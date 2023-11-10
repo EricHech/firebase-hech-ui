@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, ReactNode, createContext, useCallback, memo, useState } from "react";
+import React, { useEffect, useMemo, ReactNode, createContext, useCallback, memo, useState } from "react";
 import { Data, SoilDatabase, StatefulData } from "firebase-soil";
 import { useUserData } from "../..";
 import { useSoilContext } from "./soilContext";

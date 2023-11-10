@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, PropsWithChildren, useEffect, useRef, CSSProperties } from "react";
+import React, { useState, useMemo, useCallback, PropsWithChildren, useEffect, useRef, CSSProperties } from "react";
 
 export const useBasicIntersectionObserver = (
   root?: Nullable<Element>,

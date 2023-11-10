@@ -1,4 +1,4 @@
-import { MouseEventHandler, memo } from "react";
+import React, { MouseEventHandler, memo } from "react";
 import Link from "next/link";
 import { trackEvent } from "firebase-soil/client";
 

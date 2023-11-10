@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, ReactNode, createContext, useCallback } from "react";
+import React, { useState, useEffect, useMemo, ReactNode, createContext, useCallback } from "react";
 import type { FirebaseOptions } from "firebase/app";
 import { User } from "firebase-soil";
 import {
