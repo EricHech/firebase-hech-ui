@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, ReactNode, createContext, useContext, useCallback, memo, useState } from "react";
+import { useEffect, useMemo, ReactNode, createContext, useCallback, memo, useState } from "react";
 import { Data, SoilDatabase, StatefulData } from "firebase-soil";
 import { useUserData } from "../..";
 import { useSoilContext } from "./soilContext";
+import { useGetSafeContext } from "./getSafeContext";
 
 type BaseUserDataContext<T2 extends keyof SoilDatabase, T3 extends object = {}> = {
   data: Record<string, StatefulData<T2>>;
@@ -19,7 +20,7 @@ export const createUserDataContext = <T2 extends keyof SoilDatabase, T3 extends 
   const UserDataContext = createContext<Maybe<BaseUserDataContext<T2, T3>>>(undefined);
 
   const useUserDataFromContext = () => {
-    const useContextResult = useContext(UserDataContext);
+    const useContextResult = useGetSafeContext(UserDataContext);
 
     if (!useContextResult) throw new Error(`You must wrap your component in an instance of the ${dataType} context`);
 

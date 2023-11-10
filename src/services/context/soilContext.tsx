@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, ReactNode, createContext, useContext, useCallback } from "react";
+import { useState, useEffect, useMemo, ReactNode, createContext, useCallback } from "react";
 import type { FirebaseOptions } from "firebase/app";
 import { User } from "firebase-soil";
 import {
@@ -15,6 +15,7 @@ import {
   updateData,
 } from "firebase-soil/client";
 import { useUserData } from "../..";
+import { useGetSafeContext } from "./getSafeContext";
 
 /*
  ██████╗ ██████╗ ███╗   ██╗████████╗███████╗██╗  ██╗████████╗
@@ -39,7 +40,7 @@ type BaseSoilContext = {
 const SoilContext = createContext<Maybe<BaseSoilContext>>(undefined);
 
 export const useSoilContext = () => {
-  const useContextResult = useContext(SoilContext);
+  const useContextResult = useGetSafeContext(SoilContext);
 
   if (!useContextResult) throw new Error("You must wrap your component in an instance of SoilContext");
 

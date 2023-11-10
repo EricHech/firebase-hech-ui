@@ -1,20 +1,10 @@
 "use client";
 
-import {
-  useState,
-  useEffect,
-  useMemo,
-  Dispatch,
-  ReactNode,
-  SetStateAction,
-  createContext,
-  memo,
-  useContext,
-  PropsWithChildren,
-} from "react";
+import { useState, useEffect, useMemo, Dispatch, SetStateAction, createContext, memo, PropsWithChildren } from "react";
 import { SoilDatabase, Data } from "firebase-soil";
 import { GetChildrenEqualTo } from "firebase-soil/client";
 import { useConnectionsTypeData } from "../..";
+import { useGetSafeContext } from "./getSafeContext";
 
 type BaseConnectionsTypeDataContext<T2 extends keyof SoilDatabase> = {
   data: Nullable<Record<string, Data<T2>>>;
@@ -30,7 +20,7 @@ export const createConnectionsTypeDataContext = <T2 extends keyof SoilDatabase, 
   const ConnectionsTypeDataContext = createContext<Maybe<BaseConnectionsTypeDataContext<T22>>>(undefined);
 
   const useConnectionsTypeDataContext = (dataKey: string, initialChildEqualTo?: GetChildrenEqualTo) => {
-    const useContextResult = useContext(ConnectionsTypeDataContext);
+    const useContextResult = useGetSafeContext(ConnectionsTypeDataContext);
 
     if (!useContextResult) throw new Error(`You must wrap your component in an instance of the ${dataType} context`);
 
