@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { TrackingData } from "firebase-soil";
-import { PATHS, getCurrentUser, onDisconnect, pushKey, trackEvent } from "firebase-soil/dist/client";
+import { PATHS, getCurrentUser, onDisconnect, pushKey, trackEvent } from "firebase-soil/client";
 import { useSoilContext } from "../context/soilContext";
 
 export const usePageTracking = (asPath: string, query: Record<string, string>) => {

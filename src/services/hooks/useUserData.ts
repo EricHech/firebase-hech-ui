@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
-import { getDataKeyValue } from "firebase-soil/dist/client";
+import { getDataKeyValue } from "firebase-soil/client";
 import { SoilDatabase, StatefulData, Data } from "firebase-soil";
 import { onUserDataTypeListChildChanged } from "../helpers/onUserDataTypeListChildChanged";
 

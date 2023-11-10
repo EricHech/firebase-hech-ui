@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { SoilDatabase, DataList } from "firebase-soil";
-import { getAllConnections } from "firebase-soil/dist/client";
+import { getAllConnections } from "firebase-soil/client";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
 import { DataListHookProps } from "./useUserData";
 

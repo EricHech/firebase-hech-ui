@@ -1,6 +1,6 @@
 import { RefObject, useCallback, useEffect, useState } from "react";
 import { ConfirmationResult, getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { updateUser } from "firebase-soil/dist/client";
+import { updateUser } from "firebase-soil/client";
 import { useSoilContext } from "../context/soilContext";
 
 declare global {
