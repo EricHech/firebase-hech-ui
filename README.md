@@ -1,0 +1,1 @@
+This is the sister package of `firebase-soil`. Please look there for documentation.
