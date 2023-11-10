@@ -13,7 +13,7 @@ import {
   onUserValue,
   parseDbKey,
   updateData,
-} from "firebase-soil/client";
+} from "firebase-soil/dist/client";
 import { useUserData } from "../..";
 import { useGetSafeContext } from "./getSafeContext";
 

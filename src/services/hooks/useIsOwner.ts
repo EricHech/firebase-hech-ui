@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { SoilDatabase } from "firebase-soil";
-import { getOwner } from "firebase-soil/client";
+import { getOwner } from "firebase-soil/dist/client";
 
 export const useIsOwner = (
   dataType: keyof SoilDatabase,

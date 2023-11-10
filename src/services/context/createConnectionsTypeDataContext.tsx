@@ -11,7 +11,7 @@ import React, {
   PropsWithChildren,
 } from "react";
 import { SoilDatabase, Data } from "firebase-soil";
-import { GetChildrenEqualTo } from "firebase-soil/client";
+import { GetChildrenEqualTo } from "firebase-soil/dist/client";
 import { useConnectionsTypeData } from "../..";
 import { useGetSafeContext } from "./getSafeContext";
 

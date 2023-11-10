@@ -1,5 +1,5 @@
 import { SoilDatabase } from "firebase-soil";
-import { onChildAdded, onChildChanged, onChildRemoved, PATHS } from "firebase-soil/client";
+import { onChildAdded, onChildChanged, onChildRemoved, PATHS } from "firebase-soil/dist/client";
 
 export const onUserDataTypeListChildChanged = (
   uid: string,
