@@ -1,6 +1,6 @@
 {
   "name": "firebase-soil-ui",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "The sister package of `firebase-soil`.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -20,7 +20,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/react": "^18.2.37",
-    "firebase-soil": "^1.1.4",
+    "firebase-soil": "^1.1.5",
     "next": "^14.0.2",
     "react": "^18.2.0",
     "ts-node": "^10.9.1",
@@ -32,7 +32,7 @@
   "peerDependencies": {
     "@types/node": "^20.9.0",
     "@types/react": "^18.2.37",
-    "firebase-soil": "^1.1.4",
+    "firebase-soil": "^1.1.5",
     "next": "^14.0.2",
     "react": "^18.2.0"
   }
