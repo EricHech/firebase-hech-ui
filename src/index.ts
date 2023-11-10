@@ -1,6 +1,5 @@
 // Components
-export * from "./services/components/ConnectionsObserverHOC";
-export * from "./services/components/TrackingLink";
+export * from "./services/components/ConnectionsObserverHOC/index";
 
 // Context
 export * from "./services/context/getSafeContext";
