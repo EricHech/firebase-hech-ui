@@ -3,6 +3,7 @@ export * from "./services/components/ConnectionsObserverHOC";
 export * from "./services/components/TrackingLink";
 
 // Context
+export * from "./services/context/getSafeContext";
 export * from "./services/context/createConnectionsTypeConnectionsContext";
 export * from "./services/context/soilContext";
 export * from "./services/context/createConnectionsTypeDataContext";
