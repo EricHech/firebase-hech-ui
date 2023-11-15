@@ -1,6 +1,6 @@
 {
   "name": "firebase-soil-ui",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "description": "The sister package of `firebase-soil`.",
   "main": "dist/index.umd.js",
   "module": "dist/index.es.js",
@@ -26,6 +26,7 @@
     "firebase-soil": "^1.1.22",
     "next": "^14.0.2",
     "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2",
     "vite-plugin-dts": "^3.6.3"
@@ -39,6 +40,7 @@
     "@types/react": "^18.2.37",
     "firebase-soil": "^1.1.22",
     "next": "^14.0.2",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }
