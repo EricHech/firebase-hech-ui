@@ -1,9 +1,9 @@
 {
   "name": "firebase-soil-ui",
-  "version": "1.0.23",
+  "version": "1.0.24",
   "description": "The sister package of `firebase-soil`.",
   "main": "dist/index.umd.js",
-  "module": "dist/index.js",
+  "module": "dist/index.es.js",
   "types": "./dist/types/index.d.ts",
   "files": [
     "dist"
