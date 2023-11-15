@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useMemo, ReactNode, createContext, useCallback, memo, useState } from "react";
 import { Data, SoilDatabase, StatefulData } from "firebase-soil";
 import { useUserData } from "../..";
