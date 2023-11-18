@@ -9,7 +9,7 @@ import {
   onUserValue,
   updateData,
 } from "firebase-soil/client";
-import { useUserData } from "../..";
+import { useUserData } from "../hooks";
 import { useGetSafeContext } from "./getSafeContext";
 
 /*

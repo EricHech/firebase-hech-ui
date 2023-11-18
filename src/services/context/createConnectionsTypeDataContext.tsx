@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import { SoilDatabase, Data } from "firebase-soil";
 import { GetChildrenEqualTo } from "firebase-soil/client";
-import { useConnectionsTypeData } from "../..";
+import { useConnectionsTypeData } from "../hooks";
 import { useGetSafeContext } from "./getSafeContext";
 
 type BaseConnectionsTypeDataContext<T2 extends keyof SoilDatabase> = {
