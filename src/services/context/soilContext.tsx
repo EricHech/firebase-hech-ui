@@ -1,18 +1,15 @@
 import React, { useState, useEffect, useMemo, ReactNode, createContext, useCallback } from "react";
 import type { FirebaseOptions } from "firebase/app";
-import { User } from "firebase-soil";
+import { User, parseDbKey, generateDbKey, PATHS } from "firebase-soil";
 import {
   initializeFirebase,
-  PATHS,
   createData,
-  generateDbKey,
   get,
   getAdminValue,
   onUserValue,
-  parseDbKey,
   updateData,
 } from "firebase-soil/client";
-import { useUserData } from "../..";
+import { useUserData } from "../hooks";
 import { useGetSafeContext } from "./getSafeContext";
 
 /*

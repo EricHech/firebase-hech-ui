@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, ReactNode, createContext, useCallback, memo, useState } from "react";
 import { Data, SoilDatabase, StatefulData } from "firebase-soil";
-import { usePublicData } from "../..";
+import { usePublicData } from "../hooks";
 import { useSoilContext } from "./soilContext";
 import { useGetSafeContext } from "./getSafeContext";
 

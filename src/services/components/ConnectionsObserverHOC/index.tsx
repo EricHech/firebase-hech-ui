@@ -5,8 +5,10 @@ import {
   onConnectionsDataListChildChanged,
   onUserDataTypeListChildChanged,
   onPublicDataTypeListChildChanged,
+} from "../../helpers";
+import {
   useSoilContext,
-} from "../../..";
+} from "../../context";
 import { useBasicIntersectionObserver } from "./useBasicIntersectionObserver";
 
 export type EmptyComponentProps<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined> = {
