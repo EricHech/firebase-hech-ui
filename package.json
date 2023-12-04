@@ -1,6 +1,6 @@
 {
   "name": "firebase-soil-ui",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "The sister package of `firebase-soil`.",
   "files": [
     "dist"
@@ -41,7 +41,7 @@
     "@types/node": "^20.9.0",
     "@types/react": "^18.2.37",
     "firebase": "10.6.0",
-    "firebase-soil": "^1.2.3",
+    "firebase-soil": "^1.2.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }
