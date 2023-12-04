@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { SoilDatabase, StatefulData } from "firebase-soil";
+import type { SoilDatabase, StatefulData } from "firebase-soil";
 import { onDataKeyValue } from "firebase-soil/client";
 
 export const useOnDataKeyValue = <T2 extends keyof SoilDatabase>(dataType: T2, dataKey: string) => {

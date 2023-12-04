@@ -8,7 +8,7 @@ import React, {
   memo,
   PropsWithChildren,
 } from "react";
-import { SoilDatabase, Data } from "firebase-soil";
+import type { SoilDatabase, Data } from "firebase-soil";
 import { GetChildrenEqualTo } from "firebase-soil/client";
 import { useConnectionsTypeData } from "../hooks";
 import { useGetSafeContext } from "./getSafeContext";

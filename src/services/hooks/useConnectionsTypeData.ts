@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { SoilDatabase, Data, PATHS } from "firebase-soil";
+import type { SoilDatabase, Data } from "firebase-soil";
+import { PATHS } from "firebase-soil/paths";
 import { GetChildrenEqualTo, getChildrenEqualTo, getDataKeyValue } from "firebase-soil/client";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
 import { DataListHookProps } from "./useUserData";
@@ -23,10 +24,11 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
 
   useEffect(() => {
     if (initialChildEqualToQuery?.path) {
-      getChildrenEqualTo<ConnectionsData, GetChildrenEqualTo["val"]>(
+      // For some reason typescript loses allowing for `GetChildrenEqualTo.val` to be `null` so we have to mandate and enforce
+      getChildrenEqualTo<ConnectionsData, Mandate<GetChildrenEqualTo, "val">["val"]>(
         PATHS.dataType(dataType),
         initialChildEqualToQuery.path,
-        initialChildEqualToQuery.val
+        initialChildEqualToQuery.val!
       ).then((d) => {
         initiallyRequested.current = Object.keys(d || {}).reduce((prev, key) => {
           prev[key] = true; // eslint-disable-line no-param-reassign

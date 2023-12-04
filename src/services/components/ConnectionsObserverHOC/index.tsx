@@ -1,14 +1,12 @@
 import React, { FC, Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { SoilDatabase, StatefulData, DataList } from "firebase-soil";
+import type { SoilDatabase, StatefulData, DataList } from "firebase-soil";
 import { getDataKeyValue } from "firebase-soil/client";
 import {
   onConnectionsDataListChildChanged,
   onUserDataTypeListChildChanged,
   onPublicDataTypeListChildChanged,
 } from "../../helpers";
-import {
-  useSoilContext,
-} from "../../context";
+import { useSoilContext } from "../../context";
 import { useBasicIntersectionObserver } from "./useBasicIntersectionObserver";
 
 export type EmptyComponentProps<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined> = {

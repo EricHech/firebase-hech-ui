@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { TrackingData, PATHS } from "firebase-soil";
+import type { TrackingData } from "firebase-soil";
+import { PATHS } from "firebase-soil/paths";
 import { getCurrentUser, onDisconnect, pushKey, trackEvent } from "firebase-soil/client";
 import { useSoilContext } from "../context/soilContext";
 

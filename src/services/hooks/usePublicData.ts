@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getDataKeyValue } from "firebase-soil/client";
-import { SoilDatabase, StatefulData, Data } from "firebase-soil";
+import type { SoilDatabase, StatefulData, Data } from "firebase-soil";
 import { onPublicDataTypeListChildChanged } from "../helpers/onPublicDataTypeListChildChanged";
 import { DataListHookProps } from "./useUserData";
 

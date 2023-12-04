@@ -1,4 +1,5 @@
-import type { DataList, SoilDatabase, PATHS  } from "firebase-soil";
+import type { DataList, SoilDatabase } from "firebase-soil";
+import { PATHS } from "firebase-soil/paths";
 import { onChildAdded, onChildChanged, onChildRemoved } from "firebase-soil/client";
 
 export const onConnectionDataListChildChanged = <T2 extends keyof SoilDatabase>(

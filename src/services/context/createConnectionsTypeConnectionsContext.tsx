@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, Dispatch, ReactNode, SetStateAction, createContext, memo } from "react";
-import { SoilDatabase, DataList } from "firebase-soil";
+import type { SoilDatabase, DataList } from "firebase-soil";
 import { useConnectionsTypeConnections } from "../hooks";
 import { useGetSafeContext } from "./getSafeContext";
 

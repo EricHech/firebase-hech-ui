@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Data, SoilDatabase } from "firebase-soil";
+import type { Data, SoilDatabase } from "firebase-soil";
 import { onDataTypeChildChanged } from "../helpers/onDataTypeChildChanged";
 
 // TODO: Add tracking for all data loading and total load times so we can monitor the efficiancy of the Soil data model
