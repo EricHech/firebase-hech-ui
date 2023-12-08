@@ -19,7 +19,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
 }) => {
   type ConnectionsData = Record<string, Data<T2>>;
 
-  const [data, setData] = useState<Nullable<ConnectionsData>>({});
+  const [data, setData] = useState<ConnectionsData>({});
   const initiallyRequested = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
         initialChildEqualToQuery.val!
       ).then((d) => {
         initiallyRequested.current = Object.keys(d || {}).reduce((prev, key) => {
-          prev[key] = true; // eslint-disable-line no-param-reassign
+          prev[key] = true;
           return prev;
         }, initiallyRequested.current);
 
@@ -41,11 +41,10 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
   }, [dataType, initialChildEqualToQuery?.path, initialChildEqualToQuery?.val]);
 
   const getData = useCallback(
-    (key: string) => {
+    async (key: string) => {
       if (!initialChildEqualToQuery?.path || !initiallyRequested.current[key]) {
-        getDataKeyValue({ dataType, dataKey: key }).then(
-          (val) => val && setData((prev) => ({ ...prev, [key]: { ...val, key } }))
-        );
+        const val = await getDataKeyValue({ dataType, dataKey: key });
+        if (val) setData((prev) => ({ ...prev, [key]: { ...val, key } }));
       } else {
         delete initiallyRequested.current[key];
       }
@@ -57,9 +56,11 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
 
   const childRemoved = useCallback(
     (key: string) =>
-      setData((prev) =>
-        Object.entries(prev || {}).reduce((prv, [dKey, dVal]) => (dKey !== key ? { ...prv, [dKey]: dVal } : prv), {})
-      ),
+      setData((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      }),
     []
   );
 

@@ -41,12 +41,16 @@ export const useUserListAndData = <T2 extends keyof SoilDatabase>({ uid, dataTyp
   }, []);
 
   const userDataTypeListRemoved = useCallback((dType: T2) => {
-    setDataList((prev) =>
-      Object.entries(prev).reduce((prv, [dt, dKeys]) => (dType !== dt ? { ...prv, [dt]: dKeys } : prv), {})
-    );
-    setData((prev) =>
-      Object.entries(prev).reduce((prv, [dt, dKeys]) => (dType !== dt ? { ...prv, [dt]: dKeys } : prv), {})
-    );
+    setDataList((prev) => {
+      const next = { ...prev };
+      delete next[dType];
+      return next;
+    });
+    setData((prev) => {
+      const next = { ...prev };
+      delete next[dType];
+      return next;
+    });
   }, []);
 
   useEffect(() => {
@@ -68,17 +72,19 @@ export const useUserListAndData = <T2 extends keyof SoilDatabase>({ uid, dataTyp
     };
   }, [uid, userDataTypeListChanged, userDataTypeListRemoved]);
 
-  const toGetListChanged = useCallback((dTypeList: DataList, dKey: string) => {
+  const toGetListChanged = useCallback((dTypeList: DataList, dKey: T2) => {
     setToGetList((prev) => ({ ...prev, [dKey]: dTypeList }));
   }, []);
 
   const toGetListRemoved = useCallback(
-    (dType: string) =>
-      setToGetList((prev) =>
-        prev
-          ? Object.entries(prev).reduce((prv, [dt, dKeys]) => (dType !== dt ? { ...prv, [dt]: dKeys } : prv), {})
-          : prev
-      ),
+    (dType: T2) =>
+      setToGetList((prev) => {
+        if (!prev) return prev;
+
+        const next = { ...prev };
+        delete next[dType];
+        return next;
+      }),
     []
   );
 

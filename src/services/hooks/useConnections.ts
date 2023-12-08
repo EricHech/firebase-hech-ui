@@ -1,33 +1,30 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import type { SoilDatabase, DataList } from "firebase-soil";
-import { getAllConnections } from "firebase-soil/client";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
 import { DataListHookProps } from "./useUserData";
 
-export const useConnectionsTypeConnections = <T2 extends keyof SoilDatabase, T3 extends keyof SoilDatabase>({
+export const useConnections = <T2 extends keyof SoilDatabase, T3 extends keyof SoilDatabase>({
   parentType,
   parentKey,
   dataType,
+  includeArray = false,
   enabled = true,
-}: Pick<DataListHookProps<T2>, "dataType" | "enabled"> & {
+}: Pick<DataListHookProps<T2>, "dataType" | "includeArray" | "enabled"> & {
   parentType: T3;
   parentKey: Maybe<string>;
 }) => {
-  const [connections, setConnections] = useState({} as Record<string, DataList>);
+  type Connections = DataList[T2];
 
-  const getConnections = useCallback(
-    (key: string) =>
-      getAllConnections(dataType, key).then(
-        (val) => val && setConnections((prev) => ({ ...prev, [key]: { ...val, key } }))
-      ),
-    [dataType]
+  const [data, setData] = useState<Connections>({});
+
+  const childChanged = useCallback(
+    (timestamp: number, key: string) => setData((prev) => ({ ...prev, [key]: timestamp })),
+    []
   );
-
-  const childChanged = useCallback((_: number, key: string) => getConnections(key), [getConnections]);
 
   const childRemoved = useCallback(
     (key: string) =>
-      setConnections((prev) => {
+      setData((prev) => {
         const next = { ...prev };
         delete next[key];
         return next;
@@ -41,12 +38,14 @@ export const useConnectionsTypeConnections = <T2 extends keyof SoilDatabase, T3 
 
       return () => {
         offs();
-        setConnections({});
+        setData({});
       };
     }
 
     return undefined;
   }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled]);
 
-  return { connections };
+  const dataArray = useMemo(() => (includeArray ? Object.keys(data) : []), [includeArray, data]);
+
+  return { data, dataArray };
 };

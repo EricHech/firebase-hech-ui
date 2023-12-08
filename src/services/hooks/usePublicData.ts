@@ -37,12 +37,11 @@ export const usePublicData = <T2 extends keyof SoilDatabase>({
 
   const childRemoved = useCallback(
     (key: string) =>
-      setData((prev) =>
-        Object.entries(prev).reduce(
-          (prv, [dataKey, dataVal]) => (dataKey !== key ? { ...prv, [dataKey]: dataVal } : prv),
-          {}
-        )
-      ),
+      setData((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      }),
     []
   );
 

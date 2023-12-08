@@ -83,11 +83,12 @@ export const SoilContextProviderComponent = ({ children, firebaseOptions, anonym
   });
   const settings = useMemo(
     () =>
-      Object.entries(settingsData).reduce(
-        (prev, [key, setting]) =>
-          setting && parseDbKey(key)[1] ? { ...prev, [parseDbKey(key)[1]]: setting.value } : prev,
-        {} as Record<string, string>
-      ),
+      Object.entries(settingsData).reduce((prev, [key, setting]) => {
+        const parsedKey = parseDbKey(key)[1];
+        if (setting && parsedKey) prev[parsedKey] = setting.value;
+
+        return prev;
+      }, {} as Record<string, string>),
     [settingsData]
   );
   const setSetting = useCallback(

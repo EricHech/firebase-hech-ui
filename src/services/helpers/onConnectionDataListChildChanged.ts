@@ -5,8 +5,8 @@ import { onChildAdded, onChildChanged, onChildRemoved } from "firebase-soil/clie
 export const onConnectionDataListChildChanged = <T2 extends keyof SoilDatabase>(
   dataType: T2,
   dataKey: string,
-  childChanged: (val: DataList, key: string) => void,
-  childRemoved: (key: string) => void
+  childChanged: (val: DataList, key: T2) => void,
+  childRemoved: (key: T2) => void
 ) => {
   const addedOff = onChildAdded(PATHS.connectionDataListKey(dataType, dataKey), childChanged);
   const changedOff = onChildChanged(PATHS.connectionDataListKey(dataType, dataKey), childChanged);
