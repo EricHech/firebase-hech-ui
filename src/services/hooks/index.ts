@@ -2,6 +2,7 @@ export * from "./useGetDataKey";
 export * from "./usePublicData";
 export * from "./useConnections";
 export * from "./useConnectionsTypeConnections";
+export * from "./useConnectionsTypeCustomData";
 export * from "./useConnectionsTypeData";
 export * from "./useGetDataKeyValue";
 export * from "./useUserData";

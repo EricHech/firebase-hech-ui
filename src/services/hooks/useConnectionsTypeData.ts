@@ -82,7 +82,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
   const dataArray = useMemo(
     () =>
       includeArray
-        ? Object.entries(data || {})
+        ? Object.entries(data)
             .filter(([_, d]) => Boolean(d))
             .map(([key, val]) => ({ ...val, key } as unknown as Mandate<Data<T2>, "key">))
         : [],
