@@ -3,12 +3,10 @@ import type { SoilDatabase } from "firebase-soil";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
 import { DataListHookProps } from "./useUserData";
 
-type CustomData = Record<string, unknown>;
-
 export const useConnectionsTypeCustomData = <
   T2 extends keyof SoilDatabase,
   T3 extends keyof SoilDatabase,
-  T extends CustomData
+  T extends unknown
 >({
   parentType,
   parentKey,
@@ -21,12 +19,12 @@ export const useConnectionsTypeCustomData = <
   parentKey: Maybe<string>;
   customGet: (key: string) => Promise<T>;
 }) => {
-  const [data, setData] = useState<CustomData>({});
+  const [data, setData] = useState<Record<string, T>>({});
 
   const getData = useCallback(
     async (key: string) => {
       const val = await customGet(key);
-      if (val) setData((prev) => ({ ...prev, [key]: { ...val, key } }));
+      if (val) setData((prev) => ({ ...prev, [key]: val }));
     },
     [dataType]
   );
