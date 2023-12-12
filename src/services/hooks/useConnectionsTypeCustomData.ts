@@ -11,22 +11,22 @@ export const useConnectionsTypeCustomData = <
   parentType,
   parentKey,
   dataType,
-  includeArray = false,
   enabled = true,
-  customGet,
-}: Pick<DataListHookProps<T2>, "dataType" | "includeArray" | "enabled"> & {
+  memoizedCustomGet,
+}: Pick<DataListHookProps<T2>, "dataType" | "enabled"> & {
   parentType: T3;
   parentKey: Maybe<string>;
-  customGet: (key: string) => Promise<T>;
+  /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
+  memoizedCustomGet: (key: string) => Promise<T>;
 }) => {
   const [data, setData] = useState<Record<string, T>>({});
 
   const getData = useCallback(
     async (key: string) => {
-      const val = await customGet(key);
+      const val = await memoizedCustomGet(key);
       if (val) setData((prev) => ({ ...prev, [key]: val }));
     },
-    [dataType]
+    [memoizedCustomGet]
   );
 
   const childChanged = useCallback((_: number, key: string) => getData(key), [getData]);
