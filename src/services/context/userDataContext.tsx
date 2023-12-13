@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, ReactNode, createContext, useCallback, memo,
 import type { Data, SoilDatabase, StatefulData } from "firebase-soil";
 import { useUserData } from "../hooks";
 import { useSoilContext } from "./soilContext";
-import { useGetSafeContext } from "./getSafeContext";
+import { useGetSafeContext } from "./useGetSafeContext";
 
 type BaseUserDataContext<T2 extends keyof SoilDatabase, T3 extends object = {}> = {
   data: Record<string, StatefulData<T2>>;

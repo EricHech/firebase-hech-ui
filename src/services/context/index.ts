@@ -1,4 +1,4 @@
-export * from "./getSafeContext";
+export * from "./useGetSafeContext";
 export * from "./createConnectionsTypeConnectionsContext";
 export * from "./soilContext";
 export * from "./createConnectionsTypeDataContext";

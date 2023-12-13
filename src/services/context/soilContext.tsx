@@ -4,7 +4,7 @@ import type { User } from "firebase-soil";
 import { parseDbKey, generateDbKey, PATHS } from "firebase-soil/paths";
 import { initializeFirebase, createData, get, getAdminValue, onUserValue, updateData } from "firebase-soil/client";
 import { useUserData } from "../hooks";
-import { useGetSafeContext } from "./getSafeContext";
+import { useGetSafeContext } from "./useGetSafeContext";
 
 /*
  ██████╗ ██████╗ ███╗   ██╗████████╗███████╗██╗  ██╗████████╗

@@ -11,7 +11,7 @@ import React, {
 import type { SoilDatabase, Data } from "firebase-soil";
 import { GetChildrenEqualTo } from "firebase-soil/client";
 import { useConnectionsTypeData } from "../hooks";
-import { useGetSafeContext } from "./getSafeContext";
+import { useGetSafeContext } from "./useGetSafeContext";
 
 type BaseConnectionsTypeDataContext<T2 extends keyof SoilDatabase> = {
   data: Nullable<Record<string, Data<T2>>>;
