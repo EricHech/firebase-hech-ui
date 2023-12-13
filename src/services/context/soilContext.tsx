@@ -36,9 +36,19 @@ export const useSoilContext = () => {
   return useContextResult;
 };
 
-type TProps = { children: ReactNode; firebaseOptions: FirebaseOptions; anonymousSignIn?: boolean };
+type TProps = {
+  children: ReactNode;
+  firebaseOptions: FirebaseOptions;
+  anonymousSignIn?: boolean;
+  isNativePlatform?: boolean;
+};
 
-export const SoilContextProviderComponent = ({ children, firebaseOptions, anonymousSignIn = false }: TProps) => {
+export const SoilContextProviderComponent = ({
+  children,
+  firebaseOptions,
+  anonymousSignIn = false,
+  isNativePlatform = false,
+}: TProps) => {
   const [user, setUser] = useState<Nullable<Mandate<User, "uid">>>();
   const [asUser, setAsUser] = useState<Nullable<Mandate<User, "uid">>>();
   const [isAdmin, setIsAdmin] = useState<Nullable<boolean>>(false);
@@ -66,7 +76,7 @@ export const SoilContextProviderComponent = ({ children, firebaseOptions, anonym
           setUser(null);
         }
       },
-      anonymousSignIn
+      { anonymousSignIn, isNativePlatform }
     );
 
     return () => {
@@ -74,7 +84,7 @@ export const SoilContextProviderComponent = ({ children, firebaseOptions, anonym
       setUser(null);
       setIsAdmin(false);
     };
-  }, [firebaseOptions, anonymousSignIn]);
+  }, [firebaseOptions, anonymousSignIn, isNativePlatform]);
 
   const { data: settingsData, fetched: didFetchSettings } = useUserData({
     uid: user?.uid,
