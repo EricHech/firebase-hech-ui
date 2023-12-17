@@ -7,6 +7,7 @@ export * from "./useConnectionsTypeData";
 export * from "./useGetDataKeyValue";
 export * from "./useUserData";
 export * from "./useIsOwner";
+export * from "./useOwners";
 export * from "./useUserListAndData";
 export * from "./useDataKeyValue";
 export * from "./usePageTracking";
