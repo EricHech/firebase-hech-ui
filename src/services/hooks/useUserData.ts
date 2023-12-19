@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getDataKeyValue } from "firebase-soil/client";
 import type { SoilDatabase, StatefulData, Data } from "firebase-soil";
 import { onUserDataTypeListChildChanged } from "../helpers/onUserDataTypeListChildChanged";
@@ -31,7 +31,7 @@ export const useUserData = <T2 extends keyof SoilDatabase>({
   const [data, setDataState] = useState<Record<string, StatefulData<T2>>>({});
   const [fetched, setFetched] = useState(false);
 
-  const setData = useCallback<Dispatch<SetStateAction<Record<string, StatefulData<T2>>>>>(
+  const setData = useCallback<typeof setDataState>(
     (d) => {
       setFetched(true);
       return setDataState(d);
