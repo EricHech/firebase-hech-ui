@@ -8,9 +8,11 @@ export const onConnectionDataListChildChanged = <T2 extends keyof SoilDatabase>(
   childChanged: (val: DataList, key: T2) => void,
   childRemoved: (key: T2) => void
 ) => {
-  const addedOff = onChildAdded(PATHS.connectionDataListKey(dataType, dataKey), childChanged);
-  const changedOff = onChildChanged(PATHS.connectionDataListKey(dataType, dataKey), childChanged);
-  const removedOff = onChildRemoved(PATHS.connectionDataListKey(dataType, dataKey), childRemoved);
+  const path = PATHS.connectionDataListKey(dataType, dataKey);
+
+  const addedOff = onChildAdded(path, childChanged);
+  const changedOff = onChildChanged(path, childChanged);
+  const removedOff = onChildRemoved(path, childRemoved);
 
   return () => {
     addedOff();

@@ -77,7 +77,8 @@ export const useUserData = <T2 extends keyof SoilDatabase>({
 
     return () => {
       off?.();
-      setData({});
+      setFetched(false);
+      setDataState({});
     };
   }, [uid, childChanged, childRemoved, dataType, enabled, setData]);
 

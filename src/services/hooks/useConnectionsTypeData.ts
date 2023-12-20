@@ -48,7 +48,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
         setData(d);
       });
     }
-  }, [dataType, initialChildEqualToQuery?.path, initialChildEqualToQuery?.val, setData]);
+  }, [dataType, initialChildEqualToQuery?.path, initialChildEqualToQuery?.val]);
 
   const getData = useCallback(
     async (key: string) => {
@@ -59,7 +59,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
         delete initiallyRequested.current[key];
       }
     },
-    [dataType, initialChildEqualToQuery?.path, setData]
+    [dataType, initialChildEqualToQuery?.path]
   );
 
   const childChanged = useCallback((_: number, key: string) => getData(key), [getData]);
@@ -71,7 +71,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
         delete next[key];
         return next;
       }),
-    [setData]
+    []
   );
 
   const shouldTurnOn = initialChildEqualToQuery ? Boolean(data === null || Object.keys(data).length) : true;
@@ -82,7 +82,8 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
 
       return () => {
         offs();
-        setData({});
+        setFetched(false);
+        setDataState({});
       };
     }
 

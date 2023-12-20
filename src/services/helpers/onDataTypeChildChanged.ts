@@ -7,9 +7,11 @@ export const onDataTypeChildChanged = <T2 extends keyof SoilDatabase>(
   childChanged: (val: Data<T2>, key: string) => void,
   childRemoved: (key: string) => void
 ) => {
-  const addedOff = onChildAdded(PATHS.dataType(dataType), childChanged);
-  const changedOff = onChildChanged(PATHS.dataType(dataType), childChanged);
-  const removedOff = onChildRemoved(PATHS.dataType(dataType), childRemoved);
+  const path = PATHS.dataType(dataType);
+
+  const addedOff = onChildAdded(path, childChanged);
+  const changedOff = onChildChanged(path, childChanged);
+  const removedOff = onChildRemoved(path, childRemoved);
 
   return () => {
     addedOff();
