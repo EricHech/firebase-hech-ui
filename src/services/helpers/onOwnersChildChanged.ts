@@ -8,7 +8,7 @@ export const onOwnersChildChanged = (
   childChanged: (val: number, key: string) => void,
   childRemoved: (key: string) => void
 ) => {
-  const addedOff = onChildAdded(PATHS.ownerDataKey(dataType, dataKey), childChanged, {});
+  const addedOff = onChildAdded(PATHS.ownerDataKey(dataType, dataKey), childChanged);
   const changedOff = onChildChanged(PATHS.ownerDataKey(dataType, dataKey), childChanged);
   const removedOff = onChildRemoved(PATHS.ownerDataKey(dataType, dataKey), childRemoved);
 

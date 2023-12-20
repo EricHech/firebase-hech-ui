@@ -7,7 +7,7 @@ export const onUserDataListChildChanged = <T2 extends keyof SoilDatabase>(
   childChanged: (val: DataList[T2], key: T2) => void,
   childRemoved: (key: T2) => void
 ) => {
-  const addedOff = onChildAdded(PATHS.userDataList(uid), childChanged, {});
+  const addedOff = onChildAdded(PATHS.userDataList(uid), childChanged);
   const changedOff = onChildChanged(PATHS.userDataList(uid), childChanged);
   const removedOff = onChildRemoved(PATHS.userDataList(uid), childRemoved);
 

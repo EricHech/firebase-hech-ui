@@ -9,11 +9,7 @@ export const onConnectionsDataListChildChanged = (
   childChanged: (val: number, key: string) => void,
   childRemoved: (key: string) => void
 ) => {
-  const addedOff = onChildAdded(
-    PATHS.connectionDataListConnectionType(parentType, parentKey, dataType),
-    childChanged,
-    {}
-  );
+  const addedOff = onChildAdded(PATHS.connectionDataListConnectionType(parentType, parentKey, dataType), childChanged);
   const changedOff = onChildChanged(
     PATHS.connectionDataListConnectionType(parentType, parentKey, dataType),
     childChanged

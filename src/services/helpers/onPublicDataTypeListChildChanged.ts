@@ -7,7 +7,7 @@ export const onPublicDataTypeListChildChanged = (
   childChanged: (val: number, key: string) => void,
   childRemoved: (key: string) => void
 ) => {
-  const addedOff = onChildAdded(PATHS.publicDataTypeList(dataType), childChanged, {});
+  const addedOff = onChildAdded(PATHS.publicDataTypeList(dataType), childChanged);
   const changedOff = onChildChanged(PATHS.publicDataTypeList(dataType), childChanged);
   const removedOff = onChildRemoved(PATHS.publicDataTypeList(dataType), childRemoved);
 
