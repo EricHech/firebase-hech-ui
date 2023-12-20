@@ -8,7 +8,7 @@ export const onUserDataTypeListChildChanged = (
   childChanged: (val: number, key: string) => void,
   childRemoved: (key: string) => void
 ) => {
-  const addedOff = onChildAdded(PATHS.userDataTypeList(uid, dataType), childChanged);
+  const addedOff = onChildAdded(PATHS.userDataTypeList(uid, dataType), childChanged, {});
   const changedOff = onChildChanged(PATHS.userDataTypeList(uid, dataType), childChanged);
   const removedOff = onChildRemoved(PATHS.userDataTypeList(uid, dataType), childRemoved);
 
