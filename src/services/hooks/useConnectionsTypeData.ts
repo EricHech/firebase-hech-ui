@@ -22,10 +22,13 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
   const [data, setDataState] = useState<ConnectionsData>({});
   const [fetched, setFetched] = useState(false);
 
-  const setData = useCallback<typeof setDataState>((d) => {
-    setFetched(true);
-    return setDataState(d);
-  }, []);
+  const setData = useCallback<typeof setDataState>(
+    (d) => {
+      setFetched(true);
+      return setDataState(d);
+    },
+    [setFetched, setDataState]
+  );
 
   const initiallyRequested = useRef<Record<string, boolean>>({});
 
@@ -45,7 +48,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
         setData(d);
       });
     }
-  }, [dataType, initialChildEqualToQuery?.path, initialChildEqualToQuery?.val]);
+  }, [dataType, initialChildEqualToQuery?.path, initialChildEqualToQuery?.val, setData]);
 
   const getData = useCallback(
     async (key: string) => {
@@ -56,7 +59,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
         delete initiallyRequested.current[key];
       }
     },
-    [dataType, initialChildEqualToQuery?.path]
+    [dataType, initialChildEqualToQuery?.path, setData]
   );
 
   const childChanged = useCallback((_: number, key: string) => getData(key), [getData]);
@@ -68,7 +71,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
         delete next[key];
         return next;
       }),
-    []
+    [setData]
   );
 
   const shouldTurnOn = initialChildEqualToQuery ? Boolean(data === null || Object.keys(data).length) : true;
