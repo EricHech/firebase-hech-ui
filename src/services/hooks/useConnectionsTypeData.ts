@@ -19,16 +19,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
 }) => {
   type ConnectionsData = Record<string, Data<T2>>;
 
-  const [data, setDataState] = useState<ConnectionsData>({});
-  const [fetched, setFetched] = useState(false);
-
-  const setData = useCallback<typeof setDataState>(
-    (d) => {
-      setFetched(true);
-      return setDataState(d);
-    },
-    [setFetched, setDataState]
-  );
+  const [data, setData] = useState<ConnectionsData>({});
 
   const initiallyRequested = useRef<Record<string, boolean>>({});
 
@@ -82,8 +73,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
 
       return () => {
         offs();
-        setFetched(false);
-        setDataState({});
+        setData({});
       };
     }
 
@@ -98,5 +88,5 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
     [includeArray, data]
   );
 
-  return { data, dataArray, fetched };
+  return { data, dataArray };
 };
