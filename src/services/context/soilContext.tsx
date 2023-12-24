@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, ReactNode, createContext, useCallback } from "react";
 import type { FirebaseOptions } from "firebase/app";
-import type { User } from "firebase-soil";
+import type { EmulatorOptions, User } from "firebase-soil";
 import { parseDbKey, generateDbKey, PATHS } from "firebase-soil/paths";
 import { initializeFirebase, createData, get, getAdminValue, onUserValue, updateData } from "firebase-soil/client";
 import { useUserData } from "../hooks";
@@ -41,6 +41,7 @@ type TProps = {
   firebaseOptions: FirebaseOptions;
   anonymousSignIn?: boolean;
   isNativePlatform?: boolean;
+  emulatorOptions?: EmulatorOptions;
 };
 
 export const SoilContextProviderComponent = ({
@@ -48,6 +49,7 @@ export const SoilContextProviderComponent = ({
   firebaseOptions,
   anonymousSignIn = false,
   isNativePlatform = false,
+  emulatorOptions,
 }: TProps) => {
   const [user, setUser] = useState<Nullable<Mandate<User, "uid">>>();
   const [asUser, setAsUser] = useState<Nullable<Mandate<User, "uid">>>();
@@ -76,7 +78,7 @@ export const SoilContextProviderComponent = ({
           setUser(null);
         }
       },
-      { anonymousSignIn, isNativePlatform }
+      { anonymousSignIn, isNativePlatform, emulatorOptions }
     );
 
     return () => {
