@@ -13,11 +13,7 @@ export const useIsOwner = (
     if (dataKey && uid) {
       getOwner({ dataType, dataKey, uid })
         .then(setIsOwner)
-        .catch((e) => {
-          // TODO: Add tracking here
-          console.error(e); // eslint-disable-line no-console
-          setIsOwner(false);
-        });
+        .catch(() => setIsOwner(false)); // catch the firebase error that arises if you are not the owner
     } else {
       setIsOwner(undefined);
     }
