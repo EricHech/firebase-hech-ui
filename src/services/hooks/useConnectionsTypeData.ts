@@ -36,7 +36,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
           return prev;
         }, initiallyRequested.current);
 
-        setData(d);
+        if (d) setData((prev) => ({ ...prev, ...d }));
       });
     }
   }, [dataType, initialChildEqualToQuery?.path, initialChildEqualToQuery?.val]);
