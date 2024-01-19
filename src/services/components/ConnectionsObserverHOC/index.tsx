@@ -1,5 +1,5 @@
 import React, { FC, Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { SoilDatabase, StatefulData, DataList, Data } from "firebase-soil";
+import type { SoilDatabase, StatefulData, DataList } from "firebase-soil";
 import { getDataKeyValue } from "firebase-soil/client";
 import {
   onConnectionsDataListChildChanged,
@@ -47,7 +47,7 @@ type ObservedDataProps<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof So
   /** This will be undefined if the version is not `connectionDataList` */
   parentDataKey: Maybe<string>;
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
-  memoizedCustomGet?: (key: string) => Promise<Data<T22>>;
+  memoizedCustomGet?: (key: string) => Promise<StatefulData<T22>>;
   timestamp: number;
   observe: (el: HTMLLIElement) => void;
   observed: boolean;
@@ -130,7 +130,7 @@ export type ConnectionsObserverHOCProps<
   sort: "created oldest" | "created newest" | "updated oldest" | "updated newest";
   dataType: T22;
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
-  memoizedCustomGet?: (key: string) => Promise<Data<T22>>;
+  memoizedCustomGet?: (key: string) => Promise<StatefulData<T22>>;
   className?: string;
   /** Indicates whether or not you want the card delay animation */
   animate?: boolean;
