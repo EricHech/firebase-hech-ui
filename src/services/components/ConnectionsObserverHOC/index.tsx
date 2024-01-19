@@ -129,6 +129,8 @@ export type ConnectionsObserverHOCProps<
   /** Note, the `created` options are faster than the `updated` options which require sorting: O(n) vs O(n log n). */
   sort: "created oldest" | "created newest" | "updated oldest" | "updated newest";
   dataType: T22;
+  /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
+  memoizedCustomGet?: (key: string) => Promise<Data<T22>>;
   className?: string;
   /** Indicates whether or not you want the card delay animation */
   animate?: boolean;
@@ -171,8 +173,18 @@ export function ConnectionsObserverHOC<
   T22 extends keyof SoilDatabase,
   T222 extends keyof SoilDatabase
 >(props: ConnectionsObserverHOCProps<T2, T22, T222>) {
-  const { listItemMinHeight, listItemMinWidth, sort, dataType, className, animate, root, GroupingComponent, grouping } =
-    props;
+  const {
+    listItemMinHeight,
+    listItemMinWidth,
+    sort,
+    dataType,
+    memoizedCustomGet,
+    className,
+    animate,
+    root,
+    GroupingComponent,
+    grouping,
+  } = props;
   const { initiallyLoading, user } = useSoilContext();
 
   // ---- Data Fetching -----------------------------------------------------------------------------------------------
@@ -294,6 +306,7 @@ export function ConnectionsObserverHOC<
               idx={i}
               top={i === 0}
               bottom={i === dataList.length - 1}
+              memoizedCustomGet={memoizedCustomGet}
               dataKey={key}
               dataType={dataType}
               parentDataType={props.parentDataType}
@@ -309,6 +322,7 @@ export function ConnectionsObserverHOC<
               idx={i}
               top={i === 0}
               bottom={i === dataList.length - 1}
+              memoizedCustomGet={memoizedCustomGet}
               dataKey={key}
               dataType={dataType}
               parentDataType={undefined}
