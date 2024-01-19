@@ -1,5 +1,5 @@
 import React, { FC, Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { SoilDatabase, StatefulData, DataList } from "firebase-soil";
+import type { SoilDatabase, StatefulData, DataList, Data } from "firebase-soil";
 import { getDataKeyValue } from "firebase-soil/client";
 import {
   onConnectionsDataListChildChanged,
@@ -46,6 +46,8 @@ type ObservedDataProps<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof So
   parentDataType: T2;
   /** This will be undefined if the version is not `connectionDataList` */
   parentDataKey: Maybe<string>;
+  /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
+  memoizedCustomGet?: (key: string) => Promise<Data<T22>>;
   timestamp: number;
   observe: (el: HTMLLIElement) => void;
   observed: boolean;
@@ -65,6 +67,7 @@ export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<ke
   timestamp,
   observed,
   ItemComponent,
+  memoizedCustomGet,
 }: ObservedDataProps<T22, T2>) {
   const ref = useRef<HTMLLIElement>(null);
   const [data, setData] = useState<StatefulData<T22>>();
@@ -80,7 +83,10 @@ export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<ke
   }, [observe]);
 
   useEffect(() => {
-    if (observed) getDataKeyValue({ dataType, dataKey }).then(setData);
+    if (observed) {
+      if (memoizedCustomGet) memoizedCustomGet(dataKey).then(setData);
+      else getDataKeyValue({ dataType, dataKey }).then(setData);
+    }
   }, [timestamp, observed, dataType, dataKey]);
 
   const animationStyle = animate
