@@ -11,9 +11,13 @@ export const useIsOwner = (
 
   useEffect(() => {
     if (dataKey && uid) {
-      getOwner({ dataType, dataKey, uid })
-        .then(setIsOwner)
-        .catch(() => setIsOwner(false)); // catch the firebase error that arises if you are not the owner
+      try {
+        getOwner({ dataType, dataKey, uid })
+          .then(setIsOwner)
+          .catch(() => setIsOwner(false)); // catch the firebase error that arises if you are not the owner
+      } catch (e) {
+        // Really, really throw the error away (why trashing it seem to work?)
+      }
     } else {
       setIsOwner(undefined);
     }
