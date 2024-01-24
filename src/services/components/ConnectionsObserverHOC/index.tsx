@@ -126,13 +126,22 @@ export type ConnectionsObserverHOCProps<
   listItemMinHeight: string;
   /** This is required to prevent it from initially fetching all of the data */
   listItemMinWidth: string;
-  /** Note, the `created` options are faster than the `updated` options which require sorting: O(n) vs O(n log n). */
   sort: "created oldest" | "created newest" | "updated oldest" | "updated newest";
+  /** If nothing is passed in, it will fetch all of the keys by default. */
+  managePagination?: {
+    /** The page size. */
+    amount: number;
+    /** The number of elements from the end that should trigger another page fetch. */
+    buffer: number;
+  };
   dataType: T22;
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
   memoizedCustomGet?: (key: string) => Promise<StatefulData<T22>>;
   className?: string;
-  /** Indicates whether or not you want the card delay animation */
+  /**
+   * Indicates whether or not you want the card delay animation.
+   * Allows you to set `--gridCardAnimation` and `--gridCardDelay`.
+   */
   animate?: boolean;
   root?: Nullable<Element>;
 } & (
@@ -167,7 +176,14 @@ export type ConnectionsObserverHOCProps<
       }
   );
 
-/** Allows  you to set "--gridCardAnimation" and "--gridCardDelay" */
+/**
+ * This component allows you to fetch a list of soil keys (by connection, ownership, or public lists)
+ * and then hydrate the data for those keys only when those keys are scrolled into view. However, it
+ * combines this method with optionally fetching keys in chunks to further improve performance if dealing
+ * with extremely large lists. For example, if working with lists in the hundreds or even thousands, you
+ * can feel comfortable fetching all of the keys and hydrating when scrolled into view. But if working
+ * with a list of tens of thousands or more, such as in the case of a chat, you should pass in `managePagination`.
+ */
 export function ConnectionsObserverHOC<
   T2 extends keyof SoilDatabase,
   T22 extends keyof SoilDatabase,
@@ -177,6 +193,7 @@ export function ConnectionsObserverHOC<
     listItemMinHeight,
     listItemMinWidth,
     sort,
+    managePagination,
     dataType,
     memoizedCustomGet,
     className,
@@ -187,7 +204,17 @@ export function ConnectionsObserverHOC<
   } = props;
   const { initiallyLoading, user } = useSoilContext();
 
+  // ---- Observer ----------------------------------------------------------------------------------------------------
+  const { observe, observedIds } = useBasicIntersectionObserver(root, "150px 150px 150px 150px");
+  // ------------------------------------------------------------------------------------------------------------------
+
   // ---- Data Fetching -----------------------------------------------------------------------------------------------
+  const [pagination, setPagination] = useState(managePagination?.amount);
+
+  useEffect(() => {
+    setPagination(managePagination?.amount);
+  }, [managePagination?.amount]);
+
   const [data, setData] = useState<DataList[T22]>({});
 
   const childChanged = useCallback((val: number, key: string) => setData((prev) => ({ ...prev, [key]: val })), []);
@@ -202,30 +229,41 @@ export function ConnectionsObserverHOC<
     []
   );
 
-  /* eslint-disable react/destructuring-assignment */
   useEffect(() => {
     let off: VoidFunction;
     if (!initiallyLoading) {
+      const paginate: { limit?: { amount: number; direction: "limitToLast" | "limitToFirst" }; orderBy?: "value" } = {};
+      if (sort.startsWith("updated")) paginate.orderBy = "value";
+      if (pagination) {
+        paginate.limit = {
+          amount: pagination,
+          direction: sort.endsWith("newest") ? "limitToLast" : "limitToFirst",
+        };
+      }
+
       if (props.version === "connectionDataList" && props.parentDataKey) {
         off = onConnectionsDataListChildChanged(
           props.parentDataType,
           props.parentDataKey,
           props.connectionType || dataType,
           childChanged,
-          childRemoved
+          childRemoved,
+          paginate
         );
       } else if (props.version === "userDataList" && user?.uid) {
         off = onUserDataTypeListChildChanged(
           user.uid, //
           dataType,
           childChanged,
-          childRemoved
+          childRemoved,
+          paginate
         );
       } else if (props.version === "publicDataList") {
         off = onPublicDataTypeListChildChanged(
           dataType, //
           childChanged,
-          childRemoved
+          childRemoved,
+          paginate
         );
       }
     }
@@ -235,6 +273,8 @@ export function ConnectionsObserverHOC<
       setData({});
     };
   }, [
+    sort,
+    pagination,
     initiallyLoading,
     user?.uid,
     dataType,
@@ -245,24 +285,24 @@ export function ConnectionsObserverHOC<
     props.parentDataType,
     props.connectionType,
   ]);
-  /* eslint-enable react/destructuring-assignment */
   // ------------------------------------------------------------------------------------------------------------------
 
-  // ---- Observer ----------------------------------------------------------------------------------------------------
-  const { observe, observedIds } = useBasicIntersectionObserver(root, "150px 150px 150px 150px");
-  // ------------------------------------------------------------------------------------------------------------------
-
+  // ---- Data Maintenance --------------------------------------------------------------------------------------------
   const dataList = useMemo(() => {
     const list = Object.entries(data);
-    if (sort === "created oldest") return list;
-    if (sort === "created newest") return list.reverse();
-    if (sort === "updated oldest") return list.sort(([, a], [, b]) => a - b);
-
-    // "updated newest"
-    return list.sort(([, a], [, b]) => b - a);
+    if (sort === "created oldest" || sort === "updated oldest") return list;
+    return list.reverse();
   }, [sort, data]);
 
-  /* eslint-disable react/destructuring-assignment */
+  useEffect(() => {
+    if (managePagination?.buffer) {
+      const periphery = dataList.slice(managePagination.buffer * -1);
+      const peripheryObserved = periphery.some(([key]) => observedIds[key]);
+      if (peripheryObserved) setPagination((prev) => (prev || 0) + managePagination.amount);
+    }
+  }, [managePagination?.buffer, dataList, observedIds]);
+  // ------------------------------------------------------------------------------------------------------------------
+
   if (dataList.length === 0 && props.EmptyComponent) {
     return props.version === "connectionDataList" ? (
       <div className={className}>
@@ -282,7 +322,6 @@ export function ConnectionsObserverHOC<
       </div>
     );
   }
-  /* eslint-enable react/destructuring-assignment */
 
   if (dataList.length === 0) return null;
 

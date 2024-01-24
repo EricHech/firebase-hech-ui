@@ -5,13 +5,17 @@ import { onChildAdded, onChildChanged, onChildRemoved } from "firebase-soil/clie
 export const onPublicDataTypeListChildChanged = (
   dataType: keyof SoilDatabase,
   childChanged: (val: number, key: string) => void,
-  childRemoved: (key: string) => void
+  childRemoved: (key: string) => void,
+  paginate?: {
+    limit?: { amount: number; direction: "limitToFirst" | "limitToLast" };
+    orderBy?: "value" | { path: string };
+  }
 ) => {
   const path = PATHS.publicDataTypeList(dataType);
 
-  const addedOff = onChildAdded(path, childChanged);
-  const changedOff = onChildChanged(path, childChanged);
-  const removedOff = onChildRemoved(path, childRemoved);
+  const addedOff = onChildAdded(path, childChanged, paginate);
+  const changedOff = onChildChanged(path, childChanged, paginate);
+  const removedOff = onChildRemoved(path, childRemoved, paginate);
 
   return () => {
     addedOff();
