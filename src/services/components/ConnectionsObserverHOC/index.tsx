@@ -300,7 +300,9 @@ export function ConnectionsObserverHOC<
     if (managePagination?.buffer) {
       const periphery = dataList.slice(managePagination.buffer * -1);
       const peripheryObserved = periphery.some(([key]) => observedIds[key]);
-      if (peripheryObserved) setPagination((prev) => (prev || 0) + managePagination.amount);
+      const moreToFetch = dataList.length !== (pagination || 0);
+
+      if (peripheryObserved && moreToFetch) setPagination((prev) => (prev || 0) + managePagination.amount);
     }
   }, [managePagination?.buffer, dataList, observedIds]);
   // ------------------------------------------------------------------------------------------------------------------
