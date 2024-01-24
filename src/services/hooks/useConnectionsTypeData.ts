@@ -15,6 +15,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
 }: Pick<DataListHookProps<T2>, "dataType" | "includeArray" | "enabled"> & {
   parentType: T3;
   parentKey: Maybe<string>;
+  /** This reads from `/data`, so it will only work for admins. */
   initialChildEqualToQuery?: GetChildrenEqualTo;
 }) => {
   type ConnectionsData = Record<string, Data<T2>>;
