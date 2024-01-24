@@ -9,6 +9,13 @@ import {
 import { useSoilContext } from "../../context";
 import { useBasicIntersectionObserver } from "./useBasicIntersectionObserver";
 
+export type ManagePagination = {
+  /** The page size. */
+  amount: number;
+  /** The number of elements from the end that should trigger another page fetch. */
+  buffer: number;
+};
+
 export type EmptyComponentProps<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined> = {
   dataType: T22;
   /** This will be undefined if the version is not `connectionDataList` */
@@ -128,12 +135,7 @@ export type ConnectionsObserverHOCProps<
   listItemMinWidth: string;
   sort: "created oldest" | "created newest" | "updated oldest" | "updated newest";
   /** If nothing is passed in, it will fetch all of the keys by default. */
-  managePagination?: {
-    /** The page size. */
-    amount: number;
-    /** The number of elements from the end that should trigger another page fetch. */
-    buffer: number;
-  };
+  managePagination?: ManagePagination;
   dataType: T22;
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
   memoizedCustomGet?: (key: string) => Promise<StatefulData<T22>>;
