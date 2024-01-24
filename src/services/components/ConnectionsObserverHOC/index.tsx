@@ -243,6 +243,18 @@ export function ConnectionsObserverHOC<
         };
       }
 
+      /*
+        When paginating, we reset the listeners with larger and larger page counts.
+        But does this mean that the entire list is being refetched each time?
+        Should we instead create multiple listeners?
+
+        If so, an idea of how:
+        1. A base useEffect listening to `managePagination?.amount` - fetch the initial list
+        2. A second useEffect listening to stateful `pagination` - create new listeners each time
+        3. Somehow, the second useEffects needs to only depend on `pagination` and save (to a ref) but not trigger the `off`s on each cycle
+        4. A final useEffect with only a cleanup function that uses the ref to clean up all `off`s on unmount
+      */
+
       if (props.version === "connectionDataList" && props.parentDataKey) {
         off = onConnectionsDataListChildChanged(
           props.parentDataType,
