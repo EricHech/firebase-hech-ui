@@ -1504,10 +1504,10 @@ firebase-admin@^11.11.0:
     "@google-cloud/firestore" "^6.6.0"
     "@google-cloud/storage" "^6.9.5"
 
-firebase-soil@^1.4.43:
-  version "1.4.43"
-  resolved "https://registry.yarnpkg.com/firebase-soil/-/firebase-soil-1.4.43.tgz#dabadcb289acda342a3a970e818cbb695a724d8e"
-  integrity sha512-VFu5ztrHTHUdnfJqv7f8GSJQf8K1xY0nRw9GNpsYQ5Ag4fsst8h5aEyoFV5TSH/4dPygr8hTPQfMkgtko3V0Aw==
+firebase-soil@^1.4.44:
+  version "1.4.44"
+  resolved "https://registry.yarnpkg.com/firebase-soil/-/firebase-soil-1.4.44.tgz#d8ea815cabb26202e7d282c2d34076f38d3d77d3"
+  integrity sha512-2am0HS1P6yO11eLWUuH1KSm4nAy15YKhziOl3lzO1FZ7s7621e8Lfn91iaDrvotUNnc0eitWEMUeAd4HtClo+g==
   dependencies:
     "@types/node" "^20.9.0"
     firebase "^10.6.0"
