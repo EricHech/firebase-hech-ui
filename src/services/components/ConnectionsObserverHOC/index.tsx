@@ -7,7 +7,16 @@ import { useSoilContext } from "../../context";
 // Local
 import { useBasicIntersectionObserver } from "./useBasicIntersectionObserver";
 import { attachListeners, getDirection, getPaginationOptions, getPath } from "./utils";
-import type { GroupingComponentProps, ManagePagination, ObservedDataProps, Sort, Version } from "./types";
+import type {
+  GroupingComponentProps,
+  ItemComponentProps,
+  ManagePagination,
+  ObservedDataProps,
+  Sort,
+  Version,
+} from "./types";
+
+export type { ItemComponentProps };
 
 export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined>({
   animate,
