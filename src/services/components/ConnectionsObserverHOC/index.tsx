@@ -309,7 +309,7 @@ export function ConnectionsObserverHOC<
                 paginate,
                 childChanged,
                 childRemoved,
-                skipChildAdded: true,
+                skipChildAdded: false,
               });
             }
           });
