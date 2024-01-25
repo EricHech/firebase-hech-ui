@@ -1,65 +1,13 @@
 import React, { FC, Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SoilDatabase, StatefulData, DataList } from "firebase-soil";
-import { getDataKeyValue } from "firebase-soil/client";
-import {
-  onConnectionsDataListChildChanged,
-  onUserDataTypeListChildChanged,
-  onPublicDataTypeListChildChanged,
-} from "../../helpers";
+import { getDataKeyValue, getOrderByWithLimit } from "firebase-soil/client";
+
 import { useSoilContext } from "../../context";
+
+// Local
 import { useBasicIntersectionObserver } from "./useBasicIntersectionObserver";
-
-export type ManagePagination = {
-  /** The page size. */
-  amount: number;
-  /** The number of elements from the end that should trigger another page fetch. */
-  buffer: number;
-};
-
-export type EmptyComponentProps<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined> = {
-  dataType: T22;
-  /** This will be undefined if the version is not `connectionDataList` */
-  parentDataType: T2;
-  /** This will be undefined if the version is not `connectionDataList` */
-  parentDataKey: Maybe<string>;
-};
-
-export type ItemComponentProps<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined> = {
-  top: boolean;
-  bottom: boolean;
-  data: StatefulData<T22>;
-  dataType: T22;
-  dataKey: string;
-  /** This will be undefined if the version is not `connectionDataList` */
-  parentDataType: T2;
-  /** This will be undefined if the version is not `connectionDataList` */
-  parentDataKey: Maybe<string>;
-  observed: boolean;
-};
-
-export type GroupingComponentProps = {
-  timestamp: number;
-};
-
-type ObservedDataProps<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined> = {
-  /** Indicates whether or not you want the card delay animation */
-  animate?: boolean;
-  idx: number;
-  top: boolean;
-  bottom: boolean;
-  dataType: T22;
-  dataKey: string;
-  /** This will be undefined if the version is not `connectionDataList` */
-  parentDataType: T2;
-  /** This will be undefined if the version is not `connectionDataList` */
-  parentDataKey: Maybe<string>;
-  /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
-  memoizedCustomGet?: (key: string) => Promise<StatefulData<T22>>;
-  timestamp: number;
-  observe: (el: HTMLLIElement) => void;
-  observed: boolean;
-  ItemComponent: FC<ItemComponentProps<T22, T2>>;
-};
+import { attachListeners, getDirection, getPaginationOptions, getPath } from "./utils";
+import type { GroupingComponentProps, ManagePagination, ObservedDataProps, Sort, Version } from "./types";
 
 export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined>({
   animate,
@@ -94,7 +42,7 @@ export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<ke
       if (memoizedCustomGet) memoizedCustomGet(dataKey).then(setData);
       else getDataKeyValue({ dataType, dataKey }).then(setData);
     }
-  }, [timestamp, observed, dataType, dataKey]);
+  }, [timestamp, observed, dataType, dataKey, memoizedCustomGet]);
 
   const animationStyle = animate
     ? { animation: "var(--gridCardAnimation)", animationDelay: `calc(${idx} * var(--gridCardDelay))` }
@@ -128,12 +76,12 @@ export type ConnectionsObserverHOCProps<
   T2 extends keyof SoilDatabase,
   T22 extends keyof SoilDatabase,
   T222 extends keyof SoilDatabase
-> = {
+> = Version<T2, T22, T222> & {
   /** This is required to prevent it from initially fetching all of the data */
   listItemMinHeight: string;
   /** This is required to prevent it from initially fetching all of the data */
   listItemMinWidth: string;
-  sort: "created oldest" | "created newest" | "updated oldest" | "updated newest";
+  sort: Sort;
   /** If nothing is passed in, it will fetch all of the keys by default. */
   managePagination?: ManagePagination;
   dataType: T22;
@@ -147,25 +95,6 @@ export type ConnectionsObserverHOCProps<
   animate?: boolean;
   root?: Nullable<Element>;
 } & (
-  | {
-      version: "connectionDataList";
-      parentDataType: T2;
-      parentDataKey: Maybe<string>;
-      /** Include this key if you want to use a connectionList other than the dataType you're requesting */
-      connectionType?: T222;
-      ItemComponent: ObservedDataProps<T22, T2>["ItemComponent"];
-      EmptyComponent?: FC<EmptyComponentProps<T22, T2>>;
-    }
-  | {
-      version: "publicDataList" | "userDataList";
-      parentDataType?: undefined;
-      parentDataKey?: undefined;
-      connectionType?: undefined;
-      ItemComponent: ObservedDataProps<T22>["ItemComponent"];
-      EmptyComponent?: FC<EmptyComponentProps<T22>>;
-    }
-) &
-  (
     | {
         GroupingComponent: FC<GroupingComponentProps>;
         /** Method by which you want to section the list (ie. day, year, etc.) */
@@ -204,22 +133,52 @@ export function ConnectionsObserverHOC<
     GroupingComponent,
     grouping,
   } = props;
+  /* eslint-disable react/destructuring-assignment */
+  const versionSettings = useMemo(
+    () =>
+      props.version === "connectionDataList"
+        ? {
+            version: props.version,
+            parentDataKey: props.parentDataKey,
+            parentDataType: props.parentDataType,
+            connectionType: props.connectionType,
+          }
+        : {
+            version: props.version,
+            parentDataKey: props.parentDataKey,
+            parentDataType: props.parentDataType,
+            connectionType: props.connectionType,
+          },
+    [props.connectionType, props.parentDataKey, props.parentDataType, props.version]
+  );
+  /* eslint-enable react/destructuring-assignment */
+
   const { initiallyLoading, user } = useSoilContext();
 
   // ---- Observer ----------------------------------------------------------------------------------------------------
   const { observe, observedIds } = useBasicIntersectionObserver(root, "150px 150px 150px 150px");
   // ------------------------------------------------------------------------------------------------------------------
 
-  // ---- Data Fetching -----------------------------------------------------------------------------------------------
-  const [pagination, setPagination] = useState(managePagination?.amount);
-
-  useEffect(() => {
-    setPagination(managePagination?.amount);
-  }, [managePagination?.amount]);
-
+  // ---- Data --------------------------------------------------------------------------------------------------------
   const [data, setData] = useState<DataList[T22]>({});
 
-  const childChanged = useCallback((val: number, key: string) => setData((prev) => ({ ...prev, [key]: val })), []);
+  const dataList = useMemo(() => {
+    const list = Object.entries(data);
+    if (sort === "created oldest" || sort === "updated oldest") return list;
+    return list.reverse();
+  }, [sort, data]);
+  // ------------------------------------------------------------------------------------------------------------------
+
+  // ---- Fetch Helpers -----------------------------------------------------------------------------------------------
+  const childChanged = useCallback(
+    (val: number, key: string) =>
+      setData((prev) => {
+        const next: DataList[keyof SoilDatabase] = { ...prev };
+        next[key] = val;
+        return next;
+      }),
+    []
+  );
 
   const childRemoved = useCallback(
     (key: string) =>
@@ -230,95 +189,157 @@ export function ConnectionsObserverHOC<
       }),
     []
   );
+  // ------------------------------------------------------------------------------------------------------------------
 
-  useEffect(() => {
-    let off: VoidFunction;
-    if (!initiallyLoading) {
-      const paginate: { limit?: { amount: number; direction: "limitToLast" | "limitToFirst" }; orderBy?: "value" } = {};
-      if (sort.startsWith("updated")) paginate.orderBy = "value";
-      if (pagination) {
-        paginate.limit = {
-          amount: pagination,
-          direction: sort.endsWith("newest") ? "limitToLast" : "limitToFirst",
-        };
+  // ---- New Page Fetching -------------------------------------------------------------------------------------------
+  const newPageListenerOffs = useRef<VoidFunction[]>([]);
+
+  const listenToNewPage = useCallback(
+    async (start: string | number) => {
+      if (managePagination?.amount === undefined) throw Error("`managePagination?.amount` was `undefined`.");
+      const { amount } = managePagination;
+
+      const path = getPath(versionSettings, dataType, user?.uid);
+      if (!path) throw Error("Unable to determine database path.");
+
+      const direction = getDirection(sort);
+
+      // When fetching a new page, first get the initial page data...
+      const newData = await getOrderByWithLimit<DataList[T22]>(path, "orderByKey", {
+        amount,
+        direction,
+        exclusiveTermination: start,
+      });
+
+      const newDataLength = Object.keys(newData || {}).length;
+      const empty = !newDataLength;
+
+      if (!empty) {
+        setData((prev) => (direction === "limitToLast" ? { ...newData, ...prev } : { ...prev, ...newData }));
       }
 
-      /*
-        When paginating, we reset the listeners with larger and larger page counts.
-        But does this mean that the entire list is being refetched each time?
-        Should we instead create multiple listeners?
+      const paginate = getPaginationOptions(sort, {
+        pagination: { amount, exclusiveTermination: start },
+      });
 
-        If so, an idea of how:
-        1. A base useEffect listening to `managePagination?.amount` - fetch the initial list
-        2. A second useEffect listening to stateful `pagination` - create new listeners each time
-        3. Somehow, the second useEffects needs to only depend on `pagination` and save (to a ref) but not trigger the `off`s on each cycle
-        4. A final useEffect with only a cleanup function that uses the ref to clean up all `off`s on unmount
-      */
+      // ...then establish the listeners for changes
+      const scrolledPageOff = attachListeners({
+        userUid: user?.uid,
+        dataType,
+        settings: versionSettings,
+        paginate,
+        childChanged,
+        childRemoved,
+        skipChildAdded: true,
+      });
 
-      if (props.version === "connectionDataList" && props.parentDataKey) {
-        off = onConnectionsDataListChildChanged(
-          props.parentDataType,
-          props.parentDataKey,
-          props.connectionType || dataType,
-          childChanged,
-          childRemoved,
-          { paginate }
-        );
-      } else if (props.version === "userDataList" && user?.uid) {
-        off = onUserDataTypeListChildChanged(
-          user.uid, //
+      if (scrolledPageOff) newPageListenerOffs.current.push(scrolledPageOff);
+    },
+    [childChanged, childRemoved, dataType, managePagination, sort, user?.uid, versionSettings]
+  );
+  // ------------------------------------------------------------------------------------------------------------------
+
+  // ---- New Page Determination --------------------------------------------------------------------------------------
+  const [peripharyMarker, setPeripharyMarker] = useState<string | number>();
+
+  useEffect(() => {
+    if (managePagination?.buffer !== undefined) {
+      const periphery = dataList.slice(managePagination.buffer * -1);
+      const peripheryObserved = periphery.some(([key]) => observedIds[key]);
+
+      if (peripheryObserved) {
+        const el = periphery[periphery.length - 1];
+        const marker = sort.startsWith("created") ? el[0] : el[1];
+        setPeripharyMarker(marker);
+      } else {
+        setPeripharyMarker(undefined);
+      }
+    }
+  }, [managePagination?.buffer, dataList, observedIds, managePagination, sort, listenToNewPage]);
+
+  useEffect(() => {
+    if (peripharyMarker) listenToNewPage(peripharyMarker);
+  }, [listenToNewPage, peripharyMarker]);
+  // ------------------------------------------------------------------------------------------------------------------
+
+  // ---- Primary Hydration and Listeners -----------------------------------------------------------------------------
+  useEffect(() => {
+    let primaryListenerOff: Maybe<VoidFunction>;
+
+    if (!initiallyLoading) {
+      // (1) If you are managing pagination...
+      if (managePagination) {
+        const path = getPath(versionSettings, dataType, user?.uid);
+
+        if (path) {
+          const { amount } = managePagination;
+          const direction = getDirection(sort);
+
+          // ...get the initial chunk of data...
+          getOrderByWithLimit<DataList[T22]>(path, "orderByKey", {
+            amount,
+            direction,
+          }).then((newData) => {
+            if (newData) {
+              // ...set it...
+              setData(newData);
+
+              const newDataArray = Object.entries(newData);
+              const el = newDataArray[newDataArray.length - 1];
+              const marker = sort.startsWith("created") ? el[0] : el[1];
+
+              const paginate = getPaginationOptions(sort, {
+                exclusiveSide: { direction: "high", exclusiveTermination: marker },
+              });
+
+              // ...and then listen for any new data that comes in
+              primaryListenerOff = attachListeners({
+                userUid: user?.uid,
+                dataType,
+                settings: versionSettings,
+                paginate,
+                childChanged,
+                childRemoved,
+                skipChildAdded: true,
+              });
+            }
+          });
+        }
+        // (2) Otherwise just listen to all the data
+      } else {
+        const paginate = getPaginationOptions(sort, {});
+
+        primaryListenerOff = attachListeners({
+          userUid: user?.uid,
           dataType,
+          settings: versionSettings,
+          paginate,
           childChanged,
           childRemoved,
-          { paginate }
-        );
-      } else if (props.version === "publicDataList") {
-        off = onPublicDataTypeListChildChanged(
-          dataType, //
-          childChanged,
-          childRemoved,
-          { paginate }
-        );
+          skipChildAdded: false,
+        });
       }
     }
 
     return () => {
-      off?.();
+      primaryListenerOff?.();
+      newPageListenerOffs.current.forEach((pageOff) => pageOff()); // eslint-disable-line react-hooks/exhaustive-deps
       setData({});
     };
   }, [
-    sort,
-    pagination,
     initiallyLoading,
     user?.uid,
     dataType,
+    sort,
+    managePagination?.amount,
+    versionSettings,
+    managePagination,
     childChanged,
     childRemoved,
-    props.version,
-    props.parentDataKey,
-    props.parentDataType,
-    props.connectionType,
   ]);
   // ------------------------------------------------------------------------------------------------------------------
 
-  // ---- Data Maintenance --------------------------------------------------------------------------------------------
-  const dataList = useMemo(() => {
-    const list = Object.entries(data);
-    if (sort === "created oldest" || sort === "updated oldest") return list;
-    return list.reverse();
-  }, [sort, data]);
-
-  useEffect(() => {
-    if (managePagination?.buffer) {
-      const periphery = dataList.slice(managePagination.buffer * -1);
-      const peripheryObserved = periphery.some(([key]) => observedIds[key]);
-      const moreToFetch = dataList.length === (pagination || 0);
-
-      if (peripheryObserved && moreToFetch) setPagination((prev) => (prev || 0) + managePagination.amount);
-    }
-  }, [managePagination?.buffer, dataList, observedIds]);
-  // ------------------------------------------------------------------------------------------------------------------
-
+  /* eslint-disable react/destructuring-assignment */
   if (dataList.length === 0 && props.EmptyComponent) {
     return props.version === "connectionDataList" ? (
       <div className={className}>
@@ -337,13 +358,13 @@ export function ConnectionsObserverHOC<
         />
       </div>
     );
+    /* eslint-enable react/destructuring-assignment */
   }
 
   if (dataList.length === 0) return null;
 
   let currentGrouping = 0;
 
-  // TODO: Limit to n keys in dataList
   /* eslint-disable react/destructuring-assignment */
   return (
     <ul
