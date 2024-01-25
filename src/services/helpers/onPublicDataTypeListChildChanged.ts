@@ -6,16 +6,17 @@ export const onPublicDataTypeListChildChanged = (
   dataType: keyof SoilDatabase,
   childChanged: (val: number, key: string) => void,
   childRemoved: (key: string) => void,
-  paginate?: ListenerPaginationOptions
+  opts?: { paginate?: ListenerPaginationOptions; skipChildAdded?: boolean }
 ) => {
+  const { paginate, skipChildAdded } = opts || {};
   const path = PATHS.publicDataTypeList(dataType);
 
-  const addedOff = onChildAdded(path, childChanged, paginate);
+  const addedOff = skipChildAdded ? undefined : onChildAdded(path, childChanged, paginate);
   const changedOff = onChildChanged(path, childChanged, paginate);
   const removedOff = onChildRemoved(path, childRemoved, paginate);
 
   return () => {
-    addedOff();
+    addedOff?.();
     changedOff();
     removedOff();
   };

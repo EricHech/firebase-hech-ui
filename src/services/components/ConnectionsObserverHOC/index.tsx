@@ -262,7 +262,7 @@ export function ConnectionsObserverHOC<
           props.connectionType || dataType,
           childChanged,
           childRemoved,
-          paginate
+          { paginate }
         );
       } else if (props.version === "userDataList" && user?.uid) {
         off = onUserDataTypeListChildChanged(
@@ -270,14 +270,14 @@ export function ConnectionsObserverHOC<
           dataType,
           childChanged,
           childRemoved,
-          paginate
+          { paginate }
         );
       } else if (props.version === "publicDataList") {
         off = onPublicDataTypeListChildChanged(
           dataType, //
           childChanged,
           childRemoved,
-          paginate
+          { paginate }
         );
       }
     }
