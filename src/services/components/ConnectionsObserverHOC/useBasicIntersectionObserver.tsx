@@ -23,8 +23,8 @@ export const useBasicIntersectionObserver = (
           setObservedIds((prevState) =>
             entries.reduce(
               (prev, { isIntersecting, target: { id } }) => {
-                if (isIntersecting) prev[id] = isIntersecting;
-                else if (!observePermanentlyOnceObserved?.[id]) delete prev[id];
+                if (isIntersecting) prev[id] = isIntersecting; // eslint-disable-line no-param-reassign
+                else if (!observePermanentlyOnceObserved?.[id]) delete prev[id]; // eslint-disable-line no-param-reassign
                 return prev;
               },
               { ...prevState }
