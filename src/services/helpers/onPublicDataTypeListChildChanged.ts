@@ -1,4 +1,4 @@
-import type { SoilDatabase } from "firebase-soil";
+import type { ListenerPaginationOptions, SoilDatabase } from "firebase-soil";
 import { PATHS } from "firebase-soil/paths";
 import { onChildAdded, onChildChanged, onChildRemoved } from "firebase-soil/client";
 
@@ -6,10 +6,7 @@ export const onPublicDataTypeListChildChanged = (
   dataType: keyof SoilDatabase,
   childChanged: (val: number, key: string) => void,
   childRemoved: (key: string) => void,
-  paginate?: {
-    limit?: { amount: number; direction: "limitToFirst" | "limitToLast" };
-    orderBy?: "value" | { path: string };
-  }
+  paginate?: ListenerPaginationOptions
 ) => {
   const path = PATHS.publicDataTypeList(dataType);
 
