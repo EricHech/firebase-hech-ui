@@ -51,7 +51,7 @@ export const useCacheHook = <T extends keyof SoilDatabase>(
 
   useEffect(() => {
     if (dataKey) getCache(dataType, dataKey, { fetchIfNull }).then(setData);
-  }, [dataType, dataKey, getCache]);
+  }, [dataType, dataKey, fetchIfNull, getCache]);
 
   return data;
 };
