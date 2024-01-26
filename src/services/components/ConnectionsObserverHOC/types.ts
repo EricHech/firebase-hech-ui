@@ -49,6 +49,8 @@ export type ItemComponentProps<T22 extends keyof SoilDatabase, T2 extends Maybe<
   /** This will be undefined if the version is not `connectionDataList` */
   parentDataKey: Maybe<string>;
   observed: boolean;
+  setCache: SetCache;
+  getCache: GetCache;
 };
 
 export type GroupingComponentProps = {

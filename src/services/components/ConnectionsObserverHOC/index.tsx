@@ -31,6 +31,8 @@ export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<ke
   observe,
   timestamp,
   observed,
+  setCache,
+  getCache,
   ItemComponent,
   memoizedCustomGet,
 }: ObservedDataProps<T22, T2>) {
@@ -75,6 +77,8 @@ export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<ke
         parentDataType={parentDataType}
         parentDataKey={parentDataKey}
         observed={observed}
+        setCache={setCache}
+        getCache={getCache}
         top={top}
         bottom={bottom}
       />
