@@ -45,13 +45,13 @@ export const useCacheHook = <T extends keyof SoilDatabase>(
   dataType: T,
   dataKey: Maybe<string>,
   getCache: GetCache,
-  { fetchIfNull }: { fetchIfNull: boolean }
+  { fetchIfNull, initialized }: { fetchIfNull: boolean; initialized: boolean }
 ) => {
   const [data, setData] = useState<StatefulData<T>>();
 
   useEffect(() => {
-    if (dataKey) getCache(dataType, dataKey, { fetchIfNull }).then(setData);
-  }, [dataType, dataKey, fetchIfNull, getCache]);
+    if (initialized && dataKey) getCache(dataType, dataKey, { fetchIfNull }).then(setData);
+  }, [initialized, dataType, dataKey, fetchIfNull, getCache]);
 
   return data;
 };
