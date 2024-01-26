@@ -1,3 +1,4 @@
+export * from "./useStaticCachedDataKeyValues";
 export * from "./useGetDataKey";
 export * from "./usePublicData";
 export * from "./useConnections";

@@ -2,6 +2,7 @@ import { FC } from "react";
 
 // Soil
 import type { ListenerPaginationOptions, SoilDatabase, StatefulData } from "firebase-soil";
+import type { GetCache, SetCache } from "../../hooks";
 
 export type Sort = "created oldest" | "created newest" | "updated oldest" | "updated newest";
 
@@ -71,6 +72,8 @@ export type ObservedDataProps<T22 extends keyof SoilDatabase, T2 extends Maybe<k
   timestamp: number;
   observe: (el: HTMLLIElement) => void;
   observed: boolean;
+  setCache: SetCache;
+  getCache: GetCache;
   ItemComponent: FC<ItemComponentProps<T22, T2>>;
 };
 

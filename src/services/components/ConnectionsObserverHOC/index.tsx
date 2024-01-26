@@ -15,6 +15,7 @@ import type {
   Sort,
   Version,
 } from "./types";
+import { useStaticCachedDataKeyValues } from "../../hooks";
 
 export type { ItemComponentProps };
 
@@ -348,6 +349,8 @@ export function ConnectionsObserverHOC<
   ]);
   // ------------------------------------------------------------------------------------------------------------------
 
+  const { setCache, getCache } = useStaticCachedDataKeyValues();
+
   /* eslint-disable react/destructuring-assignment */
   if (dataList.length === 0 && props.EmptyComponent) {
     return props.version === "connectionDataList" ? (
@@ -399,6 +402,8 @@ export function ConnectionsObserverHOC<
               timestamp={timestamp}
               observe={observe}
               observed={Boolean(observedIds[key])}
+              setCache={setCache}
+              getCache={getCache}
               ItemComponent={props.ItemComponent}
             />
           ) : (
@@ -415,6 +420,8 @@ export function ConnectionsObserverHOC<
               timestamp={timestamp}
               observe={observe}
               observed={Boolean(observedIds[key])}
+              setCache={setCache}
+              getCache={getCache}
               ItemComponent={props.ItemComponent}
             />
           );
