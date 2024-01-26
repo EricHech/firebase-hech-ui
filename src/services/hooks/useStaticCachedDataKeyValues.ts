@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // Soil
 import { getDataKeyValue } from "firebase-soil/client";
@@ -38,4 +38,20 @@ export const useStaticCachedDataKeyValues = () => {
   );
 
   return { setCache, getCache };
+};
+
+/** Meant to be used as a stateful helper to go alongside the usage of `useStaticCachedDataKeyValues` */
+export const useCacheHook = <T extends keyof SoilDatabase>(
+  dataType: T,
+  dataKey: Maybe<string>,
+  getCache: GetCache,
+  { fetchIfNull }: { fetchIfNull: boolean }
+) => {
+  const [data, setData] = useState<StatefulData<T>>();
+
+  useEffect(() => {
+    if (dataKey) getCache(dataType, dataKey, { fetchIfNull }).then(setData);
+  }, [dataType, dataKey, getCache]);
+
+  return data;
 };
