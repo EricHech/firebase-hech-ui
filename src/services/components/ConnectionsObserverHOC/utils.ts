@@ -1,6 +1,8 @@
 // Soil
 import { PATHS } from "firebase-soil/paths";
 import type { ListenerPaginationOptions, SoilDatabase } from "firebase-soil";
+
+// Helpers
 import {
   onConnectionsDataListChildChanged,
   onUserDataTypeListChildChanged,

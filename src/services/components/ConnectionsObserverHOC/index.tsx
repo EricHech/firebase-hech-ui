@@ -96,6 +96,9 @@ export function ConnectionsObserverHOC<
   T22 extends keyof SoilDatabase,
   T222 extends keyof SoilDatabase
 >(props: ConnectionsObserverHOCProps<T2, T22, T222>) {
+  const { initiallyLoading, user } = useSoilContext();
+
+  // ---- Prop Settings -----------------------------------------------------------------------------------------------
   const {
     listItemMinHeight,
     listItemMinWidth,
@@ -110,6 +113,7 @@ export function ConnectionsObserverHOC<
     GroupingComponent,
     grouping,
   } = props;
+
   /* eslint-disable react/destructuring-assignment */
   const versionSettings = useMemo(
     () =>
@@ -133,8 +137,7 @@ export function ConnectionsObserverHOC<
   const direction = useMemo(() => getDirection(sort), [sort]);
   const side = useMemo(() => getSide(sort), [sort]);
   const orderBy = useMemo(() => getOrderBy(sort), [sort]);
-
-  const { initiallyLoading, user } = useSoilContext();
+  // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Observer ----------------------------------------------------------------------------------------------------
   const { observe, observedIds } = useBasicIntersectionObserver(root, "150px 150px 150px 150px");
@@ -155,10 +158,17 @@ export function ConnectionsObserverHOC<
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- New Page Fetching -------------------------------------------------------------------------------------------
+  const [peripheryMarker, setPeripheryMarker] = useState<string | number>();
+  const fetchingNewPage = useRef(false);
+  const fetchedAll = useRef(false);
+
   const newPageListenerOffs = useRef<VoidFunction[]>([]);
 
   const listenToNewPage = useCallback(
     async (startPos: string | number) => {
+      fetchingNewPage.current = true;
+      setPeripheryMarker(undefined);
+
       if (managePagination?.amount === undefined) throw Error("`managePagination?.amount` was `undefined`.");
       const { amount } = managePagination;
 
@@ -191,21 +201,19 @@ export function ConnectionsObserverHOC<
       const start = orderBy === "orderByKey" ? startEl[0] : startEl[1];
       const end = orderBy === "orderByKey" ? endEl[0] : endEl[1];
 
-      // If a full page came back, set the listeners for that page...
+      // ...if a full page came back, set the listeners for that page...
       if (newDataLength === amount) {
         paginationOpts.between = { start, end, version: "inclusive" };
       } else {
-        // ...otherwise, less than a full page came back, so you are at the end and should listen to the opposite edge now also
+        // ...otherwise, less than a full page came back, so you are at the end and should listen to the opposite edge now also...
+        fetchedAll.current = true;
         paginationOpts.edge = {
           side: side === "high" ? "low" : "high",
           termination: { key: side === "high" ? end : start, version: "inclusive" },
         };
       }
 
-      const paginate = getPaginationOptions(sort, {
-        // pagination: { amount, termination: { key: start, version: "inclusive" } },
-        between: { start: "", end: "", version: "inclusive" },
-      });
+      const paginate = getPaginationOptions(sort, paginationOpts);
 
       // ...then establish the listeners for changes
       const scrolledPageOff = attachListeners({
@@ -220,6 +228,8 @@ export function ConnectionsObserverHOC<
       });
 
       if (scrolledPageOff) newPageListenerOffs.current.push(scrolledPageOff);
+
+      fetchingNewPage.current = false;
     },
     [
       childAdded,
@@ -239,26 +249,26 @@ export function ConnectionsObserverHOC<
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- New Page Determination --------------------------------------------------------------------------------------
-  const [peripharyMarker, setPeripharyMarker] = useState<string | number>();
-
   useEffect(() => {
-    if (managePagination?.buffer !== undefined) {
+    if (managePagination?.buffer !== undefined && !fetchedAll.current) {
       const periphery = dataList.slice(managePagination.buffer * -1);
       const peripheryObserved = periphery.some(([key]) => observedIds[key]);
 
       if (peripheryObserved) {
         const el = periphery[periphery.length - 1];
         const marker = sort.startsWith("created") ? el[0] : el[1];
-        setPeripharyMarker(marker);
+        setPeripheryMarker(marker);
       } else {
-        setPeripharyMarker(undefined);
+        setPeripheryMarker(undefined);
       }
     }
   }, [managePagination?.buffer, dataList, observedIds, sort]);
 
   useEffect(() => {
-    if (peripharyMarker) listenToNewPage(peripharyMarker);
-  }, [listenToNewPage, peripharyMarker]);
+    if (!fetchingNewPage.current && !fetchedAll.current && peripheryMarker) {
+      listenToNewPage(peripheryMarker);
+    }
+  }, [listenToNewPage, peripheryMarker]);
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Primary Hydration and Listeners -----------------------------------------------------------------------------
@@ -278,13 +288,13 @@ export function ConnectionsObserverHOC<
             amount,
             direction,
           }).then((newData) => {
+            const newDataArray = Object.entries(newData || {});
+
             const paginationOpts: CustomPaginationOpts = {};
 
             if (newData) {
               // ...set it...
               setData(newData);
-
-              const newDataArray = Object.entries(newData);
 
               const elIndex = side === "high" ? 0 : newDataArray.length - 1;
               const el = newDataArray[elIndex];
@@ -293,6 +303,7 @@ export function ConnectionsObserverHOC<
               paginationOpts.edge = { side, termination: { key: marker, version: "inclusive" } };
             }
 
+            if (newDataArray.length < amount) fetchedAll.current = true;
             const paginate = getPaginationOptions(sort, paginationOpts);
 
             // ...and then listen for any new data that comes in
@@ -308,8 +319,9 @@ export function ConnectionsObserverHOC<
             });
           });
         }
-        // (2) Otherwise just listen to all the data
       } else {
+        // (2) Otherwise just listen to all the data
+        fetchedAll.current = true;
         const paginate = getPaginationOptions(sort, {});
 
         primaryListenerOff = attachListeners({
@@ -317,7 +329,7 @@ export function ConnectionsObserverHOC<
           dataType,
           settings: versionSettings,
           paginate,
-          childAdded,
+          childAdded: childChanged,
           childChanged,
           childRemoved,
           skipChildAdded: false,

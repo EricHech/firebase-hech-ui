@@ -29,7 +29,7 @@ export const useGetListeners = (
 
         // Convert back to an object
         const next = entries.reduce((obj, [k, v]) => {
-          obj[k] = v;
+          obj[k] = v; // eslint-disable-line no-param-reassign
           return obj;
         }, {} as DataList[keyof SoilDatabase]);
 
