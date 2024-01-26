@@ -1,21 +1,18 @@
-import React, { FC, Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SoilDatabase, StatefulData, DataList } from "firebase-soil";
 import { getDataKeyValue, getOrderByWithLimit } from "firebase-soil/client";
 
+// Context
 import { useSoilContext } from "../../context";
+
+// Hooks
+import { useStaticCachedDataKeyValues } from "../../hooks";
 
 // Local
 import { useBasicIntersectionObserver } from "./useBasicIntersectionObserver";
-import { attachListeners, getDirection, getPaginationOptions, getPath } from "./utils";
-import type {
-  GroupingComponentProps,
-  ItemComponentProps,
-  ManagePagination,
-  ObservedDataProps,
-  Sort,
-  Version,
-} from "./types";
-import { useStaticCachedDataKeyValues } from "../../hooks";
+import { useGetListeners } from "./useGetListeners";
+import { attachListeners, getDirection, getOrderBy, getPaginationOptions, getPath, getSide } from "./utils";
+import type { ConnectionsObserverHOCProps, CustomPaginationOpts, ItemComponentProps, ObservedDataProps } from "./types";
 
 export type { ItemComponentProps };
 
@@ -86,41 +83,6 @@ export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<ke
   );
 }
 
-export type ConnectionsObserverHOCProps<
-  T2 extends keyof SoilDatabase,
-  T22 extends keyof SoilDatabase,
-  T222 extends keyof SoilDatabase
-> = Version<T2, T22, T222> & {
-  /** This is required to prevent it from initially fetching all of the data */
-  listItemMinHeight: string;
-  /** This is required to prevent it from initially fetching all of the data */
-  listItemMinWidth: string;
-  sort: Sort;
-  /** If nothing is passed in, it will fetch all of the keys by default. */
-  managePagination?: ManagePagination;
-  dataType: T22;
-  /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
-  memoizedCustomGet?: (key: string) => Promise<StatefulData<T22>>;
-  className?: string;
-  /**
-   * Indicates whether or not you want the card delay animation.
-   * Allows you to set `--gridCardAnimation` and `--gridCardDelay`.
-   */
-  animate?: boolean;
-  root?: Nullable<Element>;
-} & (
-    | {
-        GroupingComponent: FC<GroupingComponentProps>;
-        /** Method by which you want to section the list (ie. day, year, etc.) */
-        grouping: "day" | "minute";
-      }
-    | {
-        GroupingComponent?: undefined;
-        /** Method by which you want to section the list (ie. day, year, etc.) */
-        grouping?: undefined;
-      }
-  );
-
 /**
  * This component allows you to fetch a list of soil keys (by connection, ownership, or public lists)
  * and then hydrate the data for those keys only when those keys are scrolled into view. However, it
@@ -139,6 +101,7 @@ export function ConnectionsObserverHOC<
     listItemMinWidth,
     sort,
     managePagination,
+    ignoreNonStartingEdgeAdditions,
     dataType,
     memoizedCustomGet,
     className,
@@ -167,6 +130,10 @@ export function ConnectionsObserverHOC<
   );
   /* eslint-enable react/destructuring-assignment */
 
+  const direction = useMemo(() => getDirection(sort), [sort]);
+  const side = useMemo(() => getSide(sort), [sort]);
+  const orderBy = useMemo(() => getOrderBy(sort), [sort]);
+
   const { initiallyLoading, user } = useSoilContext();
 
   // ---- Observer ----------------------------------------------------------------------------------------------------
@@ -184,56 +151,60 @@ export function ConnectionsObserverHOC<
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Fetch Helpers -----------------------------------------------------------------------------------------------
-  const childChanged = useCallback(
-    (val: number, key: string) =>
-      setData((prev) => {
-        const next: DataList[keyof SoilDatabase] = { ...prev };
-        next[key] = val;
-        return next;
-      }),
-    []
-  );
-
-  const childRemoved = useCallback(
-    (key: string) =>
-      setData((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }),
-    []
-  );
+  const { childAdded, childChanged, childRemoved } = useGetListeners(orderBy, setData);
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- New Page Fetching -------------------------------------------------------------------------------------------
   const newPageListenerOffs = useRef<VoidFunction[]>([]);
 
   const listenToNewPage = useCallback(
-    async (start: string | number) => {
+    async (startPos: string | number) => {
       if (managePagination?.amount === undefined) throw Error("`managePagination?.amount` was `undefined`.");
       const { amount } = managePagination;
 
       const path = getPath(versionSettings, dataType, user?.uid);
       if (!path) throw Error("Unable to determine database path.");
 
-      const direction = getDirection(sort);
-
       // When fetching a new page, first get the initial page data...
-      const newData = await getOrderByWithLimit<DataList[T22]>(path, "orderByKey", {
+      const newData = await getOrderByWithLimit<DataList[T22]>(path, orderBy, {
         amount,
         direction,
-        exclusiveTermination: start,
+        termination: { key: startPos, version: "inclusive" },
       });
 
-      const newDataLength = Object.keys(newData || {}).length;
+      const newDataArray = Object.entries(newData || {});
+      const newDataLength = newDataArray.length;
       const empty = !newDataLength;
 
+      const paginationOpts: CustomPaginationOpts = {};
+
       if (!empty) {
-        setData((prev) => (direction === "limitToLast" ? { ...newData, ...prev } : { ...prev, ...newData }));
+        setData((prev) =>
+          direction === "limitToLast" //
+            ? { ...newData, ...prev }
+            : { ...prev, ...newData }
+        );
+      }
+
+      const startEl = newDataArray[0];
+      const endEl = newDataArray[newDataLength - 1];
+      const start = orderBy === "orderByKey" ? startEl[0] : startEl[1];
+      const end = orderBy === "orderByKey" ? endEl[0] : endEl[1];
+
+      // If a full page came back, set the listeners for that page...
+      if (newDataLength === amount) {
+        paginationOpts.between = { start, end, version: "inclusive" };
+      } else {
+        // ...otherwise, less than a full page came back, so you are at the end and should listen to the opposite edge now also
+        paginationOpts.edge = {
+          side: side === "high" ? "low" : "high",
+          termination: { key: side === "high" ? end : start, version: "inclusive" },
+        };
       }
 
       const paginate = getPaginationOptions(sort, {
-        pagination: { amount, exclusiveTermination: start },
+        // pagination: { amount, termination: { key: start, version: "inclusive" } },
+        between: { start: "", end: "", version: "inclusive" },
       });
 
       // ...then establish the listeners for changes
@@ -242,14 +213,28 @@ export function ConnectionsObserverHOC<
         dataType,
         settings: versionSettings,
         paginate,
+        childAdded,
         childChanged,
         childRemoved,
-        skipChildAdded: true,
+        skipChildAdded: Boolean(ignoreNonStartingEdgeAdditions),
       });
 
       if (scrolledPageOff) newPageListenerOffs.current.push(scrolledPageOff);
     },
-    [childChanged, childRemoved, dataType, managePagination, sort, user?.uid, versionSettings]
+    [
+      childAdded,
+      childChanged,
+      childRemoved,
+      dataType,
+      managePagination,
+      ignoreNonStartingEdgeAdditions,
+      sort,
+      direction,
+      side,
+      orderBy,
+      versionSettings,
+      user?.uid,
+    ]
   );
   // ------------------------------------------------------------------------------------------------------------------
 
@@ -269,7 +254,7 @@ export function ConnectionsObserverHOC<
         setPeripharyMarker(undefined);
       }
     }
-  }, [managePagination?.buffer, dataList, observedIds, managePagination, sort, listenToNewPage]);
+  }, [managePagination?.buffer, dataList, observedIds, sort]);
 
   useEffect(() => {
     if (peripharyMarker) listenToNewPage(peripharyMarker);
@@ -287,36 +272,40 @@ export function ConnectionsObserverHOC<
 
         if (path) {
           const { amount } = managePagination;
-          const direction = getDirection(sort);
 
           // ...get the initial chunk of data...
-          getOrderByWithLimit<DataList[T22]>(path, "orderByKey", {
+          getOrderByWithLimit<DataList[T22]>(path, orderBy, {
             amount,
             direction,
           }).then((newData) => {
+            const paginationOpts: CustomPaginationOpts = {};
+
             if (newData) {
               // ...set it...
               setData(newData);
 
               const newDataArray = Object.entries(newData);
-              const el = newDataArray[newDataArray.length - 1];
-              const marker = sort.startsWith("created") ? el[0] : el[1];
 
-              const paginate = getPaginationOptions(sort, {
-                exclusiveSide: { direction: "high", exclusiveTermination: marker },
-              });
+              const elIndex = side === "high" ? 0 : newDataArray.length - 1;
+              const el = newDataArray[elIndex];
+              const marker = orderBy === "orderByKey" ? el[0] : el[1];
 
-              // ...and then listen for any new data that comes in
-              primaryListenerOff = attachListeners({
-                userUid: user?.uid,
-                dataType,
-                settings: versionSettings,
-                paginate,
-                childChanged,
-                childRemoved,
-                skipChildAdded: false,
-              });
+              paginationOpts.edge = { side, termination: { key: marker, version: "inclusive" } };
             }
+
+            const paginate = getPaginationOptions(sort, paginationOpts);
+
+            // ...and then listen for any new data that comes in
+            primaryListenerOff = attachListeners({
+              userUid: user?.uid,
+              dataType,
+              settings: versionSettings,
+              paginate,
+              childAdded,
+              childChanged,
+              childRemoved,
+              skipChildAdded: false,
+            });
           });
         }
         // (2) Otherwise just listen to all the data
@@ -328,6 +317,7 @@ export function ConnectionsObserverHOC<
           dataType,
           settings: versionSettings,
           paginate,
+          childAdded,
           childChanged,
           childRemoved,
           skipChildAdded: false,
@@ -345,9 +335,12 @@ export function ConnectionsObserverHOC<
     user?.uid,
     dataType,
     sort,
-    managePagination?.amount,
+    direction,
+    side,
+    orderBy,
     versionSettings,
     managePagination,
+    childAdded,
     childChanged,
     childRemoved,
   ]);

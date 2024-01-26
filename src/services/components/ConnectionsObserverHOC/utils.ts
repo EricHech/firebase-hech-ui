@@ -1,32 +1,34 @@
 // Soil
+import { PATHS } from "firebase-soil/paths";
+import type { ListenerPaginationOptions, SoilDatabase } from "firebase-soil";
 import {
   onConnectionsDataListChildChanged,
   onUserDataTypeListChildChanged,
   onPublicDataTypeListChildChanged,
 } from "../../helpers";
-import { PATHS } from "firebase-soil/paths";
-import type { ListenerPaginationOptions, SoilDatabase } from "firebase-soil";
 
 // Local
 import type { CustomPaginationOpts, SettingsVersion, Sort } from "./types";
 
+/** `limitToLast` returns the high end of a list, while `limitToFirst` returns the low end */
 export const getDirection = (sort: Sort) => (sort.endsWith("newest") ? "limitToLast" : "limitToFirst");
+export const getSide = (sort: Sort) => (sort.endsWith("newest") ? "high" : "low");
+export const getOrderBy = (sort: Sort) => (sort.startsWith("created") ? "orderByKey" : "orderByValue");
 
 export const getPaginationOptions = (sort: Sort, opts: CustomPaginationOpts) => {
   const paginate: ListenerPaginationOptions = {};
-  if (sort.startsWith("created")) paginate.orderBy = "key";
-  else paginate.orderBy = "value";
+  paginate.orderBy = getOrderBy(sort);
 
   if (opts.pagination?.amount) {
     paginate.limit = {
       amount: opts.pagination.amount,
       direction: getDirection(sort),
-      exclusiveTermination: opts.pagination.exclusiveTermination,
+      termination: opts.pagination.termination,
     };
-  } else if (opts.exclusiveBetween) {
-    paginate.exclusiveBetween = { ...opts.exclusiveBetween };
-  } else if (opts.exclusiveSide) {
-    paginate.exclusiveSide = { ...opts.exclusiveSide };
+  } else if (opts.between) {
+    paginate.between = { ...opts.between };
+  } else if (opts.edge) {
+    paginate.edge = { ...opts.edge };
   }
 
   return paginate;
@@ -41,6 +43,7 @@ export const attachListeners = <
   dataType,
   settings,
   paginate,
+  childAdded,
   childChanged,
   childRemoved,
   skipChildAdded,
@@ -49,6 +52,7 @@ export const attachListeners = <
   dataType: T22;
   settings: SettingsVersion<T2, T22, T222>;
   paginate: ListenerPaginationOptions;
+  childAdded: (val: number, key: string) => void;
   childChanged: (val: number, key: string) => void;
   childRemoved: (key: string) => void;
   skipChildAdded: boolean;
@@ -62,7 +66,7 @@ export const attachListeners = <
       settings.connectionType || dataType,
       childChanged,
       childRemoved,
-      { paginate, skipChildAdded }
+      { paginate, skipChildAdded, childAdded }
     );
   } else if (settings.version === "userDataList" && userUid) {
     off = onUserDataTypeListChildChanged(
@@ -70,14 +74,14 @@ export const attachListeners = <
       dataType,
       childChanged,
       childRemoved,
-      { paginate, skipChildAdded }
+      { paginate, skipChildAdded, childAdded }
     );
   } else if (settings.version === "publicDataList") {
     off = onPublicDataTypeListChildChanged(
       dataType, //
       childChanged,
       childRemoved,
-      { paginate, skipChildAdded }
+      { paginate, skipChildAdded, childAdded }
     );
   }
 

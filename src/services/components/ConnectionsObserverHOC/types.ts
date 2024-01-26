@@ -8,19 +8,19 @@ export type Sort = "created oldest" | "created newest" | "updated oldest" | "upd
 
 export type CustomPaginationOpts =
   | {
-      exclusiveSide?: Mandate<ListenerPaginationOptions, "exclusiveSide">["exclusiveSide"];
-      exclusiveBetween?: undefined;
+      edge?: Mandate<ListenerPaginationOptions, "edge">["edge"];
+      between?: undefined;
       pagination?: undefined;
     }
   | {
-      exclusiveBetween?: Mandate<ListenerPaginationOptions, "exclusiveBetween">["exclusiveBetween"];
-      exclusiveSide?: undefined;
+      between?: Mandate<ListenerPaginationOptions, "between">["between"];
+      edge?: undefined;
       pagination?: undefined;
     }
   | {
-      pagination?: { amount: Maybe<number>; exclusiveTermination?: string | number };
-      exclusiveBetween?: undefined;
-      exclusiveSide?: undefined;
+      pagination?: Omit<Mandate<ListenerPaginationOptions, "limit">["limit"], "direction">;
+      between?: undefined;
+      edge?: undefined;
     };
 
 export type ManagePagination = {
@@ -113,3 +113,43 @@ export type SettingsVersion<
 > =
   | Omit<ConnectionVersion<T2, T22, T222>, "ItemComponent" | "EmptyComponent">
   | Omit<PublicOrUserListVersion<T22>, "ItemComponent" | "EmptyComponent">;
+
+export type ConnectionsObserverHOCProps<
+  T2 extends keyof SoilDatabase,
+  T22 extends keyof SoilDatabase,
+  T222 extends keyof SoilDatabase
+> = Version<T2, T22, T222> & {
+  /** This is required to prevent it from initially fetching all of the data */
+  listItemMinHeight: string;
+  /** This is required to prevent it from initially fetching all of the data */
+  listItemMinWidth: string;
+  sort: Sort;
+  /** If nothing is passed in, it will fetch all of the keys by default. */
+  managePagination?: ManagePagination;
+  /**
+   * If this is true, `onChildAdded` listeners will only be added to the first page.
+   * In some situations, such as with chat, it is unnecessary to have them elsewhere.
+   */
+  ignoreNonStartingEdgeAdditions?: boolean;
+  dataType: T22;
+  /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
+  memoizedCustomGet?: (key: string) => Promise<StatefulData<T22>>;
+  className?: string;
+  /**
+   * Indicates whether or not you want the card delay animation.
+   * Allows you to set `--gridCardAnimation` and `--gridCardDelay`.
+   */
+  animate?: boolean;
+  root?: Nullable<Element>;
+} & (
+    | {
+        GroupingComponent: FC<GroupingComponentProps>;
+        /** Method by which you want to section the list (ie. day, year, etc.) */
+        grouping: "day" | "minute";
+      }
+    | {
+        GroupingComponent?: undefined;
+        /** Method by which you want to section the list (ie. day, year, etc.) */
+        grouping?: undefined;
+      }
+  );
