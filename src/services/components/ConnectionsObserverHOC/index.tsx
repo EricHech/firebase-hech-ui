@@ -19,14 +19,15 @@ export type { ItemComponentProps };
 export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined>({
   animate,
   idx,
+  list,
   top,
   bottom,
   dataType,
   dataKey,
   parentDataType,
   parentDataKey,
-  observe,
   timestamp,
+  observe,
   observed,
   setCache,
   getCache,
@@ -78,6 +79,8 @@ export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<ke
         getCache={getCache}
         top={top}
         bottom={bottom}
+        idx={idx}
+        list={list}
       />
     </li>
   );
@@ -401,6 +404,7 @@ export function ConnectionsObserverHOC<
             <ObservedData
               animate={animate}
               idx={i}
+              list={dataList}
               top={i === 0}
               bottom={i === dataList.length - 1}
               memoizedCustomGet={memoizedCustomGet}
@@ -419,6 +423,7 @@ export function ConnectionsObserverHOC<
             <ObservedData
               animate={animate}
               idx={i}
+              list={dataList}
               top={i === 0}
               bottom={i === dataList.length - 1}
               memoizedCustomGet={memoizedCustomGet}

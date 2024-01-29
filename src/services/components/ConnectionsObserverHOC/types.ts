@@ -43,6 +43,8 @@ export type EmptyComponentProps<T22 extends keyof SoilDatabase, T2 extends Maybe
 export type ItemComponentProps<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined> = {
   top: boolean;
   bottom: boolean;
+  idx: number;
+  list: [string, number][];
   data: StatefulData<T22>;
   dataType: T22;
   dataKey: string;
@@ -63,6 +65,7 @@ export type ObservedDataProps<T22 extends keyof SoilDatabase, T2 extends Maybe<k
   /** Indicates whether or not you want the card delay animation */
   animate?: boolean;
   idx: number;
+  list: [string, number][];
   top: boolean;
   bottom: boolean;
   dataType: T22;
