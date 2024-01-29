@@ -14,6 +14,8 @@ export type DataListHookProps<T2> = {
   includeKeysArray?: boolean;
   /** Turn the realtime data fetching on and off. */
   enabled?: boolean;
+  /** Pass this in if you want to fetch the data before listening to be able to have certainty as to when hydration is complete */
+  poke?: boolean;
   /** If you pass in a `keyValidator` function, it will only fetch data for keys that return true. */
   keyValidator?: (key: string) => boolean;
 };
@@ -27,7 +29,7 @@ export const useUserData = <T2 extends keyof SoilDatabase>({
   includeKeysArray = false,
   enabled = true,
   keyValidator,
-}: DataListHookProps<T2>) => {
+}: Omit<DataListHookProps<T2>, "poke">) => {
   const [data, setDataState] = useState<Record<string, StatefulData<T2>>>({});
   const [fetched, setFetched] = useState(false);
 
