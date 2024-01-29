@@ -58,7 +58,7 @@ export const useConnections = <T2 extends keyof SoilDatabase, T3 extends keyof S
     }
 
     return undefined;
-  }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled]);
+  }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled, poke]);
 
   const dataArray = useMemo(() => (includeArray ? Object.keys(data || {}) : []), [includeArray, data]);
 
