@@ -1,6 +1,6 @@
 {
   "name": "firebase-soil-ui",
-  "version": "1.4.43",
+  "version": "1.4.45",
   "description": "The sister package of `firebase-soil`.",
   "files": [
     "dist"
