@@ -9,7 +9,7 @@ export const useConnectionsTypeConnections = <T2 extends keyof SoilDatabase, T3 
   parentKey,
   dataType,
   enabled = true,
-}: Pick<DataListHookProps<T2>, "dataType" | "enabled"> & {
+}: Pick<DataListHookProps<T2, boolean>, "dataType" | "enabled"> & {
   parentType: T3;
   parentKey: Maybe<string>;
 }) => {

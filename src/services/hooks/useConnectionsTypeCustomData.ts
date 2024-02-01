@@ -13,7 +13,7 @@ export const useConnectionsTypeCustomData = <
   dataType,
   enabled = true,
   memoizedCustomGet,
-}: Pick<DataListHookProps<T2>, "dataType" | "enabled"> & {
+}: Pick<DataListHookProps<T2, boolean>, "dataType" | "enabled"> & {
   parentType: T3;
   parentKey: Maybe<string>;
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */

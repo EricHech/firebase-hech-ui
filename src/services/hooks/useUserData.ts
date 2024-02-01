@@ -3,7 +3,7 @@ import { getDataKeyValue } from "firebase-soil/client";
 import type { SoilDatabase, StatefulData, Data } from "firebase-soil";
 import { onUserDataTypeListChildChanged } from "../helpers/onUserDataTypeListChildChanged";
 
-export type DataListHookProps<T2> = {
+export type DataListHookProps<T2, Poke extends boolean> = {
   uid: Maybe<string>;
   dataType: T2;
   /** Set this to true if you want to keep all the data up to date at all times. */
@@ -14,8 +14,8 @@ export type DataListHookProps<T2> = {
   includeKeysArray?: boolean;
   /** Turn the realtime data fetching on and off. */
   enabled?: boolean;
-  /** Pass this in if you want to fetch the data before listening to be able to have certainty as to when hydration is complete */
-  poke?: boolean;
+  /** Set this to true if you want to fetch the data before listening to be able to have certainty as to when hydration is complete */
+  poke: Poke;
   /** If you pass in a `keyValidator` function, it will only fetch data for keys that return true. */
   keyValidator?: (key: string) => boolean;
 };
@@ -29,7 +29,7 @@ export const useUserData = <T2 extends keyof SoilDatabase>({
   includeKeysArray = false,
   enabled = true,
   keyValidator,
-}: Omit<DataListHookProps<T2>, "poke">) => {
+}: Omit<DataListHookProps<T2, boolean>, "poke">) => {
   const [data, setDataState] = useState<Record<string, StatefulData<T2>>>({});
   const [fetched, setFetched] = useState(false);
 

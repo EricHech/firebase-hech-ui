@@ -12,7 +12,7 @@ export const usePublicData = <T2 extends keyof SoilDatabase>({
   includeKeysArray = false,
   enabled = true,
   keyValidator,
-}: Omit<DataListHookProps<T2>, "uid" | "poke">) => {
+}: Omit<DataListHookProps<T2, boolean>, "uid" | "poke">) => {
   const [data, setData] = useState<Record<string, StatefulData<T2>>>({});
 
   const getData = useCallback(

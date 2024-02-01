@@ -12,7 +12,7 @@ export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends
   includeArray = false,
   enabled = true,
   initialChildEqualToQuery,
-}: Pick<DataListHookProps<T2>, "dataType" | "includeArray" | "enabled"> & {
+}: Pick<DataListHookProps<T2, boolean>, "dataType" | "includeArray" | "enabled"> & {
   parentType: T3;
   parentKey: Maybe<string>;
   /** This reads from `/data`, so it will only work for admins. */

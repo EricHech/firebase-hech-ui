@@ -8,7 +8,7 @@ export const useOwners = <T2 extends keyof SoilDatabase, T3 extends keyof SoilDa
   dataKey,
   includeArray = false,
   enabled = true,
-}: Pick<DataListHookProps<T2>, "dataType" | "includeArray" | "enabled"> & {
+}: Pick<DataListHookProps<T2, boolean>, "dataType" | "includeArray" | "enabled"> & {
   dataKey: Maybe<string>;
 }) => {
   const [data, setData] = useState<Record<string, number>>({});

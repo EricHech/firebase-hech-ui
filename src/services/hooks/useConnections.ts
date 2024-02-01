@@ -4,18 +4,18 @@ import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataL
 import { DataListHookProps } from "./useUserData";
 import { getConnectionType } from "firebase-soil/client";
 
-export const useConnections = <T2 extends keyof SoilDatabase, T3 extends keyof SoilDatabase>({
+export const useConnections = <T2 extends keyof SoilDatabase, T3 extends keyof SoilDatabase, Poke extends boolean>({
   parentType,
   parentKey,
   dataType,
-  includeArray = false,
+  poke,
   enabled = true,
-  poke = false,
-}: Pick<DataListHookProps<T2>, "dataType" | "includeArray" | "enabled" | "poke"> & {
+  includeArray = false,
+}: Pick<DataListHookProps<T2, Poke>, "dataType" | "includeArray" | "enabled" | "poke"> & {
   parentType: T3;
   parentKey: Maybe<string>;
 }) => {
-  const [data, setData] = useState<Nullable<DataList[T2]>>();
+  const [data, setData] = useState<Maybe<Nullable<DataList[T2]>>>(poke ? undefined : {});
 
   const childChanged = useCallback(
     (timestamp: number, key: string) => setData((prev) => ({ ...prev, [key]: timestamp })),
@@ -62,5 +62,8 @@ export const useConnections = <T2 extends keyof SoilDatabase, T3 extends keyof S
 
   const dataArray = useMemo(() => (includeArray ? Object.keys(data || {}) : []), [includeArray, data]);
 
-  return { data, dataArray };
+  return {
+    data: data as Poke extends true ? Maybe<Nullable<DataList[T2]>> : DataList[T2],
+    dataArray,
+  };
 };
