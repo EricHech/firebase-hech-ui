@@ -2,7 +2,15 @@ import React, { useState, useEffect, useMemo, ReactNode, createContext, useCallb
 import type { FirebaseOptions } from "firebase/app";
 import type { EmulatorOptions, User } from "firebase-soil";
 import { parseDbKey, generateDbKey, PATHS } from "firebase-soil/paths";
-import { initializeFirebase, createData, get, getAdminValue, onUserValue, updateData } from "firebase-soil/client";
+import {
+  initializeFirebase,
+  createData,
+  get,
+  getAdminValue,
+  onUserValue,
+  updateData,
+  updateUser,
+} from "firebase-soil/client";
 import { useUserData } from "../hooks";
 import { useGetSafeContext } from "./useGetSafeContext";
 
@@ -39,6 +47,7 @@ export const useSoilContext = () => {
 type TProps = {
   children: ReactNode;
   firebaseOptions: FirebaseOptions;
+  requireEmailVerification?: boolean;
   anonymousSignIn?: boolean;
   isNativePlatform?: boolean;
   emulatorOptions?: EmulatorOptions;
@@ -47,6 +56,7 @@ type TProps = {
 export const SoilContextProviderComponent = ({
   children,
   firebaseOptions,
+  requireEmailVerification = false,
   anonymousSignIn = false,
   isNativePlatform = false,
   emulatorOptions,
@@ -57,36 +67,47 @@ export const SoilContextProviderComponent = ({
   const [initiallyLoading, setInitiallyLoading] = useState(true);
 
   useEffect(() => {
-    let offs: Function[] = [];
+    let offUser: Maybe<VoidFunction>;
 
     initializeFirebase(
       firebaseOptions,
-      (u) => {
+      async (u) => {
         if (u) {
-          const offUser = onUserValue(u.uid, (usr) => {
-            setUser(usr);
-            getAdminValue(u.uid)
-              .then(setIsAdmin)
-              .catch(() => setIsAdmin(false))
-              .finally(() => setInitiallyLoading(false));
+          offUser?.();
+
+          // Always keep the Soil user synced with Firebase (which could be getting updates via their Google account, verification status, etc.)
+          await updateUser(u.uid, {
+            email: u.email as unknown as undefined,
+            phoneNumber: u.phoneNumber as unknown as undefined,
+            emailVerified: u.emailVerified as unknown as undefined,
+            photoURL: u.photoURL as unknown as undefined,
           });
 
-          offs = [offUser];
+          offUser = onUserValue(u.uid, async (usr) => {
+            if (!requireEmailVerification || user?.emailVerified) {
+              setUser(usr);
+              getAdminValue(u.uid)
+                .then(setIsAdmin)
+                .catch(() => setIsAdmin(false))
+                .finally(() => setInitiallyLoading(false));
+            }
+          });
         } else {
-          offs.forEach((f) => f());
-          setInitiallyLoading(false);
+          offUser?.();
           setUser(null);
+          setIsAdmin(false);
+          setInitiallyLoading(false);
         }
       },
       { anonymousSignIn, isNativePlatform, emulatorOptions }
     );
 
     return () => {
-      offs.forEach((f) => f());
+      offUser?.();
       setUser(null);
       setIsAdmin(false);
     };
-  }, [firebaseOptions, anonymousSignIn, isNativePlatform]);
+  }, [firebaseOptions, requireEmailVerification, anonymousSignIn, isNativePlatform]);
 
   const { data: settingsData, fetched: didFetchSettings } = useUserData({
     uid: user?.uid,
