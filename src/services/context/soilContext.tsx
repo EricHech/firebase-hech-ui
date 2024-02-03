@@ -1,18 +1,41 @@
 import React, { useState, useEffect, useMemo, ReactNode, createContext, useCallback } from "react";
 import type { FirebaseOptions } from "firebase/app";
 import type { EmulatorOptions, User } from "firebase-soil";
-import { parseDbKey, generateDbKey, PATHS } from "firebase-soil/paths";
 import {
   initializeFirebase,
-  createData,
-  get,
   getAdminValue,
   onUserValue,
-  updateData,
   updateUser,
+  getUnverifiedUser,
+  createUser,
+  remove,
 } from "firebase-soil/client";
-import { useUserData } from "../hooks";
 import { useGetSafeContext } from "./useGetSafeContext";
+import { User as FirebaseUser } from "firebase/auth";
+import { PATHS } from "firebase-soil/paths";
+
+const getFirebaseUserSyncUpdate = (firebaseUser: FirebaseUser, user: User) => {
+  let updateNeeded = false;
+  const userUpdate: Partial<Mutable<User>> = {};
+  if (firebaseUser.email && firebaseUser.email !== user.email) {
+    updateNeeded = true;
+    userUpdate.email = firebaseUser.email;
+  }
+  if (firebaseUser.emailVerified && firebaseUser.emailVerified !== user.emailVerified) {
+    updateNeeded = true;
+    userUpdate.emailVerified = firebaseUser.emailVerified;
+  }
+  if (firebaseUser.phoneNumber && firebaseUser.phoneNumber !== user.phoneNumber) {
+    updateNeeded = true;
+    userUpdate.phoneNumber = firebaseUser.phoneNumber;
+  }
+  if (firebaseUser.photoURL && firebaseUser.photoURL !== user.photoURL) {
+    updateNeeded = true;
+    userUpdate.photoURL = firebaseUser.photoURL;
+  }
+
+  return { userUpdate, updateNeeded };
+};
 
 /*
  ██████╗ ██████╗ ███╗   ██╗████████╗███████╗██╗  ██╗████████╗
@@ -25,13 +48,8 @@ import { useGetSafeContext } from "./useGetSafeContext";
 type BaseSoilContext = {
   initiallyLoading: boolean;
   loggedIn: boolean;
-  usingAsUser: boolean;
   isAdmin: Nullable<boolean>;
   user: Maybe<Nullable<Mandate<User, "uid">>>;
-  didFetchSettings: boolean;
-  settings: Record<string, string>;
-  setSetting: (dataKey: string, value: string) => void;
-  setUseAsUser: (uid: string) => void;
 };
 
 const SoilContext = createContext<Maybe<BaseSoilContext>>(undefined);
@@ -47,22 +65,24 @@ export const useSoilContext = () => {
 type TProps = {
   children: ReactNode;
   firebaseOptions: FirebaseOptions;
+  /** Used in sync with `firebase-soil`'s `applyVerificationCode` function */
   requireEmailVerification?: boolean;
   anonymousSignIn?: boolean;
   isNativePlatform?: boolean;
   emulatorOptions?: EmulatorOptions;
 };
 
-export const SoilContextProviderComponent = ({
+export function SoilContextProviderComponent({
   children,
   firebaseOptions,
   requireEmailVerification = false,
   anonymousSignIn = false,
   isNativePlatform = false,
   emulatorOptions,
-}: TProps) => {
-  const [user, setUser] = useState<Nullable<Mandate<User, "uid">>>();
-  const [asUser, setAsUser] = useState<Nullable<Mandate<User, "uid">>>();
+}: TProps) {
+  const [firebaseUserState, setFirebaseUserState] = useState<Nullable<FirebaseUser>>();
+
+  const [soilUserState, setSoilUserState] = useState<Nullable<Mandate<User, "uid">>>();
   const [isAdmin, setIsAdmin] = useState<Nullable<boolean>>(false);
   const [initiallyLoading, setInitiallyLoading] = useState(true);
 
@@ -71,22 +91,22 @@ export const SoilContextProviderComponent = ({
 
     initializeFirebase(
       firebaseOptions,
-      async (u) => {
-        if (u) {
+      async (firebaseUser) => {
+        setFirebaseUserState(firebaseUser);
+
+        if (firebaseUser) {
           offUser?.();
 
-          // Always keep the Soil user synced with Firebase (which could be getting updates via their Google account, verification status, etc.)
-          await updateUser(u.uid, {
-            email: u.email as unknown as undefined,
-            phoneNumber: u.phoneNumber as unknown as undefined,
-            emailVerified: u.emailVerified as unknown as undefined,
-            photoURL: u.photoURL as unknown as undefined,
-          });
+          offUser = onUserValue(firebaseUser.uid, async (soilUser) => {
+            if (soilUser === null) {
+              setSoilUserState(null);
+            } else if (!requireEmailVerification || soilUser?.emailVerified) {
+              // Always keep the Soil user synced with Firebase (which could be getting updates via their Google account, verification status, etc.)
+              const { userUpdate, updateNeeded } = getFirebaseUserSyncUpdate(firebaseUser, soilUser);
+              if (updateNeeded) await updateUser(firebaseUser.uid, userUpdate);
 
-          offUser = onUserValue(u.uid, async (usr) => {
-            if (!requireEmailVerification || user?.emailVerified) {
-              setUser(usr);
-              getAdminValue(u.uid)
+              setSoilUserState(soilUser);
+              await getAdminValue(firebaseUser.uid)
                 .then(setIsAdmin)
                 .catch(() => setIsAdmin(false))
                 .finally(() => setInitiallyLoading(false));
@@ -94,7 +114,7 @@ export const SoilContextProviderComponent = ({
           });
         } else {
           offUser?.();
-          setUser(null);
+          setSoilUserState(null);
           setIsAdmin(false);
           setInitiallyLoading(false);
         }
@@ -104,86 +124,32 @@ export const SoilContextProviderComponent = ({
 
     return () => {
       offUser?.();
-      setUser(null);
+      setSoilUserState(null);
       setIsAdmin(false);
     };
-  }, [firebaseOptions, requireEmailVerification, anonymousSignIn, isNativePlatform]);
+  }, [firebaseOptions, requireEmailVerification, anonymousSignIn, isNativePlatform, emulatorOptions]);
 
-  const { data: settingsData, fetched: didFetchSettings } = useUserData({
-    uid: user?.uid,
-    dataType: "soilUserSettings",
-    fetchData: true,
-  });
-  const settings = useMemo(
-    () =>
-      Object.entries(settingsData).reduce((prev, [key, setting]) => {
-        const parsedKey = parseDbKey(key)[1];
-        if (setting && parsedKey) prev[parsedKey] = setting.value;
-
-        return prev;
-      }, {} as Record<string, string>),
-    [settingsData]
-  );
-  const setSetting = useCallback(
-    async (settingsKey: string, value: string) => {
-      if (user?.uid) {
-        const dataKey = generateDbKey(user.uid, settingsKey);
-        if (settingsData[dataKey]) {
-          return updateData({
-            dataType: "soilUserSettings",
-            dataKey,
-            data: { value },
-            owners: [user.uid],
-            publicAccess: false,
-            makeGetRequests: true,
-          });
+  const userIsNull = soilUserState === null;
+  useEffect(() => {
+    if (firebaseUserState?.emailVerified && userIsNull) {
+      getUnverifiedUser(firebaseUserState.uid).then(async (unverifiedUser) => {
+        if (unverifiedUser) {
+          await createUser({ ...unverifiedUser, createUnverifiedUser: false });
+          await remove(PATHS.unverifiedUsers(firebaseUserState.uid));
         }
-
-        return createData({
-          dataType: "soilUserSettings",
-          dataKey,
-          data: { value },
-          owners: [user.uid],
-          publicAccess: false,
-        });
-      }
-
-      return undefined;
-    },
-    [settingsData, user?.uid]
-  );
-
-  const setUseAsUser = useCallback(
-    async (uid?: string) => {
-      if (isAdmin) {
-        if (uid) {
-          const u = await get<User>(PATHS.user(uid));
-
-          if (u) {
-            setAsUser(u);
-          }
-        } else {
-          setAsUser(undefined);
-        }
-      }
-    },
-    [isAdmin]
-  );
+      });
+    }
+  }, [firebaseUserState?.emailVerified, firebaseUserState?.uid, userIsNull]);
 
   const ctx = useMemo(
     () => ({
       initiallyLoading,
-      loggedIn: Boolean(user),
-      user: asUser || user,
-      usingAsUser: Boolean(asUser),
+      loggedIn: Boolean(soilUserState),
+      user: soilUserState,
       isAdmin,
-      didFetchSettings,
-      settings,
-      setSetting,
-      setUseAsUser,
     }),
-    [initiallyLoading, user, asUser, isAdmin, didFetchSettings, settings, setSetting, setUseAsUser]
+    [initiallyLoading, soilUserState, isAdmin]
   );
 
   return <SoilContext.Provider value={ctx}>{children}</SoilContext.Provider>;
-};
+}

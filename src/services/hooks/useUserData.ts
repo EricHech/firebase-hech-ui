@@ -30,16 +30,7 @@ export const useUserData = <T2 extends keyof SoilDatabase>({
   enabled = true,
   keyValidator,
 }: Omit<DataListHookProps<T2, boolean>, "poke">) => {
-  const [data, setDataState] = useState<Record<string, StatefulData<T2>>>({});
-  const [fetched, setFetched] = useState(false);
-
-  const setData = useCallback<typeof setDataState>(
-    (d) => {
-      setFetched(true);
-      return setDataState(d);
-    },
-    [setDataState]
-  );
+  const [data, setData] = useState<Record<string, StatefulData<T2>>>({});
 
   const getData = useCallback(
     (key: string) => {
@@ -79,8 +70,7 @@ export const useUserData = <T2 extends keyof SoilDatabase>({
 
     return () => {
       off?.();
-      setFetched(false);
-      setDataState({});
+      setData({});
     };
   }, [uid, childChanged, childRemoved, dataType, enabled, setData]);
 
@@ -101,5 +91,5 @@ export const useUserData = <T2 extends keyof SoilDatabase>({
   /** Array of keys. This is only populated if `includeKeysArray` is set to true. */
   const keysArray = useMemo(() => (includeKeysArray ? Object.keys(data) : []), [data, includeKeysArray]);
 
-  return { fetched, data, dataArray, keysArray, getData, getDataOrCache };
+  return { data, dataArray, keysArray, getData, getDataOrCache };
 };
