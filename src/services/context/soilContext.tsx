@@ -65,7 +65,11 @@ export const useSoilContext = () => {
 type TProps = {
   children: ReactNode;
   firebaseOptions: FirebaseOptions;
-  /** Used in sync with `firebase-soil`'s `applyVerificationCode` function */
+  /**
+   * This creates a temporary user that gets confirmed when `applyVerificationCode` is called from the client.
+   * If using this feature, you should create a cron job that queries `unverifiedUsers/{uid}/createdAt`
+   * to clear auth accounts and unverified users older than a certain time period (ie. 24 hours).
+   */
   requireEmailVerification?: boolean;
   anonymousSignIn?: boolean;
   isNativePlatform?: boolean;
