@@ -98,10 +98,14 @@ export function SoilContextProviderComponent({
     initializeFirebase(
       firebaseOptions,
       async (firebaseUser) => {
+        // This is needed because Firebase caches the user's info and the `emailVerified` flag might not be updated in real-time after the user clicks the verification link in their email
+        await firebaseUser?.reload();
+
         setFirebaseUserState(firebaseUser);
-        if (firebaseUser) setAwaitingVerification(!firebaseUser.emailVerified);
 
         if (firebaseUser) {
+          setAwaitingVerification(!firebaseUser.emailVerified);
+
           offUser?.();
 
           offUser = onUserValue(firebaseUser.uid, async (soilUser) => {
