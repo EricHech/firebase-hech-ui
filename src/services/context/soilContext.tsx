@@ -107,6 +107,8 @@ export function SoilContextProviderComponent({
           offUser = onUserValue(firebaseUser.uid, async (soilUser) => {
             if (soilUser === null) {
               setSoilUserState(null);
+              setInitiallyLoading(false);
+              // If the `soilUser` is not null, then the following should be true:
             } else if (!requireEmailVerification || soilUser?.emailVerified) {
               // Always keep the Soil user synced with Firebase (which could be getting updates via their Google account, verification status, etc.)
               const { userUpdate, updateNeeded } = getFirebaseUserSyncUpdate(firebaseUser, soilUser);
