@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, ReactNode, createContext, useCallback } from "react";
 import type { FirebaseOptions } from "firebase/app";
-import type { EmulatorOptions, User } from "firebase-soil";
+
+import { User as FirebaseUser } from "firebase/auth";
+import { PATHS } from "firebase-soil/paths";
 import {
   initializeFirebase,
   getAdminValue,
@@ -10,11 +12,14 @@ import {
   createUser,
   remove,
 } from "firebase-soil/client";
-import { useGetSafeContext } from "./useGetSafeContext";
-import { User as FirebaseUser } from "firebase/auth";
-import { PATHS } from "firebase-soil/paths";
+import type { EmulatorOptions, User } from "firebase-soil";
 
-const getFirebaseUserSyncUpdate = (firebaseUser: FirebaseUser, user: User) => {
+import { useGetSafeContext } from "./useGetSafeContext";
+
+const getFirebaseUserSyncUpdate = (
+  firebaseUser: Pick<FirebaseUser, "uid" | "email" | "emailVerified" | "phoneNumber" | "photoURL">,
+  user: User
+) => {
   let updateNeeded = false;
   const userUpdate: Partial<Mutable<User>> = {};
   if (firebaseUser.email && firebaseUser.email !== user.email) {
@@ -86,73 +91,101 @@ export function SoilContextProviderComponent({
   emulatorOptions,
 }: TProps) {
   const [firebaseUserState, setFirebaseUserState] = useState<Nullable<FirebaseUser>>();
+  const {
+    uid: fbUserStateUid,
+    email: fbUserStateEmail,
+    emailVerified: fbUserStateEmailVerified,
+    phoneNumber: fbUserStatePhoneNumber,
+    photoURL: fbUserStatePhotoURL,
+  } = firebaseUserState || {};
+  const fbUserIsNull = firebaseUserState === null;
+
   const [awaitingVerification, setAwaitingVerification] = useState<boolean>();
 
   const [soilUserState, setSoilUserState] = useState<Nullable<Mandate<User, "uid">>>();
+  const soilUserIsNull = soilUserState === null;
+
   const [isAdmin, setIsAdmin] = useState<Nullable<boolean>>(false);
   const [initiallyLoading, setInitiallyLoading] = useState(true);
 
   useEffect(() => {
-    let offUser: Maybe<VoidFunction>;
+    let reloadCancelToken: NodeJS.Timeout;
 
+    if (firebaseUserState && !firebaseUserState.emailVerified) {
+      // This is needed because Firebase caches the user's info. We need to continually reload to listen for `emailVerified === true`.
+      reloadCancelToken = setInterval(() => firebaseUserState?.reload(), 1_000);
+    }
+
+    return () => clearInterval(reloadCancelToken);
+  }, [firebaseUserState?.emailVerified]);
+
+  useEffect(() => {
     initializeFirebase(
       firebaseOptions,
       async (firebaseUser) => {
-        // This is needed because Firebase caches the user's info and the `emailVerified` flag might not be updated in real-time after the user clicks the verification link in their email
-        await firebaseUser?.reload();
-
         setFirebaseUserState(firebaseUser);
-
-        if (firebaseUser) {
-          setAwaitingVerification(!firebaseUser.emailVerified);
-
-          offUser?.();
-
-          offUser = onUserValue(firebaseUser.uid, async (soilUser) => {
-            if (soilUser === null) {
-              setSoilUserState(null);
-              // If the `soilUser` is not null, then the following should be true:
-            } else if (!requireEmailVerification || soilUser?.emailVerified) {
-              // Always keep the Soil user synced with Firebase (which could be getting updates via their Google account, verification status, etc.)
-              const { userUpdate, updateNeeded } = getFirebaseUserSyncUpdate(firebaseUser, soilUser);
-              if (updateNeeded) await updateUser(firebaseUser.uid, userUpdate);
-
-              setSoilUserState(soilUser);
-              await getAdminValue(firebaseUser.uid)
-                .then(setIsAdmin)
-                .catch(() => setIsAdmin(false));
-            }
-
-            setInitiallyLoading(false);
-          });
-        } else {
-          offUser?.();
-          setSoilUserState(null);
-          setIsAdmin(false);
-          setInitiallyLoading(false);
-        }
+        if (firebaseUser) setAwaitingVerification(!firebaseUser.emailVerified);
       },
       { anonymousSignIn, isNativePlatform, emulatorOptions }
     );
+  }, [firebaseOptions, anonymousSignIn, isNativePlatform, emulatorOptions]);
 
-    return () => {
-      offUser?.();
+  useEffect(() => {
+    let offUser: Maybe<VoidFunction>;
+
+    if (fbUserStateUid) {
+      offUser = onUserValue(fbUserStateUid, async (soilUser) => {
+        if (soilUser === null) {
+          setSoilUserState(null);
+          // If the `soilUser` is not null, then the following should be true:
+        } else if (!requireEmailVerification || fbUserStateEmailVerified) {
+          // Always keep the Soil user synced with Firebase (which could be getting updates via their Google account, verification status, etc.)
+          const { userUpdate, updateNeeded } = getFirebaseUserSyncUpdate(
+            {
+              uid: fbUserStateUid,
+              email: fbUserStateEmail || null,
+              emailVerified: fbUserStateEmailVerified || false,
+              phoneNumber: fbUserStatePhoneNumber || null,
+              photoURL: fbUserStatePhotoURL || null,
+            },
+            soilUser
+          );
+          if (updateNeeded) await updateUser(fbUserStateUid, userUpdate);
+
+          setSoilUserState(soilUser);
+          await getAdminValue(fbUserStateUid)
+            .then(setIsAdmin)
+            .catch(() => setIsAdmin(false));
+        }
+
+        setInitiallyLoading(false);
+      });
+    } else if (fbUserIsNull) {
       setSoilUserState(null);
       setIsAdmin(false);
-    };
-  }, [firebaseOptions, requireEmailVerification, anonymousSignIn, isNativePlatform, emulatorOptions]);
+      setInitiallyLoading(false);
+    }
 
-  const userIsNull = soilUserState === null;
+    return () => offUser?.();
+  }, [
+    fbUserIsNull,
+    fbUserStateUid,
+    fbUserStateEmail,
+    fbUserStateEmailVerified,
+    fbUserStatePhoneNumber,
+    fbUserStatePhotoURL,
+  ]);
+
   useEffect(() => {
-    if (firebaseUserState?.emailVerified && userIsNull) {
-      getUnverifiedUser(firebaseUserState.uid).then(async (unverifiedUser) => {
+    if (fbUserStateUid && fbUserStateEmailVerified && soilUserIsNull) {
+      getUnverifiedUser(fbUserStateUid).then(async (unverifiedUser) => {
         if (unverifiedUser) {
           await createUser({ ...unverifiedUser, createUnverifiedUser: false });
-          await remove(PATHS.unverifiedUsers(firebaseUserState.uid));
+          await remove(PATHS.unverifiedUsers(fbUserStateUid));
         }
       });
     }
-  }, [firebaseUserState?.emailVerified, firebaseUserState?.uid, userIsNull]);
+  }, [fbUserStateEmailVerified, fbUserStateUid, soilUserIsNull]);
 
   const ctx = useMemo(
     () => ({
