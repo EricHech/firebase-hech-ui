@@ -49,6 +49,7 @@ type BaseSoilContext = {
   initiallyLoading: boolean;
   loggedIn: boolean;
   isAdmin: Nullable<boolean>;
+  awaitingVerification: Maybe<boolean>;
   user: Maybe<Nullable<Mandate<User, "uid">>>;
 };
 
@@ -85,6 +86,7 @@ export function SoilContextProviderComponent({
   emulatorOptions,
 }: TProps) {
   const [firebaseUserState, setFirebaseUserState] = useState<Nullable<FirebaseUser>>();
+  const [awaitingVerification, setAwaitingVerification] = useState<boolean>();
 
   const [soilUserState, setSoilUserState] = useState<Nullable<Mandate<User, "uid">>>();
   const [isAdmin, setIsAdmin] = useState<Nullable<boolean>>(false);
@@ -97,6 +99,7 @@ export function SoilContextProviderComponent({
       firebaseOptions,
       async (firebaseUser) => {
         setFirebaseUserState(firebaseUser);
+        if (firebaseUser) setAwaitingVerification(!firebaseUser.emailVerified);
 
         if (firebaseUser) {
           offUser?.();
@@ -149,10 +152,11 @@ export function SoilContextProviderComponent({
     () => ({
       initiallyLoading,
       loggedIn: Boolean(soilUserState),
-      user: soilUserState,
       isAdmin,
+      awaitingVerification,
+      user: soilUserState,
     }),
-    [initiallyLoading, soilUserState, isAdmin]
+    [initiallyLoading, soilUserState, isAdmin, awaitingVerification]
   );
 
   return <SoilContext.Provider value={ctx}>{children}</SoilContext.Provider>;
