@@ -107,7 +107,6 @@ export function SoilContextProviderComponent({
           offUser = onUserValue(firebaseUser.uid, async (soilUser) => {
             if (soilUser === null) {
               setSoilUserState(null);
-              setInitiallyLoading(false);
               // If the `soilUser` is not null, then the following should be true:
             } else if (!requireEmailVerification || soilUser?.emailVerified) {
               // Always keep the Soil user synced with Firebase (which could be getting updates via their Google account, verification status, etc.)
@@ -117,9 +116,10 @@ export function SoilContextProviderComponent({
               setSoilUserState(soilUser);
               await getAdminValue(firebaseUser.uid)
                 .then(setIsAdmin)
-                .catch(() => setIsAdmin(false))
-                .finally(() => setInitiallyLoading(false));
+                .catch(() => setIsAdmin(false));
             }
+
+            setInitiallyLoading(false);
           });
         } else {
           offUser?.();
