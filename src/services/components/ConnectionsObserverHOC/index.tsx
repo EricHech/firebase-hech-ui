@@ -81,6 +81,7 @@ export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<ke
         bottom={bottom}
         idx={idx}
         list={list}
+        timestamp={timestamp}
       />
     </li>
   );

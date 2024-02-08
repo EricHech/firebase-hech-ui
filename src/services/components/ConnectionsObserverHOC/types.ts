@@ -45,6 +45,7 @@ export type ItemComponentProps<T22 extends keyof SoilDatabase, T2 extends Maybe<
   bottom: boolean;
   idx: number;
   list: [string, number][];
+  timestamp: number;
   data: StatefulData<T22>;
   dataType: T22;
   dataKey: string;
