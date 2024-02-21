@@ -10,5 +10,4 @@ export * from "./useIsOwner";
 export * from "./useOwners";
 export * from "./useDataKeyValue";
 export * from "./usePageTracking";
-export * from "./useDataType";
 export * from "./usePhoneAuth";
