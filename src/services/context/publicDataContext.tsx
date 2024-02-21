@@ -1,16 +1,16 @@
-import React, { useEffect, useMemo, ReactNode, createContext, useCallback, memo, useState } from "react";
+import React, { useEffect, useMemo, ReactNode, createContext, memo, useState, SetStateAction, Dispatch } from "react";
 import type { Data, SoilDatabase, StatefulData } from "firebase-soil";
 import { usePublicData } from "../hooks";
 import { useSoilContext } from "./soilContext";
 import { useGetSafeContext } from "./useGetSafeContext";
 
 type BasePublicDataContext<T2 extends keyof SoilDatabase> = {
-  data: Record<string, StatefulData<T2>>;
+  data: Maybe<Nullable<Record<string, StatefulData<T2>>>>;
   dataArray: Mandate<Data<T2>, "key">[];
-  turnDataOn: VoidFunction;
+  setShouldPoke: Dispatch<SetStateAction<{ decided: boolean; decision: boolean }>>;
 };
 
-export const createPublicDataContext = <T2 extends keyof SoilDatabase>(dataType: T2) => {
+export const createPublicDataContext = <T2 extends keyof SoilDatabase>(dataType: T2, poke: boolean) => {
   const PublicDataContext = createContext<Maybe<BasePublicDataContext<T2>>>(undefined);
 
   const usePublicDataFromContext = () => {
@@ -18,11 +18,11 @@ export const createPublicDataContext = <T2 extends keyof SoilDatabase>(dataType:
 
     if (!useContextResult) throw new Error(`You must wrap your component in an instance of the ${dataType} context`);
 
-    const { data, dataArray, turnDataOn } = useContextResult;
+    const { data, dataArray, setShouldPoke } = useContextResult;
 
     useEffect(() => {
-      turnDataOn();
-    }, [turnDataOn]);
+      setShouldPoke({ decided: true, decision: poke });
+    }, [setShouldPoke, poke]);
 
     return { data, dataArray };
   };
@@ -33,17 +33,17 @@ export const createPublicDataContext = <T2 extends keyof SoilDatabase>(dataType:
     children: ReactNode;
   }) {
     const { initiallyLoading } = useSoilContext();
-    const [publicDataOn, setPublicDataOn] = useState(false);
-    const turnDataOn = useCallback(() => setPublicDataOn(true), []);
 
-    const { data, dataArray } = usePublicData<T2>({
+    const [poke, setShouldPoke] = useState({ decided: false, decision: false });
+
+    const { data, dataArray } = usePublicData<T2, boolean>({
       dataType,
-      fetchData: true,
       includeArray: true,
-      enabled: !initiallyLoading && publicDataOn,
+      enabled: Boolean(!initiallyLoading && poke.decided),
+      poke: poke.decision,
     });
 
-    const ctx = useMemo(() => ({ data, dataArray, turnDataOn }), [data, dataArray, turnDataOn]);
+    const ctx = useMemo(() => ({ data, dataArray, setShouldPoke }), [data, dataArray, setShouldPoke]);
 
     return <PublicDataContext.Provider value={ctx}>{children}</PublicDataContext.Provider>;
   });

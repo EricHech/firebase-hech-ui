@@ -9,15 +9,14 @@ import React, {
   PropsWithChildren,
 } from "react";
 import type { SoilDatabase, Data } from "firebase-soil";
-import { GetChildrenEqualTo } from "firebase-soil/client";
 import { useConnectionsTypeData } from "../hooks";
 import { useGetSafeContext } from "./useGetSafeContext";
 
-type BaseConnectionsTypeDataContext<T2 extends keyof SoilDatabase> = {
-  data: Nullable<Record<string, Data<T2>>>;
-  dataArray: Mandate<Data<T2>, "key">[];
+type BaseConnectionsTypeDataContext<T22 extends keyof SoilDatabase> = {
+  data: Maybe<Nullable<Record<string, Data<T22>>>>;
+  dataArray: Mandate<Data<T22>, "key">[];
   setParentKey: Dispatch<SetStateAction<Maybe<string>>>;
-  setInitialChildEqualToQuery: Dispatch<SetStateAction<Maybe<GetChildrenEqualTo>>>;
+  setShouldPoke: Dispatch<SetStateAction<{ decided: boolean; decision: boolean }>>;
 };
 
 export const createConnectionsTypeDataContext = <T2 extends keyof SoilDatabase, T22 extends keyof SoilDatabase>(
@@ -26,22 +25,20 @@ export const createConnectionsTypeDataContext = <T2 extends keyof SoilDatabase, 
 ) => {
   const ConnectionsTypeDataContext = createContext<Maybe<BaseConnectionsTypeDataContext<T22>>>(undefined);
 
-  const useConnectionsTypeDataContext = (dataKey: string, initialChildEqualTo?: GetChildrenEqualTo) => {
+  const useConnectionsTypeDataContext = ({ dataKey, poke }: { dataKey: string; poke: boolean }) => {
     const useContextResult = useGetSafeContext(ConnectionsTypeDataContext);
 
     if (!useContextResult) throw new Error(`You must wrap your component in an instance of the ${dataType} context`);
 
-    const { data, dataArray, setParentKey, setInitialChildEqualToQuery } = useContextResult;
+    const { data, dataArray, setParentKey, setShouldPoke } = useContextResult;
 
     useEffect(() => {
       setParentKey(dataKey);
     }, [setParentKey, dataKey]);
 
     useEffect(() => {
-      if (initialChildEqualTo?.path) {
-        setInitialChildEqualToQuery({ path: initialChildEqualTo.path, val: initialChildEqualTo.val });
-      }
-    }, [setInitialChildEqualToQuery, initialChildEqualTo?.path, initialChildEqualTo?.val]);
+      setShouldPoke({ decided: true, decision: poke });
+    }, [setShouldPoke, poke]);
 
     return { data, dataArray };
   };
@@ -50,21 +47,18 @@ export const createConnectionsTypeDataContext = <T2 extends keyof SoilDatabase, 
     children,
   }: PropsWithChildren<{}>) {
     const [parentKey, setParentKey] = useState<string>();
-    const [initialChildEqualToQuery, setInitialChildEqualToQuery] = useState<GetChildrenEqualTo>();
+    const [poke, setShouldPoke] = useState({ decided: false, decision: false });
 
     const { data, dataArray } = useConnectionsTypeData({
       parentType,
       parentKey,
       dataType,
       includeArray: true,
-      enabled: Boolean(parentKey),
-      initialChildEqualToQuery,
+      enabled: Boolean(parentKey && poke.decided),
+      poke: poke.decision,
     });
 
-    const ctx = useMemo(
-      () => ({ data, dataArray, setParentKey, setInitialChildEqualToQuery }),
-      [data, dataArray, setParentKey, setInitialChildEqualToQuery]
-    );
+    const ctx = useMemo(() => ({ data, dataArray, setParentKey, setShouldPoke }), [data, dataArray]);
 
     return <ConnectionsTypeDataContext.Provider value={ctx}>{children}</ConnectionsTypeDataContext.Provider>;
   });

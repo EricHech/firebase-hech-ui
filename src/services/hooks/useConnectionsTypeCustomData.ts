@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
 import type { SoilDatabase } from "firebase-soil";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
-import { DataListHookProps } from "./useUserData";
+import { DataListHookProps } from "./types";
+import { genericHydrateAndSetStateFirebaseLists, setStateFirebaseLists } from "../helpers/utils";
 
 export const useConnectionsTypeCustomData = <
   T2 extends keyof SoilDatabase,
@@ -11,35 +12,25 @@ export const useConnectionsTypeCustomData = <
   parentType,
   parentKey,
   dataType,
+  poke,
+  includeArray = false,
   enabled = true,
   memoizedCustomGet,
-}: Pick<DataListHookProps<T2, boolean>, "dataType" | "enabled"> & {
+}: DataListHookProps<T2, boolean> & {
   parentType: T3;
   parentKey: Maybe<string>;
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
   memoizedCustomGet: (key: string) => Promise<T>;
 }) => {
-  const [data, setData] = useState<Record<string, T>>({});
+  const [data, setData] = useState<Maybe<Nullable<Record<string, T>>>>(poke ? undefined : {});
 
-  const getData = useCallback(
-    async (key: string) => {
-      const val = await memoizedCustomGet(key);
-      if (val) setData((prev) => ({ ...prev, [key]: val }));
-    },
-    [memoizedCustomGet]
+  const childChanged = useCallback(
+    async (_: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
+      genericHydrateAndSetStateFirebaseLists(memoizedCustomGet, setData, _, key, previousOrderingKey),
+    [dataType]
   );
 
-  const childChanged = useCallback((_: number, key: string) => getData(key), [getData]);
-
-  const childRemoved = useCallback(
-    (key: string) =>
-      setData((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }),
-    []
-  );
+  const childRemoved = useCallback((key: string) => setStateFirebaseLists(setData, null, key, undefined), []);
 
   useEffect(() => {
     if (parentKey && enabled) {
@@ -47,12 +38,12 @@ export const useConnectionsTypeCustomData = <
 
       return () => {
         offs();
-        setData({});
+        setData(poke ? undefined : {});
       };
     }
 
     return undefined;
-  }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled]);
+  }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled, poke]);
 
   return data;
 };

@@ -5,12 +5,12 @@ import { onChildAdded, onChildChanged, onChildRemoved } from "firebase-soil/clie
 export const onUserDataTypeListChildChanged = (
   uid: string,
   dataType: keyof SoilDatabase,
-  childChanged: (val: number, key: string) => void,
+  childChanged: (val: number, key: string, previousOrderingKey?: Nullable<string>) => void,
   childRemoved: (key: string) => void,
   opts?: {
     paginate?: ListenerPaginationOptions;
     skipChildAdded?: boolean;
-    childAdded?: (val: number, key: string) => void;
+    childAdded?: (val: number, key: string, previousOrderingKey?: Nullable<string>) => void;
   }
 ) => {
   const { paginate, skipChildAdded, childAdded } = opts || {};

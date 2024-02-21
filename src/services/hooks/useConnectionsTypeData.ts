@@ -1,93 +1,82 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import type { SoilDatabase, Data } from "firebase-soil";
-import { PATHS } from "firebase-soil/paths";
-import { GetChildrenEqualTo, getChildrenEqualTo, getDataKeyValue } from "firebase-soil/client";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
-import { DataListHookProps } from "./useUserData";
+import { soilHydrateAndSetStateFirebaseLists, setStateFirebaseLists } from "../helpers/utils";
+import { DataListHookProps } from "./types";
+import { getConnectionTypeData } from "firebase-soil/client";
 
-export const useConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 extends keyof SoilDatabase>({
+export const useConnectionsTypeData = <
+  T2 extends keyof SoilDatabase,
+  T3 extends keyof SoilDatabase,
+  Poke extends boolean
+>({
   parentType,
   parentKey,
   dataType,
+  poke,
   includeArray = false,
   enabled = true,
-  initialChildEqualToQuery,
-}: Pick<DataListHookProps<T2, boolean>, "dataType" | "includeArray" | "enabled"> & {
+}: DataListHookProps<T2, boolean> & {
   parentType: T3;
   parentKey: Maybe<string>;
-  /** This reads from `/data`, so it will only work for admins. */
-  initialChildEqualToQuery?: GetChildrenEqualTo;
 }) => {
-  type ConnectionsData = Record<string, Data<T2>>;
+  const [data, setData] = useState<Maybe<Nullable<Record<string, Data<T2>>>>>(poke ? undefined : {});
 
-  const [data, setData] = useState<ConnectionsData>({});
+  const childChanged = useCallback(
+    async (_: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
+      soilHydrateAndSetStateFirebaseLists(dataType, setData, _, key, previousOrderingKey),
+    [dataType]
+  );
 
-  const initiallyRequested = useRef<Record<string, boolean>>({});
+  const childRemoved = useCallback((key: string) => setStateFirebaseLists(setData, null, key, undefined), []);
 
   useEffect(() => {
-    if (initialChildEqualToQuery?.path) {
-      // For some reason typescript loses allowing for `GetChildrenEqualTo.val` to be `null` so we have to mandate and enforce
-      getChildrenEqualTo<ConnectionsData, Mandate<GetChildrenEqualTo, "val">["val"]>(
-        PATHS.dataType(dataType),
-        initialChildEqualToQuery.path,
-        initialChildEqualToQuery.val!
-      ).then((d) => {
-        initiallyRequested.current = Object.keys(d || {}).reduce((prev, key) => {
-          prev[key] = true;
-          return prev;
-        }, initiallyRequested.current);
+    if (parentKey && enabled) {
+      const turnOn = () =>
+        onConnectionsDataListChildChanged(parentType, parentKey, dataType, childChanged, childRemoved);
+      let off: () => void;
 
-        if (d) setData((prev) => ({ ...prev, ...d }));
-      });
-    }
-  }, [dataType, initialChildEqualToQuery?.path, initialChildEqualToQuery?.val]);
+      if (poke) {
+        getConnectionTypeData({
+          dataType: parentType,
+          dataKey: parentKey,
+          connectionType: dataType,
+        }).then((d) => {
+          setData(
+            d.length === 0
+              ? null
+              : d.reduce((p, curr) => {
+                  if (!curr) return p;
+                  p[curr.key] = curr;
+                  return p;
+                }, {} as Record<string, Data<T2>>)
+          );
 
-  const getData = useCallback(
-    async (key: string) => {
-      if (!initialChildEqualToQuery?.path || !initiallyRequested.current[key]) {
-        const val = await getDataKeyValue({ dataType, dataKey: key });
-        if (val) setData((prev) => ({ ...prev, [key]: { ...val, key } }));
+          off = turnOn();
+        });
       } else {
-        delete initiallyRequested.current[key];
+        off = turnOn();
       }
-    },
-    [dataType, initialChildEqualToQuery?.path]
-  );
-
-  const childChanged = useCallback((_: number, key: string) => getData(key), [getData]);
-
-  const childRemoved = useCallback(
-    (key: string) =>
-      setData((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }),
-    []
-  );
-
-  const shouldTurnOn = initialChildEqualToQuery ? Boolean(data === null || Object.keys(data).length) : true;
-
-  useEffect(() => {
-    if (parentKey && enabled && shouldTurnOn) {
-      const offs = onConnectionsDataListChildChanged(parentType, parentKey, dataType, childChanged, childRemoved);
 
       return () => {
-        offs();
-        setData({});
+        off();
+        setData(poke ? undefined : {});
       };
     }
 
     return undefined;
-  }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled, shouldTurnOn]);
+  }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled, poke]);
 
   const dataArray = useMemo(
     () =>
       includeArray
-        ? Object.entries(data).map(([key, val]) => ({ ...val, key } as unknown as Mandate<Data<T2>, "key">))
+        ? Object.entries(data || {}).map(([key, val]) => ({ ...val, key } as unknown as Mandate<Data<T2>, "key">))
         : [],
     [includeArray, data]
   );
 
-  return { data, dataArray };
+  return {
+    data: data as Poke extends true ? Maybe<Nullable<Record<string, Data<T2>>>> : Record<string, Data<T2>>,
+    dataArray,
+  };
 };

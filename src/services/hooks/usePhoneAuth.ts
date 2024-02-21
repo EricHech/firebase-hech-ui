@@ -43,7 +43,7 @@ export const usePhoneAuth = (buttonElementId: string, phoneNumberElement: RefObj
       if (authedUser?.phoneNumber) {
         const now = Date.now();
 
-        await updateUser({
+        await updateUser(authedUser.uid, {
           uid: authedUser.uid,
           phoneNumber: authedUser.phoneNumber,
           createdAt: now,

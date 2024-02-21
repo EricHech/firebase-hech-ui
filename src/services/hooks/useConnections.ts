@@ -1,42 +1,36 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import type { SoilDatabase, DataList } from "firebase-soil";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
-import { DataListHookProps } from "./useUserData";
 import { getConnectionType } from "firebase-soil/client";
+import { setStateFirebaseLists } from "../helpers/utils";
+import { DataListHookProps } from "./types";
 
 export const useConnections = <T2 extends keyof SoilDatabase, T3 extends keyof SoilDatabase, Poke extends boolean>({
   parentType,
   parentKey,
   dataType,
   poke,
-  enabled = true,
   includeArray = false,
-}: Pick<DataListHookProps<T2, Poke>, "dataType" | "includeArray" | "enabled" | "poke"> & {
+  enabled = true,
+}: DataListHookProps<T2, Poke> & {
   parentType: T3;
   parentKey: Maybe<string>;
 }) => {
-  const [data, setData] = useState<Maybe<Nullable<DataList[T2]>>>(poke ? undefined : {});
+  const [data, setData] = useState<Maybe<Nullable<Record<string, number>>>>(poke ? undefined : {});
 
   const childChanged = useCallback(
-    (timestamp: number, key: string) => setData((prev) => ({ ...prev, [key]: timestamp })),
+    (val: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
+      setStateFirebaseLists(setData, val, key, previousOrderingKey),
     []
   );
 
-  const childRemoved = useCallback(
-    (key: string) =>
-      setData((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }),
-    []
-  );
+  const childRemoved = useCallback((key: string) => setStateFirebaseLists(setData, null, key, undefined), []);
 
   useEffect(() => {
     if (parentKey && enabled) {
       const turnOn = () =>
         onConnectionsDataListChildChanged(parentType, parentKey, dataType, childChanged, childRemoved);
-      let offs: () => void;
+      let off: () => void;
 
       if (poke) {
         getConnectionType({
@@ -45,15 +39,15 @@ export const useConnections = <T2 extends keyof SoilDatabase, T3 extends keyof S
           connectionType: dataType,
         }).then((d) => {
           setData(d);
-          offs = turnOn();
+          off = turnOn();
         });
       } else {
-        offs = turnOn();
+        off = turnOn();
       }
 
       return () => {
-        offs();
-        setData(undefined);
+        off();
+        setData(poke ? undefined : {});
       };
     }
 

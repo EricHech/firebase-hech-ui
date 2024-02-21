@@ -1,95 +1,73 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getDataKeyValue } from "firebase-soil/client";
-import type { SoilDatabase, StatefulData, Data } from "firebase-soil";
+import { getUserDataTypeData } from "firebase-soil/client";
+import type { SoilDatabase, Data } from "firebase-soil";
 import { onUserDataTypeListChildChanged } from "../helpers/onUserDataTypeListChildChanged";
+import { setStateFirebaseLists, soilHydrateAndSetStateFirebaseLists } from "../helpers/utils";
+import { DataListHookProps } from "./types";
 
-export type DataListHookProps<T2, Poke extends boolean> = {
-  uid: Maybe<string>;
-  dataType: T2;
-  /** Set this to true if you want to keep all the data up to date at all times. */
-  fetchData?: boolean;
-  /** Set this to true if you want the data in array form using `dataArray` (`data` will still be populated). */
-  includeArray?: boolean;
-  /** Set this to true if you want the keys in array form using `keysArray`. */
-  includeKeysArray?: boolean;
-  /** Turn the realtime data fetching on and off. */
-  enabled?: boolean;
-  /** Set this to true if you want to fetch the data before listening to be able to have certainty as to when hydration is complete */
-  poke: Poke;
-  /** If you pass in a `keyValidator` function, it will only fetch data for keys that return true. */
-  keyValidator?: (key: string) => boolean;
-};
-
-// TODO: Add tracking for all data loading and total load times so we can monitor the efficiancy of the Soil data model
-export const useUserData = <T2 extends keyof SoilDatabase>({
+export const useUserData = <T2 extends keyof SoilDatabase, Poke extends boolean>({
   uid,
   dataType,
-  fetchData = false,
+  poke,
   includeArray = false,
-  includeKeysArray = false,
   enabled = true,
-  keyValidator,
-}: Omit<DataListHookProps<T2, boolean>, "poke">) => {
-  const [data, setData] = useState<Record<string, StatefulData<T2>>>({});
-
-  const getData = useCallback(
-    (key: string) => {
-      getDataKeyValue({ dataType, dataKey: key }).then((val) => setData((prev) => ({ ...prev, [key]: val })));
-    },
-    [dataType, setData]
-  );
-
-  const getDataOrCache = useCallback(async (key: string) => data[key] || getData(key), [data, getData]);
+}: DataListHookProps<T2, boolean> & {
+  uid: Maybe<string>;
+}) => {
+  const [data, setData] = useState<Maybe<Nullable<Record<string, Data<T2>>>>>(poke ? undefined : {});
 
   const childChanged = useCallback(
-    (_: number, key: string) => {
-      if (!fetchData || (keyValidator && !keyValidator(key))) {
-        setData((prev) => ({ ...prev, [key]: null }));
-      } else {
-        getData(key);
-      }
-    },
-    [fetchData, keyValidator, getData, setData]
+    async (_: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
+      soilHydrateAndSetStateFirebaseLists(dataType, setData, _, key, previousOrderingKey),
+    [dataType]
   );
 
-  const childRemoved = useCallback(
-    (key: string) =>
-      setData((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }),
-    [setData]
-  );
+  const childRemoved = useCallback((key: string) => setStateFirebaseLists(setData, null, key, undefined), []);
 
   useEffect(() => {
     let off: Maybe<VoidFunction>;
     if (uid && enabled) {
-      off = onUserDataTypeListChildChanged(uid, dataType, childChanged, childRemoved);
+      const turnOn = () => onUserDataTypeListChildChanged(uid, dataType, childChanged, childRemoved);
+      let off: () => void;
+
+      if (poke) {
+        getUserDataTypeData({
+          uid,
+          dataType,
+        }).then((d) => {
+          setData(
+            d.length === 0
+              ? null
+              : d.reduce((p, curr) => {
+                  if (!curr) return p;
+                  p[curr.key] = curr;
+                  return p;
+                }, {} as Record<string, Data<T2>>)
+          );
+
+          off = turnOn();
+        });
+      } else {
+        off = turnOn();
+      }
     }
 
     return () => {
       off?.();
       setData({});
     };
-  }, [uid, childChanged, childRemoved, dataType, enabled, setData]);
+  }, [uid, dataType, childChanged, childRemoved, enabled, setData, poke]);
 
-  /** Array form of data. This is only populated if `includeArray` is set to true. */
   const dataArray = useMemo(
     () =>
       includeArray
-        ? (Object.entries(data)
-            .filter(([_, d]) => Boolean(d))
-            .map(([key, d]) => ({
-              ...d,
-              key,
-            })) as Mandate<Data<T2>, "key">[])
+        ? Object.entries(data || {}).map(([key, val]) => ({ ...val, key } as unknown as Mandate<Data<T2>, "key">))
         : [],
-    [data, includeArray]
+    [includeArray, data]
   );
 
-  /** Array of keys. This is only populated if `includeKeysArray` is set to true. */
-  const keysArray = useMemo(() => (includeKeysArray ? Object.keys(data) : []), [data, includeKeysArray]);
-
-  return { data, dataArray, keysArray, getData, getDataOrCache };
+  return {
+    data: data as Poke extends true ? Maybe<Nullable<Record<string, Data<T2>>>> : Record<string, Data<T2>>,
+    dataArray,
+  };
 };

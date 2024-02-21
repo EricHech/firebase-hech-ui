@@ -1,32 +1,27 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import type { SoilDatabase } from "firebase-soil";
+import type { DataList, SoilDatabase } from "firebase-soil";
 import { onOwnersChildChanged } from "../helpers/onOwnersChildChanged";
-import { DataListHookProps } from "./useUserData";
+import { DataListHookProps } from "./types";
+import { setStateFirebaseLists } from "../helpers/utils";
 
-export const useOwners = <T2 extends keyof SoilDatabase, T3 extends keyof SoilDatabase>({
+export const useOwners = <T2 extends keyof SoilDatabase, Poke extends boolean>({
   dataType,
   dataKey,
+  poke,
   includeArray = false,
   enabled = true,
-}: Pick<DataListHookProps<T2, boolean>, "dataType" | "includeArray" | "enabled"> & {
+}: DataListHookProps<T2, Poke> & {
   dataKey: Maybe<string>;
 }) => {
-  const [data, setData] = useState<Record<string, number>>({});
+  const [data, setData] = useState<Maybe<Nullable<Record<string, number>>>>(poke ? undefined : {});
 
   const childChanged = useCallback(
-    (timestamp: number, key: string) => setData((prev) => ({ ...prev, [key]: timestamp })),
+    (val: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
+      setStateFirebaseLists(setData, val, key, previousOrderingKey),
     []
   );
 
-  const childRemoved = useCallback(
-    (key: string) =>
-      setData((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }),
-    []
-  );
+  const childRemoved = useCallback((key: string) => setStateFirebaseLists(setData, null, key, undefined), []);
 
   useEffect(() => {
     if (dataKey && enabled) {
@@ -41,7 +36,10 @@ export const useOwners = <T2 extends keyof SoilDatabase, T3 extends keyof SoilDa
     return undefined;
   }, [dataType, dataKey, dataType, childChanged, childRemoved, enabled]);
 
-  const dataArray = useMemo(() => (includeArray ? Object.keys(data) : []), [includeArray, data]);
+  const dataArray = useMemo(() => (includeArray ? Object.keys(data || {}) : []), [includeArray, data]);
 
-  return { data, dataArray };
+  return {
+    data: data as Poke extends true ? Maybe<Nullable<DataList[T2]>> : DataList[T2],
+    dataArray,
+  };
 };

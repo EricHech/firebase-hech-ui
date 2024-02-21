@@ -1,49 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getDataKeyValue } from "firebase-soil/client";
-import type { SoilDatabase, StatefulData, Data } from "firebase-soil";
+import type { SoilDatabase, Data } from "firebase-soil";
 import { onPublicDataTypeListChildChanged } from "../helpers/onPublicDataTypeListChildChanged";
-import { DataListHookProps } from "./useUserData";
+import { DataListHookProps } from "./types";
+import { setStateFirebaseLists, soilHydrateAndSetStateFirebaseLists } from "../helpers/utils";
 
-// TODO: Add tracking for all data loading and total load times so we can monitor the efficiancy of the Soil data model
-export const usePublicData = <T2 extends keyof SoilDatabase>({
+export const usePublicData = <T2 extends keyof SoilDatabase, Poke extends boolean>({
   dataType,
-  fetchData = false,
+  poke,
   includeArray = false,
-  includeKeysArray = false,
   enabled = true,
-  keyValidator,
-}: Omit<DataListHookProps<T2, boolean>, "uid" | "poke">) => {
-  const [data, setData] = useState<Record<string, StatefulData<T2>>>({});
+}: DataListHookProps<T2, boolean>) => {
+  const [data, setData] = useState<Maybe<Nullable<Record<string, Data<T2>>>>>(poke ? undefined : {});
 
-  const getData = useCallback(
-    (key: string) => {
-      getDataKeyValue<T2>({ dataType, dataKey: key }).then((val) => setData((prev) => ({ ...prev, [key]: val })));
-    },
+  const childChanged = useCallback(
+    async (_: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
+      soilHydrateAndSetStateFirebaseLists(dataType, setData, _, key, previousOrderingKey),
     [dataType]
   );
 
-  const getDataOrCache = useCallback(async (key: string) => data[key] || getData(key), [data, getData]);
-
-  const childChanged = useCallback(
-    (_: number, key: string) => {
-      if (!fetchData || (keyValidator && !keyValidator(key))) {
-        setData((prev) => ({ ...prev, [key]: null }));
-      } else {
-        getData(key);
-      }
-    },
-    [fetchData, keyValidator, getData]
-  );
-
-  const childRemoved = useCallback(
-    (key: string) =>
-      setData((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }),
-    []
-  );
+  const childRemoved = useCallback((key: string) => setStateFirebaseLists(setData, null, key, undefined), []);
 
   useEffect(() => {
     let off: Maybe<VoidFunction>;
@@ -57,22 +32,16 @@ export const usePublicData = <T2 extends keyof SoilDatabase>({
     };
   }, [childChanged, childRemoved, dataType, enabled]);
 
-  /** Array form of data. This is only populated if `includeArray` is set to true. */
   const dataArray = useMemo(
     () =>
       includeArray
-        ? (Object.entries(data)
-            .filter(([_, d]) => Boolean(d))
-            .map(([key, d]) => ({
-              ...d,
-              key,
-            })) as Mandate<Data<T2>, "key">[])
+        ? Object.entries(data || {}).map(([key, val]) => ({ ...val, key } as unknown as Mandate<Data<T2>, "key">))
         : [],
     [data, includeArray]
   );
 
-  /** Array of keys. This is only populated if `includeKeysArray` is set to true. */
-  const keysArray = useMemo(() => (includeKeysArray ? Object.keys(data) : []), [data, includeKeysArray]);
-
-  return { data, dataArray, keysArray, getData, getDataOrCache };
+  return {
+    data: data as Poke extends true ? Maybe<Nullable<Record<string, Data<T2>>>> : Record<string, Data<T2>>,
+    dataArray,
+  };
 };

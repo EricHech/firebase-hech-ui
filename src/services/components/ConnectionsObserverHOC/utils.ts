@@ -54,8 +54,8 @@ export const attachListeners = <
   dataType: T22;
   settings: SettingsVersion<T2, T22, T222>;
   paginate: ListenerPaginationOptions;
-  childAdded: (val: number, key: string) => void;
-  childChanged: (val: number, key: string) => void;
+  childAdded: (val: number, key: string, previousOrderingKey?: Nullable<string>) => void;
+  childChanged: (val: number, key: string, previousOrderingKey?: Nullable<string>) => void;
   childRemoved: (key: string) => void;
   skipChildAdded: boolean;
 }) => {
