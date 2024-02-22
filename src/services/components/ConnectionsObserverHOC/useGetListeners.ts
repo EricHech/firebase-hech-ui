@@ -7,14 +7,7 @@ import { handleOrderingFirebaseList } from "../../helpers/utils";
 import type { DataList, SoilDatabase } from "firebase-soil";
 
 export const useGetListeners = (setData: Dispatch<SetStateAction<DataList[keyof SoilDatabase]>>) => {
-  const childAdded = useCallback(
-    (val: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
-      // Firebase makes the `previousOrderingKey` optional, but it will only ever be string or null
-      setData((prev) => handleOrderingFirebaseList(prev, val, key, previousOrderingKey!)),
-    [setData]
-  );
-
-  const childChanged = useCallback(
+  const childAddedOrChanged = useCallback(
     (val: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
       setData((prev) => {
         // * If it is an existing value being changed, change it...
@@ -41,5 +34,5 @@ export const useGetListeners = (setData: Dispatch<SetStateAction<DataList[keyof 
     [setData]
   );
 
-  return { childAdded, childChanged, childRemoved };
+  return { childAddedOrChanged, childRemoved };
 };

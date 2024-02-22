@@ -158,7 +158,7 @@ export function ConnectionsObserverHOC<
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Fetch Helpers -----------------------------------------------------------------------------------------------
-  const { childAdded, childChanged, childRemoved } = useGetListeners(setData);
+  const { childAddedOrChanged, childRemoved } = useGetListeners(setData);
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- New Page Fetching -------------------------------------------------------------------------------------------
@@ -225,8 +225,8 @@ export function ConnectionsObserverHOC<
         dataType,
         settings: versionSettings,
         paginate,
-        childAdded,
-        childChanged,
+        childAdded: childAddedOrChanged,
+        childChanged: childAddedOrChanged,
         childRemoved,
         skipChildAdded: Boolean(ignoreNonStartingEdgeAdditions),
       });
@@ -236,8 +236,7 @@ export function ConnectionsObserverHOC<
       fetchingNewPage.current = false;
     },
     [
-      childAdded,
-      childChanged,
+      childAddedOrChanged,
       childRemoved,
       dataType,
       managePagination,
@@ -316,8 +315,8 @@ export function ConnectionsObserverHOC<
               dataType,
               settings: versionSettings,
               paginate,
-              childAdded,
-              childChanged,
+              childAdded: childAddedOrChanged,
+              childChanged: childAddedOrChanged,
               childRemoved,
               skipChildAdded: false,
             });
@@ -333,8 +332,8 @@ export function ConnectionsObserverHOC<
           dataType,
           settings: versionSettings,
           paginate,
-          childAdded: childChanged,
-          childChanged,
+          childAdded: childAddedOrChanged,
+          childChanged: childAddedOrChanged,
           childRemoved,
           skipChildAdded: false,
         });
@@ -356,8 +355,7 @@ export function ConnectionsObserverHOC<
     orderBy,
     versionSettings,
     managePagination,
-    childAdded,
-    childChanged,
+    childAddedOrChanged,
     childRemoved,
   ]);
   // ------------------------------------------------------------------------------------------------------------------
