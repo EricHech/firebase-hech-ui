@@ -126,12 +126,17 @@ export type ConnectionsObserverHOCProps<
   T222 extends keyof SoilDatabase
 > = Version<T2, T22, T222> & {
   /** This is required to prevent it from initially fetching all of the data */
-  listItemMinHeight: string;
+  listItemMinHeightPx: number;
   /** This is required to prevent it from initially fetching all of the data */
-  listItemMinWidth: string;
-  sort: Sort;
+  listItemMinWidthPx: number;
+  /**
+   * This number will be multiplied by the `listItemMin` sizes to determine how far
+   * the intersection observer with consider `observed` beyond the window boundary
+   */
+  hydrationBufferAmount: number;
   /** If nothing is passed in, it will fetch all of the keys by default. */
   managePagination?: ManagePagination;
+  sort: Sort;
   /**
    * If this is true, `onChildAdded` listeners will only be added to the first page.
    * In some situations, such as with chat, it is unnecessary to have them elsewhere.

@@ -63,8 +63,8 @@ export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<ke
       id={dataKey}
       ref={ref}
       style={{
-        minHeight: "var(--listItemMinHeight)",
-        minWidth: "var(--listItemMinWidth)",
+        minHeight: "var(--listItemMinHeightPx)",
+        minWidth: "var(--listItemMinWidthPx)",
         ...animationStyle,
       }}
     >
@@ -104,8 +104,9 @@ export function ConnectionsObserverHOC<
 
   // ---- Prop Settings -----------------------------------------------------------------------------------------------
   const {
-    listItemMinHeight,
-    listItemMinWidth,
+    listItemMinHeightPx,
+    listItemMinWidthPx,
+    hydrationBufferAmount,
     sort,
     managePagination,
     ignoreNonStartingEdgeAdditions,
@@ -144,7 +145,11 @@ export function ConnectionsObserverHOC<
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Observer ----------------------------------------------------------------------------------------------------
-  const { observe, observedIds } = useBasicIntersectionObserver(root, "150px 150px 150px 150px");
+  const verticalMargin = hydrationBufferAmount * listItemMinHeightPx;
+  const horizontalMargin = hydrationBufferAmount * listItemMinWidthPx;
+  const rootMargin = `${verticalMargin} ${horizontalMargin} ${verticalMargin} ${horizontalMargin}`;
+
+  const { observe, observedIds } = useBasicIntersectionObserver(root, rootMargin);
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Data --------------------------------------------------------------------------------------------------------
@@ -393,8 +398,8 @@ export function ConnectionsObserverHOC<
     <ul
       className={className}
       style={{
-        "--listItemMinHeight": listItemMinHeight,
-        "--listItemMinWidth": listItemMinWidth,
+        "--listItemMinHeightPx": listItemMinHeightPx,
+        "--listItemMinWidthPx": listItemMinWidthPx,
       }}
     >
       {dataList.map(([key, timestamp], i) => {
