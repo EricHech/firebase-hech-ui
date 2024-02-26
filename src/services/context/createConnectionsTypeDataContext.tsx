@@ -9,7 +9,7 @@ import React, {
   PropsWithChildren,
 } from "react";
 import type { SoilDatabase, Data } from "firebase-soil";
-import { useConnectionsTypeData } from "../hooks";
+import { useOnConnectionsTypeData } from "../hooks";
 import { useGetSafeContext } from "./useGetSafeContext";
 
 type BaseConnectionsTypeDataContext<T22 extends keyof SoilDatabase> = {
@@ -49,7 +49,7 @@ export const createConnectionsTypeDataContext = <T2 extends keyof SoilDatabase, 
     const [parentKey, setParentKey] = useState<string>();
     const [poke, setShouldPoke] = useState({ decided: false, decision: false });
 
-    const { data, dataArray } = useConnectionsTypeData({
+    const { data, dataArray } = useOnConnectionsTypeData({
       parentType,
       parentKey,
       dataType,

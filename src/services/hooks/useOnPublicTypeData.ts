@@ -1,19 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getUserDataTypeData } from "firebase-soil/client";
 import type { SoilDatabase, Data } from "firebase-soil";
-import { onUserDataTypeListChildChanged } from "../helpers/onUserDataTypeListChildChanged";
-import { setStateFirebaseLists, soilHydrateAndSetStateFirebaseLists } from "../helpers/utils";
+import { onPublicDataTypeListChildChanged } from "../helpers/onPublicDataTypeListChildChanged";
 import { DataListHookProps } from "./types";
+import { setStateFirebaseLists, soilHydrateAndSetStateFirebaseLists } from "../helpers/utils";
 
-export const useUserData = <T2 extends keyof SoilDatabase, Poke extends boolean>({
-  uid,
+export const useOnPublicTypeData = <T2 extends keyof SoilDatabase, Poke extends boolean>({
   dataType,
   poke,
   includeArray = false,
   enabled = true,
-}: DataListHookProps<T2, boolean> & {
-  uid: Maybe<string>;
-}) => {
+}: DataListHookProps<T2, boolean>) => {
   const [data, setData] = useState<Maybe<Nullable<Record<string, Data<T2>>>>>(poke ? undefined : {});
 
   const childChanged = useCallback(
@@ -26,44 +22,22 @@ export const useUserData = <T2 extends keyof SoilDatabase, Poke extends boolean>
 
   useEffect(() => {
     let off: Maybe<VoidFunction>;
-    if (uid && enabled) {
-      const turnOn = () => onUserDataTypeListChildChanged(uid, dataType, childChanged, childRemoved);
-      let off: () => void;
-
-      if (poke) {
-        getUserDataTypeData({
-          uid,
-          dataType,
-        }).then((d) => {
-          setData(
-            d.length === 0
-              ? null
-              : d.reduce((p, curr) => {
-                  if (!curr) return p;
-                  p[curr.key] = curr;
-                  return p;
-                }, {} as Record<string, Data<T2>>)
-          );
-
-          off = turnOn();
-        });
-      } else {
-        off = turnOn();
-      }
+    if (enabled) {
+      off = onPublicDataTypeListChildChanged(dataType, childChanged, childRemoved);
     }
 
     return () => {
       off?.();
       setData({});
     };
-  }, [uid, dataType, childChanged, childRemoved, enabled, setData, poke]);
+  }, [childChanged, childRemoved, dataType, enabled]);
 
   const dataArray = useMemo(
     () =>
       includeArray
         ? Object.entries(data || {}).map(([key, val]) => ({ ...val, key } as unknown as Mandate<Data<T2>, "key">))
         : [],
-    [includeArray, data]
+    [data, includeArray]
   );
 
   return {

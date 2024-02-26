@@ -5,7 +5,7 @@ import { soilHydrateAndSetStateFirebaseLists, setStateFirebaseLists } from "../h
 import { DataListHookProps } from "./types";
 import { getConnectionTypeData } from "firebase-soil/client";
 
-export const useConnectionsTypeData = <
+export const useOnConnectionsTypeData = <
   T2 extends keyof SoilDatabase,
   T3 extends keyof SoilDatabase,
   Poke extends boolean
@@ -47,6 +47,7 @@ export const useConnectionsTypeData = <
               ? null
               : d.reduce((p, curr) => {
                   if (!curr) return p;
+                  curr;
                   p[curr.key] = curr;
                   return p;
                 }, {} as Record<string, Data<T2>>)

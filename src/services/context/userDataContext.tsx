@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, ReactNode, createContext, memo, useState, Dispatch, SetStateAction } from "react";
 import type { Data, SoilDatabase, StatefulData } from "firebase-soil";
-import { useUserData } from "../hooks";
+import { useOnUserTypeData } from "../hooks";
 import { useSoilContext } from "./soilContext";
 import { useGetSafeContext } from "./useGetSafeContext";
 
@@ -39,7 +39,7 @@ export const createUserDataContext = <T2 extends keyof SoilDatabase, T3 extends 
 
     const [poke, setShouldPoke] = useState({ decided: false, decision: false });
 
-    const { data, dataArray } = useUserData({
+    const { data, dataArray } = useOnUserTypeData({
       uid: user?.uid,
       dataType,
       includeArray: true,

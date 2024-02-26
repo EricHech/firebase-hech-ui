@@ -5,7 +5,11 @@ import { getConnectionType } from "firebase-soil/client";
 import { setStateFirebaseLists } from "../helpers/utils";
 import { DataListHookProps } from "./types";
 
-export const useConnections = <T2 extends keyof SoilDatabase, T3 extends keyof SoilDatabase, Poke extends boolean>({
+export const useOnConnectionsTypeKeys = <
+  T2 extends keyof SoilDatabase,
+  T3 extends keyof SoilDatabase,
+  Poke extends boolean
+>({
   parentType,
   parentKey,
   dataType,

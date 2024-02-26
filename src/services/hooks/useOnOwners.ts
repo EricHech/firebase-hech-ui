@@ -4,7 +4,7 @@ import { onOwnersChildChanged } from "../helpers/onOwnersChildChanged";
 import { DataListHookProps } from "./types";
 import { setStateFirebaseLists } from "../helpers/utils";
 
-export const useOwners = <T2 extends keyof SoilDatabase, Poke extends boolean>({
+export const useOnOwners = <T2 extends keyof SoilDatabase, Poke extends boolean>({
   dataType,
   dataKey,
   poke,

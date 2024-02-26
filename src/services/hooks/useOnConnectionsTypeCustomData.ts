@@ -1,13 +1,15 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import type { SoilDatabase } from "firebase-soil";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
 import { DataListHookProps } from "./types";
 import { genericHydrateAndSetStateFirebaseLists, setStateFirebaseLists } from "../helpers/utils";
+import { getConnectionType } from "firebase-soil/client";
 
-export const useConnectionsTypeCustomData = <
+export const useOnConnectionsTypeCustomData = <
   T2 extends keyof SoilDatabase,
   T3 extends keyof SoilDatabase,
-  T extends unknown
+  T extends unknown,
+  Poke extends boolean
 >({
   parentType,
   parentKey,
@@ -34,10 +36,34 @@ export const useConnectionsTypeCustomData = <
 
   useEffect(() => {
     if (parentKey && enabled) {
-      const offs = onConnectionsDataListChildChanged(parentType, parentKey, dataType, childChanged, childRemoved);
+      const turnOn = () =>
+        onConnectionsDataListChildChanged(parentType, parentKey, dataType, childChanged, childRemoved);
+      let off: () => void;
+
+      if (poke) {
+        getConnectionType({
+          dataType: parentType,
+          dataKey: parentKey,
+          connectionType: dataType,
+        }).then(async (d) => {
+          if (!d) return setData(null);
+
+          const next: Record<string, T> = {};
+          await Promise.all(
+            Object.keys(d).map(async (k) => {
+              next[k] = await memoizedCustomGet(k);
+            })
+          );
+          setData(next);
+
+          off = turnOn();
+        });
+      } else {
+        off = turnOn();
+      }
 
       return () => {
-        offs();
+        off();
         setData(poke ? undefined : {});
       };
     }
@@ -45,5 +71,13 @@ export const useConnectionsTypeCustomData = <
     return undefined;
   }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled, poke]);
 
-  return data;
+  const dataArray = useMemo(
+    () => (includeArray ? Object.entries(data || {}).map(([key, value]) => ({ key, value })) : []),
+    [includeArray, data]
+  );
+
+  return {
+    data: data as Poke extends true ? Maybe<Nullable<Record<string, T>>> : Record<string, T>,
+    dataArray,
+  };
 };

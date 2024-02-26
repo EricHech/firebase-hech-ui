@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, ReactNode, createContext, memo, useState, SetStateAction, Dispatch } from "react";
 import type { Data, SoilDatabase, StatefulData } from "firebase-soil";
-import { usePublicData } from "../hooks";
+import { useOnPublicTypeData } from "../hooks";
 import { useSoilContext } from "./soilContext";
 import { useGetSafeContext } from "./useGetSafeContext";
 
@@ -36,7 +36,7 @@ export const createPublicDataContext = <T2 extends keyof SoilDatabase>(dataType:
 
     const [poke, setShouldPoke] = useState({ decided: false, decision: false });
 
-    const { data, dataArray } = usePublicData<T2, boolean>({
+    const { data, dataArray } = useOnPublicTypeData<T2, boolean>({
       dataType,
       includeArray: true,
       enabled: Boolean(!initiallyLoading && poke.decided),

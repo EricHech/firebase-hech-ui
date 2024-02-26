@@ -6,7 +6,7 @@ export const useGetDataKeyValue = <T2 extends keyof SoilDatabase>(dataType: T2, 
   const [data, setData] = useState<StatefulData<T2>>();
 
   useEffect(() => {
-    getDataKeyValue({ dataType, dataKey }).then(setData);
+    if (dataKey) getDataKeyValue({ dataType, dataKey }).then(setData);
   }, [dataType, dataKey]);
 
   return data;
