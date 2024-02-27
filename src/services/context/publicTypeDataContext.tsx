@@ -1,23 +1,20 @@
-import React, { useEffect, useMemo, ReactNode, createContext, memo, useState, Dispatch, SetStateAction } from "react";
+import React, { useEffect, useMemo, ReactNode, createContext, memo, useState, SetStateAction, Dispatch } from "react";
 import type { Data, SoilDatabase, StatefulData } from "firebase-soil";
-import { useOnUserTypeData } from "../hooks";
+import { useOnPublicTypeData } from "../hooks";
 import { useSoilContext } from "./soilContext";
 import { useGetSafeContext } from "./useGetSafeContext";
 
-type BaseUserDataContext<T2 extends keyof SoilDatabase, T3 extends object = {}> = {
+type BasePublicTypeDataContext<T2 extends keyof SoilDatabase> = {
   data: Maybe<Nullable<Record<string, StatefulData<T2>>>>;
   dataArray: Mandate<Data<T2>, "key">[];
   setShouldPoke: Dispatch<SetStateAction<{ decided: boolean; decision: boolean }>>;
 };
 
-export const createUserDataContext = <T2 extends keyof SoilDatabase, T3 extends object = {}>(
-  dataType: T2,
-  poke: boolean
-) => {
-  const UserDataContext = createContext<Maybe<BaseUserDataContext<T2, T3>>>(undefined);
+export const createPublicTypeDataContext = <T2 extends keyof SoilDatabase>(dataType: T2, poke: boolean) => {
+  const PublicTypeDataContext = createContext<Maybe<BasePublicTypeDataContext<T2>>>(undefined);
 
-  const useUserDataFromContext = () => {
-    const useContextResult = useGetSafeContext(UserDataContext);
+  const usePublicTypeDataFromContext = () => {
+    const useContextResult = useGetSafeContext(PublicTypeDataContext);
 
     if (!useContextResult) throw new Error(`You must wrap your component in an instance of the ${dataType} context`);
 
@@ -30,17 +27,16 @@ export const createUserDataContext = <T2 extends keyof SoilDatabase, T3 extends 
     return { data, dataArray };
   };
 
-  const UserDataContextProviderComponent = memo(function UserDataContextProviderComponent({
+  const PublicTypeDataContextProviderComponent = memo(function PublicTypeDataContextProviderComponent({
     children,
   }: {
     children: ReactNode;
   }) {
-    const { initiallyLoading, user } = useSoilContext();
+    const { initiallyLoading } = useSoilContext();
 
     const [poke, setShouldPoke] = useState({ decided: false, decision: false });
 
-    const { data, dataArray } = useOnUserTypeData({
-      uid: user?.uid,
+    const { data, dataArray } = useOnPublicTypeData<T2, boolean>({
       dataType,
       includeArray: true,
       enabled: Boolean(!initiallyLoading && poke.decided),
@@ -49,8 +45,8 @@ export const createUserDataContext = <T2 extends keyof SoilDatabase, T3 extends 
 
     const ctx = useMemo(() => ({ data, dataArray, setShouldPoke }), [data, dataArray, setShouldPoke]);
 
-    return <UserDataContext.Provider value={ctx}>{children}</UserDataContext.Provider>;
+    return <PublicTypeDataContext.Provider value={ctx}>{children}</PublicTypeDataContext.Provider>;
   });
 
-  return { useUserDataFromContext, UserDataContextProviderComponent };
+  return { usePublicTypeDataFromContext, PublicTypeDataContextProviderComponent };
 };

@@ -38,9 +38,9 @@ export const useOnConnectionsTypeData = <
 
       if (poke) {
         getConnectionTypeData({
-          dataType: parentType,
-          dataKey: parentKey,
-          connectionType: dataType,
+          parentType,
+          parentKey,
+          dataType,
         }).then((d) => {
           setData(
             d.length === 0

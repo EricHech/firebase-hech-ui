@@ -3,7 +3,7 @@ import type { SoilDatabase } from "firebase-soil";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
 import { DataListHookProps } from "./types";
 import { genericHydrateAndSetStateFirebaseLists, setStateFirebaseLists } from "../helpers/utils";
-import { getConnectionType } from "firebase-soil/client";
+import { getConnectionTypeKeys } from "firebase-soil/client";
 
 export const useOnConnectionsTypeCustomData = <
   T2 extends keyof SoilDatabase,
@@ -41,10 +41,10 @@ export const useOnConnectionsTypeCustomData = <
       let off: () => void;
 
       if (poke) {
-        getConnectionType({
-          dataType: parentType,
-          dataKey: parentKey,
-          connectionType: dataType,
+        getConnectionTypeKeys({
+          parentType,
+          parentKey,
+          dataType,
         }).then(async (d) => {
           if (!d) return setData(null);
 

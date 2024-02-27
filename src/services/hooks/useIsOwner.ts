@@ -2,11 +2,15 @@ import { useState, useEffect } from "react";
 import type { SoilDatabase } from "firebase-soil";
 import { getOwner } from "firebase-soil/client";
 
-export const useIsOwner = (
-  dataType: keyof SoilDatabase,
-  dataKey: Maybe<Nullable<string>>,
-  uid: Maybe<Nullable<string>>
-) => {
+export const useIsOwner = ({
+  dataType,
+  dataKey,
+  uid,
+}: {
+  dataType: keyof SoilDatabase;
+  dataKey: Maybe<Nullable<string>>;
+  uid: Maybe<Nullable<string>>;
+}) => {
   const [isOwner, setIsOwner] = useState<Nullable<boolean>>();
 
   useEffect(() => {

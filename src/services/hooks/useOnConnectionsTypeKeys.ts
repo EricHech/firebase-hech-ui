@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import type { SoilDatabase, DataList } from "firebase-soil";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
-import { getConnectionType } from "firebase-soil/client";
+import { getConnectionTypeKeys } from "firebase-soil/client";
 import { setStateFirebaseLists } from "../helpers/utils";
 import { DataListHookProps } from "./types";
 
@@ -37,10 +37,10 @@ export const useOnConnectionsTypeKeys = <
       let off: () => void;
 
       if (poke) {
-        getConnectionType({
-          dataType: parentType,
-          dataKey: parentKey,
-          connectionType: dataType,
+        getConnectionTypeKeys({
+          parentType,
+          parentKey,
+          dataType,
         }).then((d) => {
           setData(d);
           off = turnOn();

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getUserDataTypeData } from "firebase-soil/client";
+import { getUserTypeData } from "firebase-soil/client";
 import type { SoilDatabase, Data } from "firebase-soil";
 import { onUserDataTypeListChildChanged } from "../helpers/onUserDataTypeListChildChanged";
 import { setStateFirebaseLists, soilHydrateAndSetStateFirebaseLists } from "../helpers/utils";
@@ -31,7 +31,7 @@ export const useOnUserTypeData = <T2 extends keyof SoilDatabase, Poke extends bo
       let off: () => void;
 
       if (poke) {
-        getUserDataTypeData({
+        getUserTypeData({
           uid,
           dataType,
         }).then((d) => {
