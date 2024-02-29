@@ -9,7 +9,7 @@ export const useOnPublicTypeData = <T2 extends keyof SoilDatabase, Poke extends 
   poke,
   includeArray = false,
   enabled = true,
-}: DataListHookProps<T2, boolean>) => {
+}: DataListHookProps<T2, Poke>) => {
   const [data, setData] = useState<Maybe<Nullable<Record<string, Data<T2>>>>>(poke ? undefined : {});
 
   const childChanged = useCallback(

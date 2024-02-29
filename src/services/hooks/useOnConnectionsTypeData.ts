@@ -16,7 +16,7 @@ export const useOnConnectionsTypeData = <
   poke,
   includeArray = false,
   enabled = true,
-}: DataListHookProps<T2, boolean> & {
+}: DataListHookProps<T2, Poke> & {
   parentType: T3;
   parentKey: Maybe<string>;
 }) => {

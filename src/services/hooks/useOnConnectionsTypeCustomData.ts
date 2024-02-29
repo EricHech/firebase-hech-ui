@@ -18,7 +18,7 @@ export const useOnConnectionsTypeCustomData = <
   includeArray = false,
   enabled = true,
   memoizedCustomGet,
-}: DataListHookProps<T2, boolean> & {
+}: DataListHookProps<T2, Poke> & {
   parentType: T3;
   parentKey: Maybe<string>;
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */

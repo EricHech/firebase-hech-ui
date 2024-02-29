@@ -11,7 +11,7 @@ export const useOnUserTypeData = <T2 extends keyof SoilDatabase, Poke extends bo
   poke,
   includeArray = false,
   enabled = true,
-}: DataListHookProps<T2, boolean> & {
+}: DataListHookProps<T2, Poke> & {
   uid: Maybe<string>;
 }) => {
   const [data, setData] = useState<Maybe<Nullable<Record<string, Data<T2>>>>>(poke ? undefined : {});
