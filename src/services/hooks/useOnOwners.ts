@@ -10,6 +10,7 @@ export const useOnOwners = <T2 extends keyof SoilDatabase, Poke extends boolean>
   poke,
   includeArray = false,
   enabled = true,
+  maintainWhenDisabled = false,
 }: DataListHookProps<T2, Poke> & {
   dataKey: Maybe<string>;
 }) => {
@@ -29,12 +30,12 @@ export const useOnOwners = <T2 extends keyof SoilDatabase, Poke extends boolean>
 
       return () => {
         offs();
-        setData({});
+        if (!maintainWhenDisabled) setData(poke ? undefined : {});
       };
     }
 
     return undefined;
-  }, [dataType, dataKey, dataType, childChanged, childRemoved, enabled]);
+  }, [dataType, dataKey, childChanged, childRemoved, enabled, maintainWhenDisabled, poke]);
 
   const dataArray = useMemo(() => (includeArray ? Object.keys(data || {}) : []), [includeArray, data]);
 

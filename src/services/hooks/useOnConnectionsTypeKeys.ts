@@ -16,6 +16,7 @@ export const useOnConnectionsTypeKeys = <
   poke,
   includeArray = false,
   enabled = true,
+  maintainWhenDisabled = false,
 }: DataListHookProps<T2, Poke> & {
   parentType: T3;
   parentKey: Maybe<string>;
@@ -51,12 +52,12 @@ export const useOnConnectionsTypeKeys = <
 
       return () => {
         off();
-        setData(poke ? undefined : {});
+        if (!maintainWhenDisabled) setData(poke ? undefined : {});
       };
     }
 
     return undefined;
-  }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled, poke]);
+  }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled, maintainWhenDisabled, poke]);
 
   const dataArray = useMemo(() => (includeArray ? Object.keys(data || {}) : []), [includeArray, data]);
 

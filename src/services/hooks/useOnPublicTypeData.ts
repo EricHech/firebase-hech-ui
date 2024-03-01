@@ -9,6 +9,7 @@ export const useOnPublicTypeData = <T2 extends keyof SoilDatabase, Poke extends 
   poke,
   includeArray = false,
   enabled = true,
+  maintainWhenDisabled = false,
 }: DataListHookProps<T2, Poke>) => {
   const [data, setData] = useState<Maybe<Nullable<Record<string, Data<T2>>>>>(poke ? undefined : {});
 
@@ -28,9 +29,9 @@ export const useOnPublicTypeData = <T2 extends keyof SoilDatabase, Poke extends 
 
     return () => {
       off?.();
-      setData({});
+      if (!maintainWhenDisabled) setData(poke ? undefined : {});
     };
-  }, [childChanged, childRemoved, dataType, enabled]);
+  }, [dataType, childChanged, childRemoved, enabled, maintainWhenDisabled, poke]);
 
   const dataArray = useMemo(
     () =>
