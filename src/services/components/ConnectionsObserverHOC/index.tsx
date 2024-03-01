@@ -145,9 +145,9 @@ export function ConnectionsObserverHOC<
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Observer ----------------------------------------------------------------------------------------------------
-  const verticalMargin = hydrationBufferAmount * listItemMinHeightPx;
-  const horizontalMargin = hydrationBufferAmount * listItemMinWidthPx;
-  const rootMargin = `${verticalMargin} ${horizontalMargin} ${verticalMargin} ${horizontalMargin}`;
+  const verticalMarginNum = hydrationBufferAmount * listItemMinHeightPx;
+  const horizontalMarginNum = hydrationBufferAmount * listItemMinWidthPx;
+  const rootMargin = `${verticalMarginNum}px ${horizontalMarginNum}px ${verticalMarginNum}px ${horizontalMarginNum}px`;
 
   const { observe, observedIds } = useBasicIntersectionObserver(root, rootMargin);
   // ------------------------------------------------------------------------------------------------------------------
