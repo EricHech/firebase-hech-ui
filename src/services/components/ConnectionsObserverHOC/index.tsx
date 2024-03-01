@@ -347,7 +347,7 @@ export function ConnectionsObserverHOC<
 
     return () => {
       primaryListenerOff?.();
-      newPageListenerOffs.current.forEach((pageOff) => pageOff()); // eslint-disable-line react-hooks/exhaustive-deps
+      newPageListenerOffs.current.forEach((pageOff) => pageOff());
       setData({});
     };
   }, [

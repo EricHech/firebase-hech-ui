@@ -76,9 +76,9 @@ export type ObservedDataProps<T22 extends keyof SoilDatabase, T2 extends Maybe<k
   /** This will be undefined if the version is not `connectionDataList` */
   parentDataKey: Maybe<string>;
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
-  memoizedCustomGet?: (key: string) => Promise<StatefulData<T22>>;
+  memoizedCustomGet?: (_key: string) => Promise<StatefulData<T22>>;
   timestamp: number;
-  observe: (el: HTMLLIElement) => void;
+  observe: (_el: HTMLLIElement) => void;
   observed: boolean;
   setCache: SetCache;
   getCache: GetCache;
@@ -125,6 +125,8 @@ export type ConnectionsObserverHOCProps<
   T22 extends keyof SoilDatabase,
   T222 extends keyof SoilDatabase
 > = Version<T2, T22, T222> & {
+  /** The scroll wrapper. This is essential for determining when elements are `observed` and utilizing the `hydrationBufferAmount`. */
+  root: Nullable<Element>;
   /** This is required to prevent it from initially fetching all of the data */
   listItemMinHeightPx: number;
   /** This is required to prevent it from initially fetching all of the data */
@@ -144,14 +146,13 @@ export type ConnectionsObserverHOCProps<
   ignoreNonStartingEdgeAdditions?: boolean;
   dataType: T22;
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
-  memoizedCustomGet?: (key: string) => Promise<StatefulData<T22>>;
+  memoizedCustomGet?: (_key: string) => Promise<StatefulData<T22>>;
   className?: string;
   /**
    * Indicates whether or not you want the card delay animation.
    * Allows you to set `--gridCardAnimation` and `--gridCardDelay`.
    */
   animate?: boolean;
-  root?: Nullable<Element>;
 } & (
     | {
         GroupingComponent: FC<GroupingComponentProps>;
