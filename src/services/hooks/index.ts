@@ -1,4 +1,7 @@
 export * from "./useStaticCachedDataKeyValues";
+export * from "./useGetConnectionsTypeData";
+export * from "./useGetPublicTypeData";
+export * from "./useGetUserTypeData";
 export * from "./useOnPublicTypeData";
 export * from "./useOnConnectionsTypeKeys";
 export * from "./useOnConnectionsTypeCustomData";
