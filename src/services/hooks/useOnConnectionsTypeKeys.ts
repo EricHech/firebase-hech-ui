@@ -3,7 +3,7 @@ import type { SoilDatabase, DataList } from "firebase-soil";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
 import { getConnectionTypeKeys } from "firebase-soil/client";
 import { setStateFirebaseLists } from "../helpers/utils";
-import { DataListHookProps } from "./types";
+import { OnDataListHookProps } from "./types";
 
 export const useOnConnectionsTypeKeys = <
   T2 extends keyof SoilDatabase,
@@ -17,7 +17,7 @@ export const useOnConnectionsTypeKeys = <
   includeArray = false,
   enabled = true,
   maintainWhenDisabled = false,
-}: DataListHookProps<T2, Poke> & {
+}: OnDataListHookProps<T2, Poke> & {
   parentType: T3;
   parentKey: Maybe<string>;
 }) => {

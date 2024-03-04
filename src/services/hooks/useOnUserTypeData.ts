@@ -3,7 +3,7 @@ import { getUserTypeData } from "firebase-soil/client";
 import type { SoilDatabase, Data } from "firebase-soil";
 import { onUserDataTypeListChildChanged } from "../helpers/onUserDataTypeListChildChanged";
 import { setStateFirebaseLists, soilHydrateAndSetStateFirebaseLists } from "../helpers/utils";
-import { DataListHookProps } from "./types";
+import { OnDataListHookProps } from "./types";
 
 export const useOnUserTypeData = <T2 extends keyof SoilDatabase, Poke extends boolean>({
   uid,
@@ -12,7 +12,7 @@ export const useOnUserTypeData = <T2 extends keyof SoilDatabase, Poke extends bo
   includeArray = false,
   enabled = true,
   maintainWhenDisabled = false,
-}: DataListHookProps<T2, Poke> & {
+}: OnDataListHookProps<T2, Poke> & {
   uid: Maybe<string>;
 }) => {
   const [data, setData] = useState<Maybe<Nullable<Record<string, Data<T2>>>>>(poke ? undefined : {});

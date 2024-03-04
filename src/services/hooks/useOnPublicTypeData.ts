@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { SoilDatabase, Data } from "firebase-soil";
 import { onPublicDataTypeListChildChanged } from "../helpers/onPublicDataTypeListChildChanged";
-import { DataListHookProps } from "./types";
+import { OnDataListHookProps } from "./types";
 import { setStateFirebaseLists, soilHydrateAndSetStateFirebaseLists } from "../helpers/utils";
+import { getPublicTypeData } from "firebase-soil/client";
 
 export const useOnPublicTypeData = <T2 extends keyof SoilDatabase, Poke extends boolean>({
   dataType,
@@ -10,7 +11,7 @@ export const useOnPublicTypeData = <T2 extends keyof SoilDatabase, Poke extends 
   includeArray = false,
   enabled = true,
   maintainWhenDisabled = false,
-}: DataListHookProps<T2, Poke>) => {
+}: OnDataListHookProps<T2, Poke>) => {
   const [data, setData] = useState<Maybe<Nullable<Record<string, Data<T2>>>>>(poke ? undefined : {});
 
   const childChanged = useCallback(
@@ -24,7 +25,28 @@ export const useOnPublicTypeData = <T2 extends keyof SoilDatabase, Poke extends 
   useEffect(() => {
     let off: Maybe<VoidFunction>;
     if (enabled) {
-      off = onPublicDataTypeListChildChanged(dataType, childChanged, childRemoved);
+      const turnOn = () => onPublicDataTypeListChildChanged(dataType, childChanged, childRemoved);
+      let off: () => void;
+
+      if (poke) {
+        getPublicTypeData({
+          dataType,
+        }).then((d) => {
+          setData(
+            d.length === 0
+              ? null
+              : d.reduce((p, curr) => {
+                  if (!curr) return p;
+                  p[curr.key] = curr;
+                  return p;
+                }, {} as Record<string, Data<T2>>)
+          );
+
+          off = turnOn();
+        });
+      } else {
+        off = turnOn();
+      }
     }
 
     return () => {

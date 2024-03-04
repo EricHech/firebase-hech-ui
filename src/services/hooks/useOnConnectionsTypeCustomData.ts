@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import type { SoilDatabase } from "firebase-soil";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
-import { DataListHookProps } from "./types";
+import { OnDataListHookProps } from "./types";
 import { genericHydrateAndSetStateFirebaseLists, setStateFirebaseLists } from "../helpers/utils";
 import { getConnectionTypeKeys } from "firebase-soil/client";
 
@@ -19,7 +19,7 @@ export const useOnConnectionsTypeCustomData = <
   enabled = true,
   maintainWhenDisabled = false,
   memoizedCustomGet,
-}: DataListHookProps<T2, Poke> & {
+}: OnDataListHookProps<T2, Poke> & {
   parentType: T3;
   parentKey: Maybe<string>;
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */

@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import type { SoilDatabase, Data } from "firebase-soil";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
 import { soilHydrateAndSetStateFirebaseLists, setStateFirebaseLists } from "../helpers/utils";
-import { DataListHookProps } from "./types";
+import { OnDataListHookProps } from "./types";
 import { getConnectionTypeData } from "firebase-soil/client";
 
 export const useOnConnectionsTypeData = <
@@ -17,7 +17,7 @@ export const useOnConnectionsTypeData = <
   includeArray = false,
   enabled = true,
   maintainWhenDisabled = false,
-}: DataListHookProps<T2, Poke> & {
+}: OnDataListHookProps<T2, Poke> & {
   parentType: T3;
   parentKey: Maybe<string>;
 }) => {

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import type { DataList, SoilDatabase } from "firebase-soil";
 import { onOwnersChildChanged } from "../helpers/onOwnersChildChanged";
-import { DataListHookProps } from "./types";
+import { OnDataListHookProps } from "./types";
 import { setStateFirebaseLists } from "../helpers/utils";
 
 export const useOnOwners = <T2 extends keyof SoilDatabase, Poke extends boolean>({
@@ -11,7 +11,7 @@ export const useOnOwners = <T2 extends keyof SoilDatabase, Poke extends boolean>
   includeArray = false,
   enabled = true,
   maintainWhenDisabled = false,
-}: DataListHookProps<T2, Poke> & {
+}: OnDataListHookProps<T2, Poke> & {
   dataKey: Maybe<string>;
 }) => {
   const [data, setData] = useState<Maybe<Nullable<Record<string, number>>>>(poke ? undefined : {});
