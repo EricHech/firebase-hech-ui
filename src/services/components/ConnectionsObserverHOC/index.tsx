@@ -12,9 +12,16 @@ import { useStaticCachedDataKeyValues } from "../../hooks";
 import { useBasicIntersectionObserver } from "./useBasicIntersectionObserver";
 import { useGetListeners } from "./useGetListeners";
 import { attachListeners, getDirection, getOrderBy, getPaginationOptions, getPath, getSide } from "./utils";
-import type { ConnectionsObserverHOCProps, CustomPaginationOpts, ItemComponentProps, ObservedDataProps } from "./types";
+import type {
+  ConnectionsObserverHOCProps,
+  CustomPaginationOpts,
+  ItemComponentProps,
+  GroupingComponentProps,
+  EmptyComponentProps,
+  ObservedDataProps,
+} from "./types";
 
-export type { ItemComponentProps };
+export type { ItemComponentProps, GroupingComponentProps, EmptyComponentProps };
 
 export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined>({
   animate,
