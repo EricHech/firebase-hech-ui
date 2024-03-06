@@ -123,6 +123,7 @@ export function ConnectionsObserverHOC<
     animate,
     root,
     GroupingComponent,
+    memoizedPrefixedListItems = null,
     grouping,
   } = props;
 
@@ -409,6 +410,8 @@ export function ConnectionsObserverHOC<
         "--listItemMinWidthPx": listItemMinWidthPx,
       }}
     >
+      {memoizedPrefixedListItems}
+
       {dataList.map(([key, timestamp], i) => {
         const dataJsx =
           props.version === "connectionDataList" ? (

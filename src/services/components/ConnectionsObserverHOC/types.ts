@@ -153,6 +153,8 @@ export type ConnectionsObserverHOCProps<
    * Allows you to set `--gridCardAnimation` and `--gridCardDelay`.
    */
   animate?: boolean;
+  /** Don't forget to memoize. */
+  memoizedPrefixedListItems?: JSX.Element;
 } & (
     | {
         GroupingComponent: FC<GroupingComponentProps>;
