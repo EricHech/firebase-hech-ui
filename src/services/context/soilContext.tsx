@@ -111,13 +111,13 @@ export function SoilContextProviderComponent({
   useEffect(() => {
     let reloadCancelToken: NodeJS.Timeout;
 
-    if (firebaseUserState && !firebaseUserState.emailVerified) {
+    if (requireEmailVerification && firebaseUserState && !firebaseUserState.emailVerified) {
       // This is needed because Firebase caches the user's info. We need to continually reload to listen for `emailVerified === true`.
       reloadCancelToken = setInterval(() => firebaseUserState?.reload(), 1_000);
     }
 
     return () => clearInterval(reloadCancelToken);
-  }, [firebaseUserState?.emailVerified]);
+  }, [requireEmailVerification, firebaseUserState?.emailVerified]);
 
   useEffect(() => {
     initializeFirebase(
