@@ -133,7 +133,7 @@ export type ConnectionsObserverHOCProps<
   listItemMinWidthPx: number;
   /**
    * This number will be multiplied by the `listItemMin` sizes to determine how far
-   * the intersection observer with consider `observed` beyond the window boundary
+   * the intersection observer will consider `observed` beyond the window boundary
    */
   hydrationBufferAmount: number;
   /** If nothing is passed in, it will fetch all of the keys by default. */
