@@ -148,6 +148,8 @@ export type ConnectionsObserverHOCProps<
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
   memoizedCustomGet?: (_key: string) => Promise<StatefulData<T22>>;
   className?: string;
+  /** The provided keys will be omitted from the list */
+  omitKeys?: Record<string, boolean>;
   /**
    * Indicates whether or not you want the card delay animation.
    * Allows you to set `--gridCardAnimation` and `--gridCardDelay`.

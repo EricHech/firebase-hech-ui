@@ -119,6 +119,7 @@ export function ConnectionsObserverHOC<
     ignoreNonStartingEdgeAdditions,
     dataType,
     memoizedCustomGet,
+    omitKeys,
     className,
     animate,
     root,
@@ -413,6 +414,8 @@ export function ConnectionsObserverHOC<
       {memoizedPrefixedListItems}
 
       {dataList.map(([key, timestamp], i) => {
+        if (omitKeys?.[key]) return null;
+
         const dataJsx =
           props.version === "connectionDataList" ? (
             <ObservedData
