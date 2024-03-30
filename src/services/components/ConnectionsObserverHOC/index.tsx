@@ -407,8 +407,8 @@ export function ConnectionsObserverHOC<
     <ul
       className={className}
       style={{
-        "--listItemMinHeightPx": listItemMinHeightPx,
-        "--listItemMinWidthPx": listItemMinWidthPx,
+        "--listItemMinHeightPx": `${listItemMinHeightPx}px`,
+        "--listItemMinWidthPx": `${listItemMinWidthPx}px`,
       }}
     >
       {memoizedPrefixedListItems}
