@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, ReactNode, createContext, useCallback } from "react";
 import type { FirebaseOptions } from "firebase/app";
 
-import { User as FirebaseUser } from "firebase/auth";
+import { User as FirebaseUser, Persistence } from "firebase/auth";
 import { PATHS } from "firebase-soil/paths";
 import {
   initializeFirebase,
@@ -78,17 +78,25 @@ type TProps = {
    */
   requireEmailVerification?: boolean;
   anonymousSignIn?: boolean;
-  isNativePlatform?: boolean;
   emulatorOptions?: EmulatorOptions;
-};
+} & (
+  | {
+      isNativePlatform?: true;
+      webPersistance?: undefined;
+    }
+  | {
+      isNativePlatform?: undefined;
+      webPersistance?: Persistence;
+    }
+);
 
 export function SoilContextProviderComponent({
   children,
   firebaseOptions,
   requireEmailVerification = false,
   anonymousSignIn = false,
-  isNativePlatform = false,
   emulatorOptions,
+  ...props
 }: TProps) {
   const [firebaseUserState, setFirebaseUserState] = useState<Nullable<FirebaseUser>>();
   const {
@@ -126,9 +134,9 @@ export function SoilContextProviderComponent({
         setFirebaseUserState(firebaseUser);
         if (firebaseUser) setAwaitingVerification(!firebaseUser.emailVerified);
       },
-      { anonymousSignIn, isNativePlatform, emulatorOptions }
+      { anonymousSignIn, emulatorOptions, ...props }
     );
-  }, [firebaseOptions, anonymousSignIn, isNativePlatform, emulatorOptions]);
+  }, [firebaseOptions, anonymousSignIn, emulatorOptions, props.isNativePlatform, props.webPersistance]);
 
   useEffect(() => {
     let offUser: Maybe<VoidFunction>;
