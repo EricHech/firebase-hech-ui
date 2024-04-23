@@ -56,7 +56,15 @@ type TProps = PropsWithChildren<{
   style?: CSSProperties;
 }>;
 
-export function ObservedAnimation({ id, observe, observed, className, animatedClassName, style, children }: TProps) {
+export function AnimatedUponObservation({
+  id,
+  observe,
+  observed,
+  className,
+  animatedClassName,
+  style,
+  children,
+}: TProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

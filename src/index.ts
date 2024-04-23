@@ -1,5 +1,6 @@
 // Components
 export * from "./services/components/ConnectionsObserverHOC";
+export * from "./services/components/ConnectionsObserverHOC/useBasicIntersectionObserver";
 
 // Context
 export * from "./services/context";
