@@ -12,6 +12,7 @@ export const useOnUserTypeData = <T2 extends keyof SoilDatabase, Poke extends bo
   includeArray = false,
   enabled = true,
   maintainWhenDisabled = false,
+  deps = [],
 }: OnDataListHookProps<T2, Poke> & {
   uid: Maybe<string>;
 }) => {
@@ -57,7 +58,7 @@ export const useOnUserTypeData = <T2 extends keyof SoilDatabase, Poke extends bo
       off?.();
       if (!maintainWhenDisabled) setData(poke ? undefined : {});
     };
-  }, [uid, dataType, childChanged, childRemoved, enabled, maintainWhenDisabled, poke]);
+  }, [uid, dataType, childChanged, childRemoved, enabled, maintainWhenDisabled, poke, ...deps]);
 
   const dataArray = useMemo(
     () =>

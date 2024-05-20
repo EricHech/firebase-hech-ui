@@ -10,6 +10,7 @@ export const useGetConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 exte
   includeArray = false,
   enabled = true,
   maintainWhenDisabled = false,
+  deps = [],
 }: GetDataListHookProps<T2> & {
   parentType: T3;
   parentKey: Maybe<string>;
@@ -41,7 +42,7 @@ export const useGetConnectionsTypeData = <T2 extends keyof SoilDatabase, T3 exte
     }
 
     return undefined;
-  }, [parentType, parentKey, dataType, enabled, maintainWhenDisabled]);
+  }, [parentType, parentKey, dataType, enabled, maintainWhenDisabled, ...deps]);
 
   const dataArray = useMemo(
     () =>

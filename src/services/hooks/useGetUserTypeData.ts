@@ -10,6 +10,7 @@ export const useGetUserTypeData = <T2 extends keyof SoilDatabase, T3 extends key
   includeArray = false,
   enabled = true,
   maintainWhenDisabled = false,
+  deps = [],
 }: GetDataListHookProps<T2> & {
   parentType: T3;
   uid: Maybe<string>;
@@ -40,7 +41,7 @@ export const useGetUserTypeData = <T2 extends keyof SoilDatabase, T3 extends key
     }
 
     return undefined;
-  }, [parentType, uid, dataType, enabled, maintainWhenDisabled]);
+  }, [parentType, uid, dataType, enabled, maintainWhenDisabled, ...deps]);
 
   const dataArray = useMemo(
     () =>

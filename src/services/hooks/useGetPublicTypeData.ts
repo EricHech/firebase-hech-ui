@@ -8,6 +8,7 @@ export const useGetPublicTypeData = <T2 extends keyof SoilDatabase>({
   includeArray = false,
   enabled = true,
   maintainWhenDisabled = false,
+  deps = [],
 }: GetDataListHookProps<T2>) => {
   const [data, setData] = useState<Maybe<Nullable<Record<string, Data<T2>>>>>();
 
@@ -34,7 +35,7 @@ export const useGetPublicTypeData = <T2 extends keyof SoilDatabase>({
     }
 
     return undefined;
-  }, [dataType, enabled, maintainWhenDisabled]);
+  }, [dataType, enabled, maintainWhenDisabled, ...deps]);
 
   const dataArray = useMemo(
     () =>

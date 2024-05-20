@@ -6,6 +6,8 @@ export type GetDataListHookProps<T2> = {
   enabled?: boolean;
   /** Defaults to `false`. Set to true if, once enabled and then disabled, it maintains the data from when it was enabled */
   maintainWhenDisabled?: boolean;
+  /** spread into the dependency array for fetching the data */
+  deps?: unknown[];
 };
 
 export type OnDataListHookProps<T2, Poke extends boolean> = GetDataListHookProps<T2> & {

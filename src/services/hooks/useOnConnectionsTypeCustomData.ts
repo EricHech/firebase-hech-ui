@@ -18,6 +18,7 @@ export const useOnConnectionsTypeCustomData = <
   includeArray = false,
   enabled = true,
   maintainWhenDisabled = false,
+  deps = [],
   memoizedCustomGet,
 }: OnDataListHookProps<T2, Poke> & {
   parentType: T3;
@@ -70,7 +71,7 @@ export const useOnConnectionsTypeCustomData = <
     }
 
     return undefined;
-  }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled, maintainWhenDisabled, poke]);
+  }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled, maintainWhenDisabled, poke, ...deps]);
 
   const dataArray = useMemo(
     () => (includeArray ? Object.entries(data || {}).map(([key, value]) => ({ key, value })) : []),
