@@ -107,7 +107,7 @@ export const getPath = <T2 extends keyof SoilDatabase, T22 extends keyof SoilDat
     return PATHS.userDataTypeList(userUid, dataType);
   }
 
-  if (version.version === "userDataList" && userUid) {
+  if (version.version === "publicDataList" && userUid) {
     return PATHS.publicDataTypeList(dataType);
   }
 
