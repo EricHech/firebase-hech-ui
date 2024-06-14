@@ -17,7 +17,7 @@ export const useIsOwner = ({
     if (dataKey && uid) {
       try {
         getOwner({ dataType, dataKey, uid })
-          .then(setIsOwner)
+          .then((ownerTimestamp) => setIsOwner(typeof ownerTimestamp === "number"))
           .catch(() => setIsOwner(false)); // catch the firebase error that arises if you are not the owner
       } catch (e) {
         // Really, really throw the error away (why trashing it seem to work?)
