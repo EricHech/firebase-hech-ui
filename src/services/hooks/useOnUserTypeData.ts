@@ -27,10 +27,10 @@ export const useOnUserTypeData = <T2 extends keyof SoilDatabase, Poke extends bo
   const childRemoved = useCallback((key: string) => setStateFirebaseLists(setData, null, key, undefined), []);
 
   useEffect(() => {
-    let off: Maybe<VoidFunction>;
+    let off: Maybe<VoidFunction> = undefined;
+
     if (uid && enabled) {
       const turnOn = () => onUserDataTypeListChildChanged(uid, dataType, childChanged, childRemoved);
-      let off: () => void;
 
       if (poke) {
         getUserTypeData({

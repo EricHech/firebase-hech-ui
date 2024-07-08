@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import type { SoilDatabase, DataList } from "firebase-soil";
-import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
 import { getConnectionTypeKeys } from "firebase-soil/client";
+import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
 import { setStateFirebaseLists } from "../helpers/utils";
 import { OnDataListHookProps } from "./types";
 
@@ -36,7 +36,7 @@ export const useOnConnectionsTypeKeys = <
     if (parentKey && enabled) {
       const turnOn = () =>
         onConnectionsDataListChildChanged(parentType, parentKey, dataType, childChanged, childRemoved);
-      let off: () => void;
+      let off: Maybe<VoidFunction> = undefined;
 
       if (poke) {
         getConnectionTypeKeys({
@@ -52,7 +52,7 @@ export const useOnConnectionsTypeKeys = <
       }
 
       return () => {
-        off();
+        off?.();
         if (!maintainWhenDisabled) setData(poke ? undefined : {});
       };
     }

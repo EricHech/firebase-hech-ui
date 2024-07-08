@@ -24,10 +24,10 @@ export const useOnPublicTypeData = <T2 extends keyof SoilDatabase, Poke extends 
   const childRemoved = useCallback((key: string) => setStateFirebaseLists(setData, null, key, undefined), []);
 
   useEffect(() => {
-    let off: Maybe<VoidFunction>;
+    let off: Maybe<VoidFunction> = undefined;
+
     if (enabled) {
       const turnOn = () => onPublicDataTypeListChildChanged(dataType, childChanged, childRemoved);
-      let off: () => void;
 
       if (poke) {
         getPublicTypeData({

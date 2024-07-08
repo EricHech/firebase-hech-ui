@@ -36,7 +36,7 @@ export const useOnConnectionsTypeData = <
     if (parentKey && enabled) {
       const turnOn = () =>
         onConnectionsDataListChildChanged(parentType, parentKey, dataType, childChanged, childRemoved);
-      let off: () => void;
+      let off: Maybe<VoidFunction> = undefined;
 
       if (poke) {
         getConnectionTypeData({
@@ -62,7 +62,7 @@ export const useOnConnectionsTypeData = <
       }
 
       return () => {
-        off();
+        off?.();
         if (!maintainWhenDisabled) setData(poke ? undefined : {});
       };
     }

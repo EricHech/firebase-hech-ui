@@ -40,7 +40,7 @@ export const useOnConnectionsTypeCustomData = <
     if (parentKey && enabled) {
       const turnOn = () =>
         onConnectionsDataListChildChanged(parentType, parentKey, dataType, childChanged, childRemoved);
-      let off: () => void;
+      let off: Maybe<VoidFunction> = undefined;
 
       if (poke) {
         getConnectionTypeKeys({
@@ -65,7 +65,7 @@ export const useOnConnectionsTypeCustomData = <
       }
 
       return () => {
-        off();
+        off?.();
         if (!maintainWhenDisabled) setData(poke ? undefined : {});
       };
     }
