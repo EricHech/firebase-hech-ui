@@ -1,5 +1,5 @@
 export * from "./useGetSafeContext";
-export * from "./soilContext";
+export * from "./firebaseHechContext";
 export * from "./createConnectionsTypeDataContext";
 export * from "./userTypeDataContext";
 export * from "./publicTypeDataContext";

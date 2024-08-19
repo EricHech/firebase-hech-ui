@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import type { SoilDatabase } from "firebase-soil";
-import { getOwner } from "firebase-soil/client";
+import type { FirebaseHechDatabase } from "firebase-hech";
+import { getOwner } from "firebase-hech/client";
 
 export const useIsOwner = ({
   dataType,
   dataKey,
   uid,
 }: {
-  dataType: keyof SoilDatabase;
+  dataType: keyof FirebaseHechDatabase;
   dataKey: Maybe<Nullable<string>>;
   uid: Maybe<Nullable<string>>;
 }) => {

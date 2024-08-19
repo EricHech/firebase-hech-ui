@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, ReactNode, createContext, useCallb
 import type { FirebaseOptions } from "firebase/app";
 
 import { User as FirebaseUser, Persistence } from "firebase/auth";
-import { PATHS } from "firebase-soil/paths";
+import { PATHS } from "firebase-hech/paths";
 import {
   initializeFirebase,
   getAdminValue,
@@ -11,8 +11,8 @@ import {
   getUnverifiedUser,
   createUser,
   remove,
-} from "firebase-soil/client";
-import type { EmulatorOptions, User } from "firebase-soil";
+} from "firebase-hech/client";
+import type { EmulatorOptions, User } from "firebase-hech";
 
 import { useGetSafeContext } from "./useGetSafeContext";
 
@@ -50,7 +50,7 @@ const getFirebaseUserSyncUpdate = (
 ╚██████╗╚██████╔╝██║ ╚████║   ██║   ███████╗██╔╝ ██╗   ██║
  ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝   ╚═╝
 */
-type BaseSoilContext = {
+type BaseFirebaseHechContext = {
   initiallyLoading: boolean;
   loggedIn: boolean;
   isAdmin: Nullable<boolean>;
@@ -58,12 +58,12 @@ type BaseSoilContext = {
   user: Maybe<Nullable<Mandate<User, "uid">>>;
 };
 
-const SoilContext = createContext<Maybe<BaseSoilContext>>(undefined);
+const FirebaseHechContext = createContext<Maybe<BaseFirebaseHechContext>>(undefined);
 
-export const useSoilContext = () => {
-  const useContextResult = useGetSafeContext(SoilContext);
+export const useFirebaseHechContext = () => {
+  const useContextResult = useGetSafeContext(FirebaseHechContext);
 
-  if (!useContextResult) throw new Error("You must wrap your component in an instance of SoilContext");
+  if (!useContextResult) throw new Error("You must wrap your component in an instance of FirebaseHechContext");
 
   return useContextResult;
 };
@@ -90,7 +90,7 @@ type TProps = {
     }
 );
 
-export function SoilContextProviderComponent({
+export function FirebaseHechContextProviderComponent({
   children,
   firebaseOptions,
   requireEmailVerification = false,
@@ -110,8 +110,8 @@ export function SoilContextProviderComponent({
 
   const [awaitingVerification, setAwaitingVerification] = useState<boolean>();
 
-  const [soilUserState, setSoilUserState] = useState<Nullable<Mandate<User, "uid">>>();
-  const soilUserIsNull = soilUserState === null;
+  const [firebaseHechUserState, setFirebaseHechUserState] = useState<Nullable<Mandate<User, "uid">>>();
+  const firebaseHechUserIsNull = firebaseHechUserState === null;
 
   const [isAdmin, setIsAdmin] = useState<Nullable<boolean>>(false);
   const [initiallyLoading, setInitiallyLoading] = useState(true);
@@ -142,12 +142,12 @@ export function SoilContextProviderComponent({
     let offUser: Maybe<VoidFunction>;
 
     if (fbUserStateUid) {
-      offUser = onUserValue(fbUserStateUid, async (soilUser) => {
-        if (soilUser === null) {
-          setSoilUserState(null);
-          // If the `soilUser` is not null, then the following should be true:
+      offUser = onUserValue(fbUserStateUid, async (firebaseHechUser) => {
+        if (firebaseHechUser === null) {
+          setFirebaseHechUserState(null);
+          // If the `firebaseHechUser` is not null, then the following should be true:
         } else if (!requireEmailVerification || fbUserStateEmailVerified) {
-          // Always keep the Soil user synced with Firebase (which could be getting updates via their Google account, verification status, etc.)
+          // Always keep the FirebaseHech user synced with Firebase (which could be getting updates via their Google account, verification status, etc.)
           const { userUpdate, updateNeeded } = getFirebaseUserSyncUpdate(
             {
               uid: fbUserStateUid,
@@ -156,11 +156,11 @@ export function SoilContextProviderComponent({
               phoneNumber: fbUserStatePhoneNumber || null,
               photoURL: fbUserStatePhotoURL || null,
             },
-            soilUser
+            firebaseHechUser
           );
           if (updateNeeded) await updateUser(fbUserStateUid, userUpdate);
 
-          setSoilUserState(soilUser);
+          setFirebaseHechUserState(firebaseHechUser);
           await getAdminValue(fbUserStateUid)
             .then(setIsAdmin)
             .catch(() => setIsAdmin(false));
@@ -169,7 +169,7 @@ export function SoilContextProviderComponent({
         setInitiallyLoading(false);
       });
     } else if (fbUserIsNull) {
-      setSoilUserState(null);
+      setFirebaseHechUserState(null);
       setIsAdmin(false);
       setInitiallyLoading(false);
     }
@@ -185,7 +185,7 @@ export function SoilContextProviderComponent({
   ]);
 
   useEffect(() => {
-    if (fbUserStateUid && fbUserStateEmailVerified && soilUserIsNull) {
+    if (fbUserStateUid && fbUserStateEmailVerified && firebaseHechUserIsNull) {
       getUnverifiedUser(fbUserStateUid).then(async (unverifiedUser) => {
         if (unverifiedUser) {
           await createUser({ ...unverifiedUser, createUnverifiedUser: false });
@@ -193,18 +193,18 @@ export function SoilContextProviderComponent({
         }
       });
     }
-  }, [fbUserStateEmailVerified, fbUserStateUid, soilUserIsNull]);
+  }, [fbUserStateEmailVerified, fbUserStateUid, firebaseHechUserIsNull]);
 
   const ctx = useMemo(
     () => ({
       initiallyLoading,
-      loggedIn: Boolean(soilUserState),
+      loggedIn: Boolean(firebaseHechUserState),
       isAdmin,
       awaitingVerification,
-      user: soilUserState,
+      user: firebaseHechUserState,
     }),
-    [initiallyLoading, soilUserState, isAdmin, awaitingVerification]
+    [initiallyLoading, firebaseHechUserState, isAdmin, awaitingVerification]
   );
 
-  return <SoilContext.Provider value={ctx}>{children}</SoilContext.Provider>;
+  return <FirebaseHechContext.Provider value={ctx}>{children}</FirebaseHechContext.Provider>;
 }

@@ -1,6 +1,6 @@
-// Soil
-import { PATHS } from "firebase-soil/paths";
-import type { ListenerPaginationOptions, SoilDatabase } from "firebase-soil";
+// FirebaseHech
+import { PATHS } from "firebase-hech/paths";
+import type { ListenerPaginationOptions, FirebaseHechDatabase } from "firebase-hech";
 
 // Helpers
 import {
@@ -37,9 +37,9 @@ export const getPaginationOptions = (sort: Sort, opts: CustomPaginationOpts) => 
 };
 
 export const attachListeners = <
-  T2 extends keyof SoilDatabase,
-  T22 extends keyof SoilDatabase,
-  T222 extends keyof SoilDatabase
+  T2 extends keyof FirebaseHechDatabase,
+  T22 extends keyof FirebaseHechDatabase,
+  T222 extends keyof FirebaseHechDatabase
 >({
   userUid,
   dataType,
@@ -90,7 +90,11 @@ export const attachListeners = <
   return off;
 };
 
-export const getPath = <T2 extends keyof SoilDatabase, T22 extends keyof SoilDatabase, T222 extends keyof SoilDatabase>(
+export const getPath = <
+  T2 extends keyof FirebaseHechDatabase,
+  T22 extends keyof FirebaseHechDatabase,
+  T222 extends keyof FirebaseHechDatabase
+>(
   version: SettingsVersion<T2, T22, T222>,
   dataType: T22,
   userUid: Maybe<string>

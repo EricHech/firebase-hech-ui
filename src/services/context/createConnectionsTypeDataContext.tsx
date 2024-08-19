@@ -8,18 +8,21 @@ import React, {
   memo,
   PropsWithChildren,
 } from "react";
-import type { SoilDatabase, Data } from "firebase-soil";
+import type { FirebaseHechDatabase, Data } from "firebase-hech";
 import { useOnConnectionsTypeData } from "../hooks";
 import { useGetSafeContext } from "./useGetSafeContext";
 
-type BaseConnectionsTypeDataContext<T22 extends keyof SoilDatabase> = {
+type BaseConnectionsTypeDataContext<T22 extends keyof FirebaseHechDatabase> = {
   data: Maybe<Nullable<Record<string, Data<T22>>>>;
   dataArray: Mandate<Data<T22>, "key">[];
   setParentKey: Dispatch<SetStateAction<Maybe<string>>>;
   setShouldPoke: Dispatch<SetStateAction<{ decided: boolean; decision: boolean }>>;
 };
 
-export const createConnectionsTypeDataContext = <T2 extends keyof SoilDatabase, T22 extends keyof SoilDatabase>(
+export const createConnectionsTypeDataContext = <
+  T2 extends keyof FirebaseHechDatabase,
+  T22 extends keyof FirebaseHechDatabase
+>(
   parentType: T2,
   dataType: T22
 ) => {

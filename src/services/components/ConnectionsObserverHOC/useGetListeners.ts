@@ -4,9 +4,9 @@ import { Dispatch, SetStateAction, useCallback } from "react";
 import { handleOrderingFirebaseList } from "../../helpers/utils";
 
 // Types
-import type { DataList, SoilDatabase } from "firebase-soil";
+import type { DataList, FirebaseHechDatabase } from "firebase-hech";
 
-export const useGetListeners = (setData: Dispatch<SetStateAction<DataList[keyof SoilDatabase]>>) => {
+export const useGetListeners = (setData: Dispatch<SetStateAction<DataList[keyof FirebaseHechDatabase]>>) => {
   const childAddedOrChanged = useCallback(
     (val: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
       setData((prev) => {

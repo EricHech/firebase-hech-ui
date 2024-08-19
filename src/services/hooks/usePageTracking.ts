@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import type { TrackingData } from "firebase-soil";
-import { PATHS } from "firebase-soil/paths";
-import { getCurrentUser, onDisconnect, pushKey, trackEvent } from "firebase-soil/client";
-import { useSoilContext } from "../context/soilContext";
+import type { TrackingData } from "firebase-hech";
+import { PATHS } from "firebase-hech/paths";
+import { getCurrentUser, onDisconnect, pushKey, trackEvent } from "firebase-hech/client";
+import { useFirebaseHechContext } from "../context/firebaseHechContext";
 
 export const usePageTracking = (asPath: string, query: Record<string, string>) => {
-  const { loggedIn, user } = useSoilContext();
+  const { loggedIn, user } = useFirebaseHechContext();
 
   useEffect(() => {
     if (loggedIn) trackEvent("pageView", { path: asPath });

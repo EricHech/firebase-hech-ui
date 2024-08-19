@@ -1,13 +1,13 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import type { SoilDatabase, Data } from "firebase-soil";
+import type { FirebaseHechDatabase, Data } from "firebase-hech";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
-import { soilHydrateAndSetStateFirebaseLists, setStateFirebaseLists } from "../helpers/utils";
+import { firebaseHechHydrateAndSetStateFirebaseLists, setStateFirebaseLists } from "../helpers/utils";
 import { OnDataListHookProps } from "./types";
-import { getConnectionTypeData } from "firebase-soil/client";
+import { getConnectionTypeData } from "firebase-hech/client";
 
 export const useOnConnectionsTypeData = <
-  T2 extends keyof SoilDatabase,
-  T3 extends keyof SoilDatabase,
+  T2 extends keyof FirebaseHechDatabase,
+  T3 extends keyof FirebaseHechDatabase,
   Poke extends boolean
 >({
   parentType,
@@ -26,7 +26,7 @@ export const useOnConnectionsTypeData = <
 
   const childChanged = useCallback(
     async (_: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
-      soilHydrateAndSetStateFirebaseLists(dataType, setData, _, key, previousOrderingKey),
+      firebaseHechHydrateAndSetStateFirebaseLists(dataType, setData, _, key, previousOrderingKey),
     [dataType]
   );
 

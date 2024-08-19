@@ -1,7 +1,7 @@
 import { RefObject, useCallback, useEffect, useState } from "react";
 import { ConfirmationResult, getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { updateUser } from "firebase-soil/client";
-import { useSoilContext } from "../context/soilContext";
+import { updateUser } from "firebase-hech/client";
+import { useFirebaseHechContext } from "../context/firebaseHechContext";
 
 declare global {
   interface Window {
@@ -10,7 +10,7 @@ declare global {
 }
 
 export const usePhoneAuth = (buttonElementId: string, phoneNumberElement: RefObject<HTMLInputElement>) => {
-  const { user } = useSoilContext();
+  const { user } = useFirebaseHechContext();
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult>();
 
   const enabled = Boolean(user || user === null);

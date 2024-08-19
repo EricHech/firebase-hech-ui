@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
-import type { SoilDatabase, Data } from "firebase-soil";
+import type { FirebaseHechDatabase, Data } from "firebase-hech";
 import { GetDataListHookProps } from "./types";
-import { getUserTypeData } from "firebase-soil/client";
+import { getUserTypeData } from "firebase-hech/client";
 
-export const useGetUserTypeData = <T2 extends keyof SoilDatabase, T3 extends keyof SoilDatabase>({
+export const useGetUserTypeData = <T2 extends keyof FirebaseHechDatabase, T3 extends keyof FirebaseHechDatabase>({
   parentType,
   uid,
   dataType,

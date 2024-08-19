@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getUserTypeData } from "firebase-soil/client";
-import type { SoilDatabase, Data } from "firebase-soil";
+import { getUserTypeData } from "firebase-hech/client";
+import type { FirebaseHechDatabase, Data } from "firebase-hech";
 import { onUserDataTypeListChildChanged } from "../helpers/onUserDataTypeListChildChanged";
-import { setStateFirebaseLists, soilHydrateAndSetStateFirebaseLists } from "../helpers/utils";
+import { setStateFirebaseLists, firebaseHechHydrateAndSetStateFirebaseLists } from "../helpers/utils";
 import { OnDataListHookProps } from "./types";
 
-export const useOnUserTypeData = <T2 extends keyof SoilDatabase, Poke extends boolean>({
+export const useOnUserTypeData = <T2 extends keyof FirebaseHechDatabase, Poke extends boolean>({
   uid,
   dataType,
   poke,
@@ -20,7 +20,7 @@ export const useOnUserTypeData = <T2 extends keyof SoilDatabase, Poke extends bo
 
   const childChanged = useCallback(
     async (_: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
-      soilHydrateAndSetStateFirebaseLists(dataType, setData, _, key, previousOrderingKey),
+      firebaseHechHydrateAndSetStateFirebaseLists(dataType, setData, _, key, previousOrderingKey),
     [dataType]
   );
 

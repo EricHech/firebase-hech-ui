@@ -1,13 +1,13 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import type { SoilDatabase } from "firebase-soil";
+import type { FirebaseHechDatabase } from "firebase-hech";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
 import { OnDataListHookProps } from "./types";
 import { genericHydrateAndSetStateFirebaseLists, setStateFirebaseLists } from "../helpers/utils";
-import { getConnectionTypeKeys } from "firebase-soil/client";
+import { getConnectionTypeKeys } from "firebase-hech/client";
 
 export const useOnConnectionsTypeCustomData = <
-  T2 extends keyof SoilDatabase,
-  T3 extends keyof SoilDatabase,
+  T2 extends keyof FirebaseHechDatabase,
+  T3 extends keyof FirebaseHechDatabase,
   T extends unknown,
   Poke extends boolean
 >({

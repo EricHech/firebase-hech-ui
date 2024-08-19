@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
-import type { SoilDatabase, Data } from "firebase-soil";
+import type { FirebaseHechDatabase, Data } from "firebase-hech";
 import { GetDataListHookProps } from "./types";
-import { getPublicTypeData } from "firebase-soil/client";
+import { getPublicTypeData } from "firebase-hech/client";
 
-export const useGetPublicTypeData = <T2 extends keyof SoilDatabase>({
+export const useGetPublicTypeData = <T2 extends keyof FirebaseHechDatabase>({
   dataType,
   includeArray = false,
   enabled = true,

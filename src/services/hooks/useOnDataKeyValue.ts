@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import type { SoilDatabase, Data } from "firebase-soil";
-import { onDataKeyValue } from "firebase-soil/client";
+import type { FirebaseHechDatabase, Data } from "firebase-hech";
+import { onDataKeyValue } from "firebase-hech/client";
 
-export const useOnDataKeyValue = <T2 extends keyof SoilDatabase>({
+export const useOnDataKeyValue = <T2 extends keyof FirebaseHechDatabase>({
   dataType,
   dataKey,
   initialized,

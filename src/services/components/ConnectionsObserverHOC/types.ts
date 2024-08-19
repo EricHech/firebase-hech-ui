@@ -1,7 +1,7 @@
 import { FC } from "react";
 
-// Soil
-import type { ListenerPaginationOptions, SoilDatabase, StatefulData } from "firebase-soil";
+// FirebaseHech
+import type { ListenerPaginationOptions, FirebaseHechDatabase, StatefulData } from "firebase-hech";
 
 // Local
 import type { GetCache, SetCache } from "../../hooks";
@@ -32,7 +32,10 @@ export type ManagePagination = {
   buffer: number;
 };
 
-export type EmptyComponentProps<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined> = {
+export type EmptyComponentProps<
+  T22 extends keyof FirebaseHechDatabase,
+  T2 extends Maybe<keyof FirebaseHechDatabase> = undefined
+> = {
   dataType: T22;
   /** This will be undefined if the version is not `connectionDataList` */
   parentDataType: T2;
@@ -40,7 +43,10 @@ export type EmptyComponentProps<T22 extends keyof SoilDatabase, T2 extends Maybe
   parentDataKey: Maybe<string>;
 };
 
-export type ItemComponentProps<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined> = {
+export type ItemComponentProps<
+  T22 extends keyof FirebaseHechDatabase,
+  T2 extends Maybe<keyof FirebaseHechDatabase> = undefined
+> = {
   top: boolean;
   bottom: boolean;
   idx: number;
@@ -62,7 +68,10 @@ export type GroupingComponentProps = {
   timestamp: number;
 };
 
-export type ObservedDataProps<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined> = {
+export type ObservedDataProps<
+  T22 extends keyof FirebaseHechDatabase,
+  T2 extends Maybe<keyof FirebaseHechDatabase> = undefined
+> = {
   /** Indicates whether or not you want the card delay animation */
   animate?: boolean;
   idx: number;
@@ -86,9 +95,9 @@ export type ObservedDataProps<T22 extends keyof SoilDatabase, T2 extends Maybe<k
 };
 
 type ConnectionVersion<
-  T2 extends keyof SoilDatabase,
-  T22 extends keyof SoilDatabase,
-  T222 extends keyof SoilDatabase
+  T2 extends keyof FirebaseHechDatabase,
+  T22 extends keyof FirebaseHechDatabase,
+  T222 extends keyof FirebaseHechDatabase
 > = {
   version: "connectionDataList";
   parentDataType: T2;
@@ -99,7 +108,7 @@ type ConnectionVersion<
   EmptyComponent?: FC<EmptyComponentProps<T22, T2>>;
 };
 
-type PublicOrUserListVersion<T22 extends keyof SoilDatabase> = {
+type PublicOrUserListVersion<T22 extends keyof FirebaseHechDatabase> = {
   version: "publicDataList" | "userDataList";
   parentDataType?: undefined;
   parentDataKey?: undefined;
@@ -108,22 +117,24 @@ type PublicOrUserListVersion<T22 extends keyof SoilDatabase> = {
   EmptyComponent?: FC<EmptyComponentProps<T22>>;
 };
 
-export type Version<T2 extends keyof SoilDatabase, T22 extends keyof SoilDatabase, T222 extends keyof SoilDatabase> =
-  | ConnectionVersion<T2, T22, T222>
-  | PublicOrUserListVersion<T22>;
+export type Version<
+  T2 extends keyof FirebaseHechDatabase,
+  T22 extends keyof FirebaseHechDatabase,
+  T222 extends keyof FirebaseHechDatabase
+> = ConnectionVersion<T2, T22, T222> | PublicOrUserListVersion<T22>;
 
 export type SettingsVersion<
-  T2 extends keyof SoilDatabase,
-  T22 extends keyof SoilDatabase,
-  T222 extends keyof SoilDatabase
+  T2 extends keyof FirebaseHechDatabase,
+  T22 extends keyof FirebaseHechDatabase,
+  T222 extends keyof FirebaseHechDatabase
 > =
   | Omit<ConnectionVersion<T2, T22, T222>, "ItemComponent" | "EmptyComponent">
   | Omit<PublicOrUserListVersion<T22>, "ItemComponent" | "EmptyComponent">;
 
 export type ConnectionsObserverHOCProps<
-  T2 extends keyof SoilDatabase,
-  T22 extends keyof SoilDatabase,
-  T222 extends keyof SoilDatabase
+  T2 extends keyof FirebaseHechDatabase,
+  T22 extends keyof FirebaseHechDatabase,
+  T222 extends keyof FirebaseHechDatabase
 > = Version<T2, T22, T222> & {
   /** The scroll wrapper. This is essential for determining when elements are `observed` and utilizing the `hydrationBufferAmount`. */
   root: Nullable<Element>;

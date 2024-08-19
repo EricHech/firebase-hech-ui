@@ -1,8 +1,8 @@
 import type { Dispatch, SetStateAction } from "react";
 
-// Soil
-import { getDataKeyValue } from "firebase-soil/client";
-import type { Data, SoilDatabase } from "firebase-soil";
+// FirebaseHech
+import { getDataKeyValue } from "firebase-hech/client";
+import type { Data, FirebaseHechDatabase } from "firebase-hech";
 
 export const handleOrderingFirebaseList = <T extends unknown>(
   data: Maybe<Nullable<Record<string, T>>>,
@@ -64,7 +64,7 @@ export const genericHydrateAndSetStateFirebaseLists = async <T extends unknown>(
   return setStateFirebaseLists(setData, val, key, previousOrderingKey);
 };
 
-export const soilHydrateAndSetStateFirebaseLists = async <T2 extends keyof SoilDatabase>(
+export const firebaseHechHydrateAndSetStateFirebaseLists = async <T2 extends keyof FirebaseHechDatabase>(
   dataType: T2,
   setData: Dispatch<SetStateAction<Maybe<Nullable<Record<string, Data<T2>>>>>>,
   _: Nullable<number>,

@@ -1,9 +1,9 @@
 import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { SoilDatabase, StatefulData, DataList } from "firebase-soil";
-import { getDataKeyValue, getOrderByWithLimit } from "firebase-soil/client";
+import type { FirebaseHechDatabase, StatefulData, DataList } from "firebase-hech";
+import { getDataKeyValue, getOrderByWithLimit } from "firebase-hech/client";
 
 // Context
-import { useSoilContext } from "../../context";
+import { useFirebaseHechContext } from "../../context";
 
 // Hooks
 import { useStaticCachedDataKeyValues } from "../../hooks";
@@ -23,7 +23,10 @@ import type {
 
 export type { ItemComponentProps, GroupingComponentProps, EmptyComponentProps };
 
-export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<keyof SoilDatabase> = undefined>({
+export function ObservedData<
+  T22 extends keyof FirebaseHechDatabase,
+  T2 extends Maybe<keyof FirebaseHechDatabase> = undefined
+>({
   animate,
   idx,
   list,
@@ -95,7 +98,7 @@ export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<ke
 }
 
 /**
- * This component allows you to fetch a list of soil keys (by connection, ownership, or public lists)
+ * This component allows you to fetch a list of firebase-hech keys (by connection, ownership, or public lists)
  * and then hydrate the data for those keys only when those keys are scrolled into view. However, it
  * combines this method with optionally fetching keys in chunks to further improve performance if dealing
  * with extremely large lists. For example, if working with lists in the hundreds or even thousands, you
@@ -103,11 +106,11 @@ export function ObservedData<T22 extends keyof SoilDatabase, T2 extends Maybe<ke
  * with a list of tens of thousands or more, such as in the case of a chat, you should pass in `managePagination`.
  */
 export function ConnectionsObserverHOC<
-  T2 extends keyof SoilDatabase,
-  T22 extends keyof SoilDatabase,
-  T222 extends keyof SoilDatabase
+  T2 extends keyof FirebaseHechDatabase,
+  T22 extends keyof FirebaseHechDatabase,
+  T222 extends keyof FirebaseHechDatabase
 >(props: ConnectionsObserverHOCProps<T2, T22, T222>) {
-  const { initiallyLoading, user } = useSoilContext();
+  const { initiallyLoading, user } = useFirebaseHechContext();
 
   // ---- Prop Settings -----------------------------------------------------------------------------------------------
   const {

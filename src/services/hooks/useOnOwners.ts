@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import type { DataList, SoilDatabase } from "firebase-soil";
+import type { DataList, FirebaseHechDatabase } from "firebase-hech";
 import { onOwnersChildChanged } from "../helpers/onOwnersChildChanged";
 import { OnDataListHookProps } from "./types";
 import { setStateFirebaseLists } from "../helpers/utils";
 
-export const useOnOwners = <T2 extends keyof SoilDatabase, Poke extends boolean>({
+export const useOnOwners = <T2 extends keyof FirebaseHechDatabase, Poke extends boolean>({
   dataType,
   dataKey,
   poke,

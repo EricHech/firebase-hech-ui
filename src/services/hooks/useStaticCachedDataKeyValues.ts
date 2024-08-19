@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 
-// Soil
-import { getDataKeyValue } from "firebase-soil/client";
-import type { SoilDatabase, StatefulData } from "firebase-soil";
+// FirebaseHech
+import { getDataKeyValue } from "firebase-hech/client";
+import type { FirebaseHechDatabase, StatefulData } from "firebase-hech";
 
-type StaticCache = Partial<Record<keyof SoilDatabase, Partial<Record<string, StatefulData<keyof SoilDatabase>>>>>;
+type StaticCache = Partial<
+  Record<keyof FirebaseHechDatabase, Partial<Record<string, StatefulData<keyof FirebaseHechDatabase>>>>
+>;
 
 export type SetCache = ReturnType<typeof useStaticCachedDataKeyValues>["setCache"];
 export type GetCache = ReturnType<typeof useStaticCachedDataKeyValues>["getCache"];
@@ -13,7 +15,7 @@ export const useStaticCachedDataKeyValues = () => {
   const [staticCache, setStaticCache] = useState<StaticCache>({});
 
   const setCache = useCallback(
-    <T extends keyof SoilDatabase>(dataType: T, dataKey: string, data: StatefulData<T>) =>
+    <T extends keyof FirebaseHechDatabase>(dataType: T, dataKey: string, data: StatefulData<T>) =>
       setStaticCache((prev) => ({
         ...prev,
         [dataType]: {
@@ -25,7 +27,11 @@ export const useStaticCachedDataKeyValues = () => {
   );
 
   const getCache = useCallback(
-    async <T extends keyof SoilDatabase>(dataType: T, dataKey: string, { fetchIfNull }: { fetchIfNull: boolean }) => {
+    async <T extends keyof FirebaseHechDatabase>(
+      dataType: T,
+      dataKey: string,
+      { fetchIfNull }: { fetchIfNull: boolean }
+    ) => {
       const data = staticCache[dataType]?.[dataKey] as StatefulData<T>;
       if (fetchIfNull ? data != undefined : data !== undefined) return data;
 
@@ -41,7 +47,7 @@ export const useStaticCachedDataKeyValues = () => {
 };
 
 /** Meant to be used as a stateful helper to go alongside the usage of `useStaticCachedDataKeyValues` */
-export const useCacheHook = <T extends keyof SoilDatabase>(
+export const useCacheHook = <T extends keyof FirebaseHechDatabase>(
   dataType: T,
   dataKey: Maybe<string>,
   getCache: GetCache,

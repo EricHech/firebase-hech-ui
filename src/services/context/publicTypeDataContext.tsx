@@ -1,16 +1,16 @@
 import React, { useEffect, useMemo, ReactNode, createContext, memo, useState, SetStateAction, Dispatch } from "react";
-import type { Data, SoilDatabase, StatefulData } from "firebase-soil";
+import type { Data, FirebaseHechDatabase, StatefulData } from "firebase-hech";
 import { useOnPublicTypeData } from "../hooks";
-import { useSoilContext } from "./soilContext";
+import { useFirebaseHechContext } from "./firebaseHechContext";
 import { useGetSafeContext } from "./useGetSafeContext";
 
-type BasePublicTypeDataContext<T2 extends keyof SoilDatabase> = {
+type BasePublicTypeDataContext<T2 extends keyof FirebaseHechDatabase> = {
   data: Maybe<Nullable<Record<string, StatefulData<T2>>>>;
   dataArray: Mandate<Data<T2>, "key">[];
   setShouldPoke: Dispatch<SetStateAction<{ decided: boolean; decision: boolean }>>;
 };
 
-export const createPublicTypeDataContext = <T2 extends keyof SoilDatabase>(dataType: T2, poke: boolean) => {
+export const createPublicTypeDataContext = <T2 extends keyof FirebaseHechDatabase>(dataType: T2, poke: boolean) => {
   const PublicTypeDataContext = createContext<Maybe<BasePublicTypeDataContext<T2>>>(undefined);
 
   const usePublicTypeDataFromContext = () => {
@@ -32,7 +32,7 @@ export const createPublicTypeDataContext = <T2 extends keyof SoilDatabase>(dataT
   }: {
     children: ReactNode;
   }) {
-    const { initiallyLoading } = useSoilContext();
+    const { initiallyLoading } = useFirebaseHechContext();
 
     const [poke, setShouldPoke] = useState({ decided: false, decision: false });
 
