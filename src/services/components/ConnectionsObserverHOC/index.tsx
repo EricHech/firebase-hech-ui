@@ -292,6 +292,8 @@ export function ConnectionsObserverHOC<
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Primary Hydration and Listeners -----------------------------------------------------------------------------
+  const [initialHydrationComplete, setInitialHydrationComplete] = useState(!managePagination); // initial hydration can only be tracked if managing pagination
+
   useEffect(() => {
     let primaryListenerOff: Maybe<VoidFunction>;
 
@@ -322,6 +324,7 @@ export function ConnectionsObserverHOC<
 
               paginationOpts.edge = { side, termination: { key: marker, version: "inclusive" } };
             }
+            setInitialHydrationComplete(true);
 
             if (newDataArray.length < amount) fetchedAll.current = true;
             const paginate = getPaginationOptions(sort, paginationOpts);
@@ -380,7 +383,28 @@ export function ConnectionsObserverHOC<
   const { setCache, getCache } = useStaticCachedDataKeyValues();
 
   /* eslint-disable react/destructuring-assignment */
-  if (dataList.length === 0 && props.EmptyComponent) {
+  if (props.LoadingComponent && !initialHydrationComplete) {
+    return props.version === "connectionDataList" ? (
+      <div className={className}>
+        <props.LoadingComponent
+          dataType={dataType} //
+          parentDataType={props.parentDataType}
+          parentDataKey={props.parentDataKey}
+        />
+      </div>
+    ) : (
+      <div className={className}>
+        <props.LoadingComponent
+          dataType={dataType} //
+          parentDataType={undefined}
+          parentDataKey={undefined}
+        />
+      </div>
+    );
+    /* eslint-enable react/destructuring-assignment */
+  }
+
+  if (dataList.length === 0 && props.EmptyComponent && initialHydrationComplete) {
     return props.version === "connectionDataList" ? (
       <div className={className}>
         <props.EmptyComponent

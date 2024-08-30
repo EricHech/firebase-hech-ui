@@ -1,6 +1,6 @@
 {
   "name": "firebase-hech-ui",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The sister package of `firebase-hech`.",
   "files": [
     "dist"
@@ -28,7 +28,7 @@
     "@swc/core": "^1.3.96",
     "@types/node": "^20.9.0",
     "@types/react": "^18.2.37",
-    "firebase-hech": "^1.0.0",
+    "firebase-hech": "^1.0.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "ts-node": "^10.9.1",

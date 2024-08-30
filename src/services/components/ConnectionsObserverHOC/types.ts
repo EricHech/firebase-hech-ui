@@ -43,6 +43,17 @@ export type EmptyComponentProps<
   parentDataKey: Maybe<string>;
 };
 
+export type LoadingComponentProps<
+  T22 extends keyof FirebaseHechDatabase,
+  T2 extends Maybe<keyof FirebaseHechDatabase> = undefined
+> = {
+  dataType: T22;
+  /** This will be undefined if the version is not `connectionDataList` */
+  parentDataType: T2;
+  /** This will be undefined if the version is not `connectionDataList` */
+  parentDataKey: Maybe<string>;
+};
+
 export type ItemComponentProps<
   T22 extends keyof FirebaseHechDatabase,
   T2 extends Maybe<keyof FirebaseHechDatabase> = undefined
@@ -106,6 +117,7 @@ type ConnectionVersion<
   connectionType?: T222;
   ItemComponent: ObservedDataProps<T22, T2>["ItemComponent"];
   EmptyComponent?: FC<EmptyComponentProps<T22, T2>>;
+  LoadingComponent?: FC<LoadingComponentProps<T22, T2>>;
 };
 
 type PublicOrUserListVersion<T22 extends keyof FirebaseHechDatabase> = {
@@ -115,6 +127,7 @@ type PublicOrUserListVersion<T22 extends keyof FirebaseHechDatabase> = {
   connectionType?: undefined;
   ItemComponent: ObservedDataProps<T22>["ItemComponent"];
   EmptyComponent?: FC<EmptyComponentProps<T22>>;
+  LoadingComponent?: FC<LoadingComponentProps<T22>>;
 };
 
 export type Version<
@@ -128,8 +141,8 @@ export type SettingsVersion<
   T22 extends keyof FirebaseHechDatabase,
   T222 extends keyof FirebaseHechDatabase
 > =
-  | Omit<ConnectionVersion<T2, T22, T222>, "ItemComponent" | "EmptyComponent">
-  | Omit<PublicOrUserListVersion<T22>, "ItemComponent" | "EmptyComponent">;
+  | Omit<ConnectionVersion<T2, T22, T222>, "ItemComponent" | "EmptyComponent" | "LoadingComponent">
+  | Omit<PublicOrUserListVersion<T22>, "ItemComponent" | "EmptyComponent" | "LoadingComponent">;
 
 export type ConnectionsObserverHOCProps<
   T2 extends keyof FirebaseHechDatabase,
