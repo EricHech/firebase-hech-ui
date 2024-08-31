@@ -19,6 +19,7 @@ export const getOrderBy = (sort: Sort) => (sort.startsWith("created") ? "orderBy
 
 export const getPaginationOptions = (sort: Sort, opts: CustomPaginationOpts) => {
   const paginate: ListenerPaginationOptions = {};
+
   paginate.orderBy = getOrderBy(sort);
 
   if (opts.pagination?.amount) {
