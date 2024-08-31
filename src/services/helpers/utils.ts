@@ -12,9 +12,7 @@ export const handleOrderingFirebaseList = <T extends unknown>(
   direction: "limitToLast" | "limitToFirst"
 ) => {
   // * If it is a new value being added to the beginning, add it to the beginning...
-  if (previousOrderingKey === null) {
-    return direction === "limitToFirst" ? { [key]: val, ...data } : { ...data, [key]: val };
-  }
+  if (previousOrderingKey === null) return { [key]: val, ...data };
 
   // * ...otherwise add it to the correct location:
   const next = { ...data };
