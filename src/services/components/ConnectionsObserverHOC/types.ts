@@ -162,6 +162,8 @@ export type ConnectionsObserverHOCProps<
   hydrationBufferAmount: number;
   /** If nothing is passed in, it will fetch all of the keys by default. */
   managePagination?: ManagePagination;
+  /** If passed in, this will serve as a limit on the query (ie. all values higher/lower than x) */
+  terminationEdge?: string | number;
   sort: Sort;
   /**
    * If this is true, `onChildAdded` listeners will only be added to the first page.

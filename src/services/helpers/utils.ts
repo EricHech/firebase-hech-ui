@@ -8,22 +8,22 @@ export const handleOrderingFirebaseList = <T extends unknown>(
   data: Maybe<Nullable<Record<string, T>>>,
   val: T,
   key: string,
-  previousOrderingKey: Nullable<string>
+  previousOrderingKey: Nullable<string>,
+  direction: "limitToLast" | "limitToFirst"
 ) => {
   // * If it is a new value being added to the beginning, add it to the beginning...
-  if (previousOrderingKey === null) return { [key]: val, ...data };
+  if (previousOrderingKey === null) {
+    return direction === "limitToFirst" ? { [key]: val, ...data } : { ...data, [key]: val };
+  }
 
   // * ...otherwise add it to the correct location:
-  const entries = Object.entries(data || {});
-
-  // Insert the new item after the previous one
+  const next = { ...data };
+  delete next[key];
+  const entries = Object.entries(next || {});
   const insertionPrevIndex = entries.findIndex(([k]) => k === previousOrderingKey);
   entries.splice(insertionPrevIndex + 1, 0, [key, val]);
 
-  return entries.reduce((obj, [k, v]) => {
-    obj[k] = v; // eslint-disable-line no-param-reassign
-    return obj;
-  }, {} as Record<string, T>);
+  return Object.fromEntries(entries);
 };
 
 export const setStateFirebaseLists = <T extends unknown>(
@@ -49,7 +49,7 @@ export const setStateFirebaseLists = <T extends unknown>(
 
     // * ...otherwise handle adding it
     // Firebase makes the `previousOrderingKey` optional, but it will only ever be string or null
-    return handleOrderingFirebaseList(prev, val, key, previousOrderingKey!);
+    return handleOrderingFirebaseList(prev, val, key, previousOrderingKey!, "limitToFirst");
   });
 
 export const genericHydrateAndSetStateFirebaseLists = async <T extends unknown>(

@@ -119,6 +119,7 @@ export function ConnectionsObserverHOC<
     hydrationBufferAmount,
     sort,
     managePagination,
+    terminationEdge: terminationEdgeMarker,
     ignoreNonStartingEdgeAdditions,
     dataType,
     memoizedCustomGet,
@@ -165,17 +166,27 @@ export function ConnectionsObserverHOC<
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Data --------------------------------------------------------------------------------------------------------
-  const [data, setData] = useState<DataList[T22]>({});
+  // We save the data as an array of pages because the added/changed/removed listeners read statuses according to their page
+  const [data, setData] = useState<DataList[T22][]>([]);
+  const nextPageIdx = data.length;
 
   const dataList = useMemo(() => {
-    const list = Object.entries(data);
-    if (sort === "created oldest" || sort === "updated oldest") return list;
-    return list.reverse();
-  }, [sort, data]);
+    const list = data.reduce((prev, curr) => {
+      /* eslint-disable no-param-reassign */
+      if (direction === "limitToFirst") prev = { ...prev, ...curr };
+      else prev = { ...curr, ...prev };
+      /* eslint-enable no-param-reassign */
+      return prev;
+    }, {} as DataList[T22]);
+
+    if (sort === "created oldest" || sort === "updated oldest") return Object.entries(list);
+    return Object.entries(list).reverse();
+  }, [direction, sort, data]);
+
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Fetch Helpers -----------------------------------------------------------------------------------------------
-  const { childAddedOrChanged, childRemoved } = useGetListeners(setData);
+  const { getChildAddedOrChanged, getChildRemoved } = useGetListeners(setData);
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- New Page Fetching -------------------------------------------------------------------------------------------
@@ -200,7 +211,7 @@ export function ConnectionsObserverHOC<
       const newData = await getOrderByWithLimit<DataList[T22]>(path, orderBy, {
         amount,
         direction,
-        termination: { key: startPos, version: "inclusive" },
+        termination: { key: startPos, version: "exclusive" },
       });
 
       const newDataArray = Object.entries(newData || {});
@@ -209,29 +220,23 @@ export function ConnectionsObserverHOC<
 
       const paginationOpts: CustomPaginationOpts = {};
 
-      if (!empty) {
-        setData((prev) =>
-          direction === "limitToLast" //
-            ? { ...newData, ...prev }
-            : { ...prev, ...newData }
-        );
-      }
+      if (!empty) setData((prev) => [...prev, newData]);
 
       const startEl = newDataArray[0];
       const endEl = newDataArray[newDataLength - 1];
       const start = orderBy === "orderByKey" ? startEl[0] : startEl[1];
       const end = orderBy === "orderByKey" ? endEl[0] : endEl[1];
 
-      // ...if a full page came back, set the listeners for that page...
-      if (newDataLength === amount) {
-        paginationOpts.between = { start, end, version: "inclusive" };
-      } else {
-        // ...otherwise, less than a full page came back, so you are at the end and should listen to the opposite edge now also...
+      // ...if less than a full page came back, you are at the end and should listen to the opposite of the starting edge now also...
+      if (newDataLength < amount) {
         fetchedAll.current = true;
         paginationOpts.edge = {
           side: side === "high" ? "low" : "high",
-          termination: { key: side === "high" ? end : start, version: "inclusive" },
+          termination: { key: side === "high" ? end : start, version: "exclusive" },
         };
+      } else {
+        // ...otherwise, set the listeners for that page...
+        paginationOpts.between = { start, end, version: "exclusive" };
       }
 
       const paginate = getPaginationOptions(sort, paginationOpts);
@@ -242,9 +247,9 @@ export function ConnectionsObserverHOC<
         dataType,
         settings: versionSettings,
         paginate,
-        childAdded: childAddedOrChanged,
-        childChanged: childAddedOrChanged,
-        childRemoved,
+        childAdded: getChildAddedOrChanged(nextPageIdx, direction),
+        childChanged: getChildAddedOrChanged(nextPageIdx, direction),
+        childRemoved: getChildRemoved(nextPageIdx),
         skipChildAdded: Boolean(ignoreNonStartingEdgeAdditions),
       });
 
@@ -253,8 +258,8 @@ export function ConnectionsObserverHOC<
       fetchingNewPage.current = false;
     },
     [
-      childAddedOrChanged,
-      childRemoved,
+      getChildAddedOrChanged,
+      getChildRemoved,
       dataType,
       managePagination,
       ignoreNonStartingEdgeAdditions,
@@ -264,6 +269,7 @@ export function ConnectionsObserverHOC<
       orderBy,
       versionSettings,
       user?.uid,
+      nextPageIdx,
     ]
   );
   // ------------------------------------------------------------------------------------------------------------------
@@ -304,11 +310,15 @@ export function ConnectionsObserverHOC<
 
         if (path) {
           const { amount } = managePagination;
+          const terminationEdge = terminationEdgeMarker
+            ? ({ key: terminationEdgeMarker, version: "inclusive" } as const)
+            : undefined;
 
           // ...get the initial chunk of data...
           getOrderByWithLimit<DataList[T22]>(path, orderBy, {
             amount,
             direction,
+            termination: terminationEdge,
           }).then((newData) => {
             const newDataArray = Object.entries(newData || {});
 
@@ -316,13 +326,20 @@ export function ConnectionsObserverHOC<
 
             if (newData) {
               // ...set it...
-              setData(newData);
+              setData([newData]);
 
-              const elIndex = side === "high" ? 0 : newDataArray.length - 1;
-              const el = newDataArray[elIndex];
-              const marker = orderBy === "orderByKey" ? el[0] : el[1];
+              // If you are setting a custom edge (rather than the actual end of the infinite scroll)...
+              if (terminationEdge) {
+                // ...then use the `pagination` prop, which aims in the direction you're paginating...
+                paginationOpts.pagination = { amount, termination: terminationEdge };
+              } else {
+                // ...otherwise, set the `edge`, which will look in the direction of the starting place in case more data comes in
+                const elIndex = side === "high" ? 0 : newDataArray.length - 1;
+                const el = newDataArray[elIndex];
+                const marker = orderBy === "orderByKey" ? el[0] : el[1];
 
-              paginationOpts.edge = { side, termination: { key: marker, version: "inclusive" } };
+                paginationOpts.edge = { side, termination: { key: marker, version: "inclusive" } };
+              }
             }
             setInitialHydrationComplete(true);
 
@@ -335,9 +352,9 @@ export function ConnectionsObserverHOC<
               dataType,
               settings: versionSettings,
               paginate,
-              childAdded: childAddedOrChanged,
-              childChanged: childAddedOrChanged,
-              childRemoved,
+              childAdded: getChildAddedOrChanged(0, direction),
+              childChanged: getChildAddedOrChanged(0, direction),
+              childRemoved: getChildRemoved(0),
               skipChildAdded: false,
             });
           });
@@ -352,9 +369,9 @@ export function ConnectionsObserverHOC<
           dataType,
           settings: versionSettings,
           paginate,
-          childAdded: childAddedOrChanged,
-          childChanged: childAddedOrChanged,
-          childRemoved,
+          childAdded: getChildAddedOrChanged(0, direction),
+          childChanged: getChildAddedOrChanged(0, direction),
+          childRemoved: getChildRemoved(0),
           skipChildAdded: false,
         });
       }
@@ -363,7 +380,7 @@ export function ConnectionsObserverHOC<
     return () => {
       primaryListenerOff?.();
       newPageListenerOffs.current.forEach((pageOff) => pageOff());
-      setData({});
+      setData([]);
     };
   }, [
     initiallyLoading,
@@ -375,8 +392,9 @@ export function ConnectionsObserverHOC<
     orderBy,
     versionSettings,
     managePagination,
-    childAddedOrChanged,
-    childRemoved,
+    terminationEdgeMarker,
+    getChildAddedOrChanged,
+    getChildRemoved,
   ]);
   // ------------------------------------------------------------------------------------------------------------------
 

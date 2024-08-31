@@ -6,33 +6,36 @@ import { handleOrderingFirebaseList } from "../../helpers/utils";
 // Types
 import type { DataList, FirebaseHechDatabase } from "firebase-hech";
 
-export const useGetListeners = (setData: Dispatch<SetStateAction<DataList[keyof FirebaseHechDatabase]>>) => {
-  const childAddedOrChanged = useCallback(
-    (val: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
-      setData((prev) => {
-        // * If it is an existing value being changed, change it...
-        if (prev[key] !== undefined) {
-          const next = { ...prev };
-          next[key] = val;
-          return next;
-        }
+export const useGetListeners = (setData: Dispatch<SetStateAction<DataList[keyof FirebaseHechDatabase][]>>) => {
+  const getChildAddedOrChanged = useCallback(
+    (pageIdx: number, direction: "limitToLast" | "limitToFirst") =>
+      (val: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
+        setData((prev) => {
+          // Firebase makes the `previousOrderingKey` optional, but it will only ever be string or null
+          const updatedPage = handleOrderingFirebaseList(prev[pageIdx], val, key, previousOrderingKey!, direction);
 
-        // * ...otherwise handle adding it
-        // Firebase makes the `previousOrderingKey` optional, but it will only ever be string or null
-        return handleOrderingFirebaseList(prev, val, key, previousOrderingKey!);
-      }),
+          // This part is a little confusing to me, but it seems that maybe when something moves between pages,
+          // we need to make sure it is cleaned in case there is an overlap between listeners due to edge listening
+          return prev.map((page, i) => {
+            const cleaned = { ...page };
+            delete cleaned[key];
+
+            return i === pageIdx ? updatedPage : cleaned;
+          });
+        }),
     [setData]
   );
 
-  const childRemoved = useCallback(
-    (key: string) =>
+  const getChildRemoved = useCallback(
+    (pageIdx: number) => (key: string) => {
       setData((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }),
+        const updatedPage = { ...prev[pageIdx] };
+        delete updatedPage[key];
+        return prev.map((page, i) => (i === pageIdx ? updatedPage : page));
+      });
+    },
     [setData]
   );
 
-  return { childAddedOrChanged, childRemoved };
+  return { getChildAddedOrChanged, getChildRemoved };
 };

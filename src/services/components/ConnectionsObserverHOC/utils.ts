@@ -12,7 +12,13 @@ import {
 // Local
 import type { CustomPaginationOpts, SettingsVersion, Sort } from "./types";
 
-/** `limitToLast` returns the high end of a list, while `limitToFirst` returns the low end */
+/**
+ * `limitToLast` returns the high end of a list, while `limitToFirst` returns the low end
+ * ```
+ * "limitToFirst" : 123 | 456 | 789
+ * "limitToLast"  : 789 | 456 | 123
+ * ```
+ */
 export const getDirection = (sort: Sort) => (sort.endsWith("newest") ? "limitToLast" : "limitToFirst");
 export const getSide = (sort: Sort) => (sort.endsWith("newest") ? "high" : "low");
 export const getOrderBy = (sort: Sort) => (sort.startsWith("created") ? "orderByKey" : "orderByValue");
