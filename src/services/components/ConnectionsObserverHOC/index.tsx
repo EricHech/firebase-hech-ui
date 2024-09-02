@@ -400,6 +400,9 @@ export function ConnectionsObserverHOC<
 
   const { setCache, getCache } = useStaticCachedDataKeyValues();
 
+  const groupingDataRef = useRef<Record<string, unknown>>({});
+  groupingDataRef.current = {};
+
   /* eslint-disable react/destructuring-assignment */
   if (props.LoadingComponent && !initialHydrationComplete) {
     return props.version === "connectionDataList" ? (
@@ -512,7 +515,13 @@ export function ConnectionsObserverHOC<
 
             return (
               <Fragment key={key}>
-                <GroupingComponent timestamp={currentGrouping} />
+                <GroupingComponent
+                  idx={i}
+                  top={i === 0}
+                  bottom={i === dataList.length - 1}
+                  timestamp={currentGrouping}
+                  groupingData={groupingDataRef.current}
+                />
                 {dataJsx}
               </Fragment>
             );

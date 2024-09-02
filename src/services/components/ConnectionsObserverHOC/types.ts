@@ -76,7 +76,12 @@ export type ItemComponentProps<
 };
 
 export type GroupingComponentProps = {
+  idx: number;
+  top: boolean;
+  bottom: boolean;
   timestamp: number;
+  /** Data used to track information during the iteration progress. It is reset every render. */
+  groupingData: Record<string, unknown>;
 };
 
 export type ObservedDataProps<
