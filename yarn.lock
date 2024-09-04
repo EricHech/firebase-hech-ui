@@ -1406,10 +1406,10 @@ firebase-admin@12.4.0:
     "@google-cloud/firestore" "^7.7.0"
     "@google-cloud/storage" "^7.7.0"
 
-firebase-hech@^1.0.15:
-  version "1.0.15"
-  resolved "https://registry.yarnpkg.com/firebase-hech/-/firebase-hech-1.0.15.tgz#75251746436512e1a4d242ec82088ab79c6c984a"
-  integrity sha512-8lJQ0UkVzlL4y3uqBOMs3cwnhimjlWn+j3rXlTc4EwtvcWNCfqACKJsmDiTAIGvghrXULEhuAGswVYCW+UJprg==
+firebase-hech@^1.0.16:
+  version "1.0.16"
+  resolved "https://registry.yarnpkg.com/firebase-hech/-/firebase-hech-1.0.16.tgz#0e022ab7f93bff9c1d1d2c0c8c4d6db16dc590a7"
+  integrity sha512-HnEwb9C8XSaFi+phLcYTCbqSnI1wj69jM0DRadS2wSBSSr+k7h/8fb861dJn1k8e/aIDdILt5CZzb0fOWyBejg==
   dependencies:
     "@types/node" "^20.9.0"
     firebase "^10.13.1"
