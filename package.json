@@ -1,6 +1,6 @@
 {
   "name": "firebase-hech-ui",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "The sister package of `firebase-hech`.",
   "files": [
     "dist"

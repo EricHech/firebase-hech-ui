@@ -324,7 +324,7 @@ export function ConnectionsObserverHOC<
 
             const paginationOpts: CustomPaginationOpts = {};
 
-            if (newData) {
+            if (newDataArray.length) {
               // ...set it...
               setData([newData]);
 
