@@ -247,8 +247,8 @@ export function ConnectionsObserverHOC<
         dataType,
         settings: versionSettings,
         paginate,
-        childAdded: getChildAddedOrChanged(nextPageIdx, direction),
-        childChanged: getChildAddedOrChanged(nextPageIdx, direction),
+        childAdded: getChildAddedOrChanged(nextPageIdx),
+        childChanged: getChildAddedOrChanged(nextPageIdx),
         childRemoved: getChildRemoved(nextPageIdx),
         skipChildAdded: Boolean(ignoreNonStartingEdgeAdditions),
       });
@@ -320,7 +320,7 @@ export function ConnectionsObserverHOC<
             direction,
             termination: terminationEdge,
           }).then((newData) => {
-            const newDataArray = Object.entries(newData || {});
+            const newDataArray = Object.entries(newData);
 
             const paginationOpts: CustomPaginationOpts = {};
 
@@ -352,8 +352,8 @@ export function ConnectionsObserverHOC<
               dataType,
               settings: versionSettings,
               paginate,
-              childAdded: getChildAddedOrChanged(0, direction),
-              childChanged: getChildAddedOrChanged(0, direction),
+              childAdded: getChildAddedOrChanged(0),
+              childChanged: getChildAddedOrChanged(0),
               childRemoved: getChildRemoved(0),
               skipChildAdded: false,
             });
@@ -369,8 +369,8 @@ export function ConnectionsObserverHOC<
           dataType,
           settings: versionSettings,
           paginate,
-          childAdded: getChildAddedOrChanged(0, direction),
-          childChanged: getChildAddedOrChanged(0, direction),
+          childAdded: getChildAddedOrChanged(0),
+          childChanged: getChildAddedOrChanged(0),
           childRemoved: getChildRemoved(0),
           skipChildAdded: false,
         });
@@ -422,9 +422,10 @@ export function ConnectionsObserverHOC<
         />
       </div>
     );
-    /* eslint-enable react/destructuring-assignment */
   }
+  /* eslint-enable react/destructuring-assignment */
 
+  /* eslint-disable react/destructuring-assignment */
   if (dataList.length === 0 && props.EmptyComponent && initialHydrationComplete) {
     return props.version === "connectionDataList" ? (
       <div className={className}>
@@ -443,8 +444,8 @@ export function ConnectionsObserverHOC<
         />
       </div>
     );
-    /* eslint-enable react/destructuring-assignment */
   }
+  /* eslint-enable react/destructuring-assignment */
 
   if (dataList.length === 0) return null;
 

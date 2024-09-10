@@ -8,8 +8,7 @@ export const handleOrderingFirebaseList = <T extends unknown>(
   data: Maybe<Nullable<Record<string, T>>>,
   val: T,
   key: string,
-  previousOrderingKey: Nullable<string>,
-  direction: "limitToLast" | "limitToFirst"
+  previousOrderingKey: Nullable<string>
 ) => {
   // * If it is a new value being added to the beginning, add it to the beginning...
   if (previousOrderingKey === null) return { [key]: val, ...data };
@@ -47,7 +46,7 @@ export const setStateFirebaseLists = <T extends unknown>(
 
     // * ...otherwise handle adding it
     // Firebase makes the `previousOrderingKey` optional, but it will only ever be string or null
-    return handleOrderingFirebaseList(prev, val, key, previousOrderingKey!, "limitToFirst");
+    return handleOrderingFirebaseList(prev, val, key, previousOrderingKey!);
   });
 
 export const genericHydrateAndSetStateFirebaseLists = async <T extends unknown>(
