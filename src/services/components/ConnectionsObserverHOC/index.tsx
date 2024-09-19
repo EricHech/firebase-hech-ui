@@ -382,6 +382,7 @@ export function ConnectionsObserverHOC<
       primaryListenerOff?.();
       newPageListenerOffs.current.forEach((pageOff) => pageOff());
       setData([]);
+      setInitialHydrationComplete(!managePagination);
     };
   }, [
     initiallyLoading,
