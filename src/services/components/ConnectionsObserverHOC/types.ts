@@ -188,6 +188,7 @@ export type ConnectionsObserverHOCProps<
   animate?: boolean;
   /** Don't forget to memoize. */
   memoizedPrefixedListItems?: JSX.Element;
+  disable?: boolean;
 } & (
     | {
         GroupingComponent: FC<GroupingComponentProps>;

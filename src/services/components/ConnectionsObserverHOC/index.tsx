@@ -130,6 +130,7 @@ export function ConnectionsObserverHOC<
     GroupingComponent,
     memoizedPrefixedListItems = null,
     grouping,
+    disable,
   } = props;
 
   /* eslint-disable react/destructuring-assignment */
@@ -303,7 +304,7 @@ export function ConnectionsObserverHOC<
   useEffect(() => {
     let primaryListenerOff: Maybe<VoidFunction>;
 
-    if (!initiallyLoading) {
+    if (!initiallyLoading && !disable) {
       // (1) If you are managing pagination...
       if (managePagination) {
         const path = getPath(versionSettings, dataType, user?.uid);
@@ -395,6 +396,7 @@ export function ConnectionsObserverHOC<
     terminationEdgeMarker,
     getChildAddedOrChanged,
     getChildRemoved,
+    disable,
   ]);
   // ------------------------------------------------------------------------------------------------------------------
 
