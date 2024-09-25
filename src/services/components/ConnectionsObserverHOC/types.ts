@@ -1,12 +1,28 @@
 import { FC } from "react";
 
 // FirebaseHech
-import type { ListenerPaginationOptions, FirebaseHechDatabase, StatefulData } from "firebase-hech";
+import type {
+  ListenerPaginationOptions,
+  FirebaseHechDatabase,
+  StatefulData,
+  ConnectionDataListDatabase,
+} from "firebase-hech";
 
 // Local
 import type { GetCache, SetCache } from "../../hooks";
 
-export type Sort = "created oldest" | "created newest" | "updated oldest" | "updated newest";
+export type Sort<
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
+> =
+  | "created oldest"
+  | "created newest"
+  | "updated oldest"
+  | "updated newest"
+  | { childKey: keyof Val; direction: "asc" | "desc" };
 
 export type CustomPaginationOpts =
   | {
@@ -33,41 +49,44 @@ export type ManagePagination = {
 };
 
 export type EmptyComponentProps<
-  T22 extends keyof FirebaseHechDatabase,
-  T2 extends Maybe<keyof FirebaseHechDatabase> = undefined
+  ChildT extends keyof FirebaseHechDatabase,
+  ParentT extends Maybe<keyof ConnectionDataListDatabase> = undefined
 > = {
-  dataType: T22;
+  dataType: ChildT;
   /** This will be undefined if the version is not `connectionDataList` */
-  parentDataType: T2;
+  parentDataType: Maybe<ParentT>;
   /** This will be undefined if the version is not `connectionDataList` */
   parentDataKey: Maybe<string>;
 };
 
 export type LoadingComponentProps<
-  T22 extends keyof FirebaseHechDatabase,
-  T2 extends Maybe<keyof FirebaseHechDatabase> = undefined
+  ChildT extends keyof FirebaseHechDatabase,
+  ParentT extends Maybe<keyof ConnectionDataListDatabase> = undefined
 > = {
-  dataType: T22;
+  dataType: ChildT;
   /** This will be undefined if the version is not `connectionDataList` */
-  parentDataType: T2;
+  parentDataType: Maybe<ParentT>;
   /** This will be undefined if the version is not `connectionDataList` */
   parentDataKey: Maybe<string>;
 };
 
 export type ItemComponentProps<
-  T22 extends keyof FirebaseHechDatabase,
-  T2 extends Maybe<keyof FirebaseHechDatabase> = undefined
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 > = {
   top: boolean;
   bottom: boolean;
   idx: number;
-  list: [string, number][];
+  list: [string, Val | number][];
   timestamp: number;
-  data: StatefulData<T22>;
-  dataType: T22;
+  data: StatefulData<ChildT>;
+  dataType: ChildT;
   dataKey: string;
   /** This will be undefined if the version is not `connectionDataList` */
-  parentDataType: T2;
+  parentDataType: Maybe<ParentT>;
   /** This will be undefined if the version is not `connectionDataList` */
   parentDataKey: Maybe<string>;
   observed: boolean;
@@ -85,75 +104,105 @@ export type GroupingComponentProps = {
 };
 
 export type ObservedDataProps<
-  T22 extends keyof FirebaseHechDatabase,
-  T2 extends Maybe<keyof FirebaseHechDatabase> = undefined
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 > = {
   /** Indicates whether or not you want the card delay animation */
   animate?: boolean;
   idx: number;
-  list: [string, number][];
+  list: [string, Val | number][];
   top: boolean;
   bottom: boolean;
-  dataType: T22;
+  dataType: ChildT;
   dataKey: string;
   /** This will be undefined if the version is not `connectionDataList` */
-  parentDataType: T2;
+  parentDataType: Maybe<ParentT>;
   /** This will be undefined if the version is not `connectionDataList` */
   parentDataKey: Maybe<string>;
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
-  memoizedCustomGet?: (_key: string) => Promise<StatefulData<T22>>;
+  memoizedCustomGet?: (_key: string) => Promise<StatefulData<ChildT>>;
   timestamp: number;
+  queryNode: number | Val;
   observe: (_el: HTMLLIElement) => void;
   observed: boolean;
   setCache: SetCache;
   getCache: GetCache;
-  ItemComponent: FC<ItemComponentProps<T22, T2>>;
+  ItemComponent: FC<ItemComponentProps<ParentT, ParentK, ChildT, ChildK, Val>>;
 };
 
 type ConnectionVersion<
-  T2 extends keyof FirebaseHechDatabase,
-  T22 extends keyof FirebaseHechDatabase,
-  T222 extends keyof FirebaseHechDatabase
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 > = {
   version: "connectionDataList";
-  parentDataType: T2;
-  parentDataKey: Maybe<string>;
+  parentDataType: ParentT;
+  parentDataKey: Maybe<ParentK>;
   /** Include this key if you want to use a connectionList other than the dataType you're requesting */
-  connectionType?: T222;
-  ItemComponent: ObservedDataProps<T22, T2>["ItemComponent"];
-  EmptyComponent?: FC<EmptyComponentProps<T22, T2>>;
-  LoadingComponent?: FC<LoadingComponentProps<T22, T2>>;
+  connectionType?: ChildT2;
+  ItemComponent: ObservedDataProps<ParentT, ParentK, ChildT, ChildK, Val>["ItemComponent"];
+  EmptyComponent?: FC<EmptyComponentProps<ChildT, ParentT>>;
+  LoadingComponent?: FC<LoadingComponentProps<ChildT, ParentT>>;
 };
 
-type PublicOrUserListVersion<T22 extends keyof FirebaseHechDatabase> = {
+type PublicOrUserListVersion<
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
+> = {
   version: "publicDataList" | "userDataList";
   parentDataType?: undefined;
   parentDataKey?: undefined;
   connectionType?: undefined;
-  ItemComponent: ObservedDataProps<T22>["ItemComponent"];
-  EmptyComponent?: FC<EmptyComponentProps<T22>>;
-  LoadingComponent?: FC<LoadingComponentProps<T22>>;
+  ItemComponent: ObservedDataProps<ParentT, ParentK, ChildT, ChildK, Val>["ItemComponent"];
+  EmptyComponent?: FC<EmptyComponentProps<ChildT, ParentT>>;
+  LoadingComponent?: FC<LoadingComponentProps<ChildT, ParentT>>;
 };
 
 export type Version<
-  T2 extends keyof FirebaseHechDatabase,
-  T22 extends keyof FirebaseHechDatabase,
-  T222 extends keyof FirebaseHechDatabase
-> = ConnectionVersion<T2, T22, T222> | PublicOrUserListVersion<T22>;
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
+> =
+  | ConnectionVersion<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>
+  | PublicOrUserListVersion<ParentT, ParentK, ChildT, ChildK, Val>;
 
 export type SettingsVersion<
-  T2 extends keyof FirebaseHechDatabase,
-  T22 extends keyof FirebaseHechDatabase,
-  T222 extends keyof FirebaseHechDatabase
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 > =
-  | Omit<ConnectionVersion<T2, T22, T222>, "ItemComponent" | "EmptyComponent" | "LoadingComponent">
-  | Omit<PublicOrUserListVersion<T22>, "ItemComponent" | "EmptyComponent" | "LoadingComponent">;
+  | Omit<
+      ConnectionVersion<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>,
+      "ItemComponent" | "EmptyComponent" | "LoadingComponent"
+    >
+  | Omit<
+      PublicOrUserListVersion<ParentT, ParentK, ChildT, ChildK, Val>,
+      "ItemComponent" | "EmptyComponent" | "LoadingComponent"
+    >;
 
 export type ConnectionsObserverHOCProps<
-  T2 extends keyof FirebaseHechDatabase,
-  T22 extends keyof FirebaseHechDatabase,
-  T222 extends keyof FirebaseHechDatabase
-> = Version<T2, T22, T222> & {
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
+> = Version<ParentT, ParentK, ChildT, ChildT2, ChildK, Val> & {
   /** The scroll wrapper. This is essential for determining when elements are `observed` and utilizing the `hydrationBufferAmount`. */
   root: Nullable<Element>;
   /** This is required to prevent it from initially fetching all of the data */
@@ -169,15 +218,15 @@ export type ConnectionsObserverHOCProps<
   managePagination?: ManagePagination;
   /** If passed in, this will serve as a limit on the query (ie. all values higher/lower than x) */
   terminationEdge?: string | number;
-  sort: Sort;
+  sort: Sort<ParentT, ParentK, ChildT, ChildK, Val>;
   /**
    * If this is true, `onChildAdded` listeners will only be added to the first page.
    * In some situations, such as with chat, it is unnecessary to have them elsewhere.
    */
   ignoreNonStartingEdgeAdditions?: boolean;
-  dataType: T22;
+  dataType: ChildT;
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
-  memoizedCustomGet?: (_key: string) => Promise<StatefulData<T22>>;
+  memoizedCustomGet?: (_key: string) => Promise<StatefulData<ChildT>>;
   className?: string;
   /** The provided keys will be omitted from the list */
   omitKeys?: Record<string, boolean>;

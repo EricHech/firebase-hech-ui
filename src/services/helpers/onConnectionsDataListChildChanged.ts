@@ -1,17 +1,23 @@
-import type { ListenerPaginationOptions, FirebaseHechDatabase } from "firebase-hech";
+import type { ListenerPaginationOptions, FirebaseHechDatabase, ConnectionDataListDatabase } from "firebase-hech";
 import { PATHS } from "firebase-hech/paths";
 import { onChildAdded, onChildChanged, onChildRemoved } from "firebase-hech/client";
 
-export const onConnectionsDataListChildChanged = (
-  parentType: keyof FirebaseHechDatabase,
-  parentKey: string,
-  dataType: keyof FirebaseHechDatabase,
-  childChanged: (val: number, key: string, previousOrderingKey?: Nullable<string>) => void,
-  childRemoved: (key: string) => void,
+export const onConnectionsDataListChildChanged = <
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
+>(
+  parentType: ParentT,
+  parentKey: ParentK,
+  dataType: ChildT,
+  childChanged: (val: Val, key: ChildK | string, previousOrderingKey?: Nullable<string>) => void,
+  childRemoved: (key: ChildK | string) => void,
   opts?: {
     paginate?: ListenerPaginationOptions;
     skipChildAdded?: boolean;
-    childAdded?: (val: number, key: string, previousOrderingKey?: Nullable<string>) => void;
+    childAdded?: (val: Val, key: ChildK | string, previousOrderingKey?: Nullable<string>) => void;
   }
 ) => {
   const { paginate, skipChildAdded, childAdded } = opts || {};

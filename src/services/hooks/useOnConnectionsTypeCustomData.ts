@@ -1,13 +1,16 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import type { FirebaseHechDatabase } from "firebase-hech";
+import type { ConnectionDataListDatabase, FirebaseHechDatabase } from "firebase-hech";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
 import { OnDataListHookProps } from "./types";
 import { genericHydrateAndSetStateFirebaseLists, setStateFirebaseLists } from "../helpers/utils";
 import { getConnectionTypeKeys } from "firebase-hech/client";
 
 export const useOnConnectionsTypeCustomData = <
-  T2 extends keyof FirebaseHechDatabase,
-  T3 extends keyof FirebaseHechDatabase,
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK],
   T extends unknown,
   Poke extends boolean
 >({
@@ -20,26 +23,38 @@ export const useOnConnectionsTypeCustomData = <
   maintainWhenDisabled = false,
   deps = [],
   memoizedCustomGet,
-}: OnDataListHookProps<T2, Poke> & {
-  parentType: T3;
-  parentKey: Maybe<string>;
+}: OnDataListHookProps<ChildT, Poke> & {
+  parentType: ParentT;
+  parentKey: Maybe<ParentK>;
   /** Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
   memoizedCustomGet: (key: string) => Promise<T>;
 }) => {
   const [data, setData] = useState<Maybe<Nullable<Record<string, T>>>>(poke ? undefined : {});
 
   const childChanged = useCallback(
-    async (_: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
-      genericHydrateAndSetStateFirebaseLists(memoizedCustomGet, setData, _, key, previousOrderingKey),
+    async (
+      _: ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK],
+      key: ChildK | string,
+      previousOrderingKey: Maybe<Nullable<string>>
+    ) => genericHydrateAndSetStateFirebaseLists(memoizedCustomGet, setData, key as string, previousOrderingKey),
     [dataType]
   );
 
-  const childRemoved = useCallback((key: string) => setStateFirebaseLists(setData, null, key, undefined), []);
+  const childRemoved = useCallback(
+    (key: ChildK | string) => setStateFirebaseLists(setData, null, key as string, undefined),
+    []
+  );
 
   useEffect(() => {
     if (parentKey && enabled) {
       const turnOn = () =>
-        onConnectionsDataListChildChanged(parentType, parentKey, dataType, childChanged, childRemoved);
+        onConnectionsDataListChildChanged<ParentT, ParentK, ChildT, ChildK, Val>(
+          parentType,
+          parentKey,
+          dataType,
+          childChanged,
+          childRemoved
+        );
       let off: Maybe<VoidFunction> = undefined;
 
       if (poke) {

@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 
 // FirebaseHech
 import { getDataKeyValue } from "firebase-hech/client";
-import type { Data, FirebaseHechDatabase } from "firebase-hech";
+import type { ConnectionDataListDatabase, Data, FirebaseHechDatabase } from "firebase-hech";
 
 export const handleOrderingFirebaseList = <T extends unknown>(
   data: Maybe<Nullable<Record<string, T>>>,
@@ -52,7 +52,6 @@ export const setStateFirebaseLists = <T extends unknown>(
 export const genericHydrateAndSetStateFirebaseLists = async <T extends unknown>(
   get: (key: string) => Promise<Nullable<T>>,
   setData: Dispatch<SetStateAction<Maybe<Nullable<Record<string, T>>>>>,
-  _: Nullable<number>,
   key: string,
   previousOrderingKey: Maybe<Nullable<string>>
 ) => {
@@ -64,11 +63,10 @@ export const genericHydrateAndSetStateFirebaseLists = async <T extends unknown>(
 export const firebaseHechHydrateAndSetStateFirebaseLists = async <T2 extends keyof FirebaseHechDatabase>(
   dataType: T2,
   setData: Dispatch<SetStateAction<Maybe<Nullable<Record<string, Data<T2>>>>>>,
-  _: Nullable<number>,
   key: string,
   previousOrderingKey: Maybe<Nullable<string>>
 ) => {
   const get = (k: string) => getDataKeyValue({ dataType, dataKey: k });
 
-  return genericHydrateAndSetStateFirebaseLists(get, setData, _, key, previousOrderingKey);
+  return genericHydrateAndSetStateFirebaseLists(get, setData, key, previousOrderingKey);
 };

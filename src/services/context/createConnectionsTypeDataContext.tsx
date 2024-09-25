@@ -8,27 +8,33 @@ import React, {
   memo,
   PropsWithChildren,
 } from "react";
-import type { FirebaseHechDatabase, Data } from "firebase-hech";
+import type { FirebaseHechDatabase, Data, ConnectionDataListDatabase } from "firebase-hech";
 import { useOnConnectionsTypeData } from "../hooks";
 import { useGetSafeContext } from "./useGetSafeContext";
 
-type BaseConnectionsTypeDataContext<T22 extends keyof FirebaseHechDatabase> = {
-  data: Maybe<Nullable<Record<string, Data<T22>>>>;
-  dataArray: Mandate<Data<T22>, "key">[];
-  setParentKey: Dispatch<SetStateAction<Maybe<string>>>;
+type BaseConnectionsTypeDataContext<
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase
+> = {
+  data: Maybe<Nullable<Record<string, Data<ChildT>>>>;
+  dataArray: Mandate<Data<ChildT>, "key">[];
+  setParentKey: Dispatch<SetStateAction<Maybe<ParentK>>>;
   setShouldPoke: Dispatch<SetStateAction<{ decided: boolean; decision: boolean }>>;
 };
 
 export const createConnectionsTypeDataContext = <
-  T2 extends keyof FirebaseHechDatabase,
-  T22 extends keyof FirebaseHechDatabase
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase
 >(
-  parentType: T2,
-  dataType: T22
+  parentType: ParentT,
+  dataType: ChildT
 ) => {
-  const ConnectionsTypeDataContext = createContext<Maybe<BaseConnectionsTypeDataContext<T22>>>(undefined);
+  const ConnectionsTypeDataContext =
+    createContext<Maybe<BaseConnectionsTypeDataContext<ParentT, ParentK, ChildT>>>(undefined);
 
-  const useConnectionsTypeDataContext = ({ dataKey, poke }: { dataKey: string; poke: boolean }) => {
+  const useConnectionsTypeDataContext = ({ dataKey, poke }: { dataKey: ParentK; poke: boolean }) => {
     const useContextResult = useGetSafeContext(ConnectionsTypeDataContext);
 
     if (!useContextResult) throw new Error(`You must wrap your component in an instance of the ${dataType} context`);
@@ -49,7 +55,7 @@ export const createConnectionsTypeDataContext = <
   const ConnectionsTypeDataContextProviderComponent = memo(function ConnectionsTypeDataContextProviderComponent({
     children,
   }: PropsWithChildren<{}>) {
-    const [parentKey, setParentKey] = useState<string>();
+    const [parentKey, setParentKey] = useState<ParentK>();
     const [poke, setShouldPoke] = useState({ decided: false, decision: false });
 
     const { data, dataArray } = useOnConnectionsTypeData({

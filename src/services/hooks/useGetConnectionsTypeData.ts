@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
-import type { FirebaseHechDatabase, Data } from "firebase-hech";
+import type { FirebaseHechDatabase, Data, ConnectionDataListDatabase } from "firebase-hech";
 import { GetDataListHookProps } from "./types";
 import { getConnectionTypeData } from "firebase-hech/client";
 
 export const useGetConnectionsTypeData = <
-  T2 extends keyof FirebaseHechDatabase,
-  T3 extends keyof FirebaseHechDatabase
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase
 >({
   parentType,
   parentKey,
@@ -14,11 +15,11 @@ export const useGetConnectionsTypeData = <
   enabled = true,
   maintainWhenDisabled = false,
   deps = [],
-}: GetDataListHookProps<T2> & {
-  parentType: T3;
-  parentKey: Maybe<string>;
+}: GetDataListHookProps<ChildT> & {
+  parentType: ParentT;
+  parentKey: Maybe<ParentK>;
 }) => {
-  const [data, setData] = useState<Maybe<Nullable<Record<string, Data<T2>>>>>();
+  const [data, setData] = useState<Maybe<Nullable<Record<string, Data<ChildT>>>>>();
 
   useEffect(() => {
     if (parentKey && enabled) {
@@ -35,7 +36,7 @@ export const useGetConnectionsTypeData = <
                 curr;
                 p[curr.key] = curr;
                 return p;
-              }, {} as Record<string, Data<T2>>)
+              }, {} as Record<string, Data<ChildT>>)
         );
       });
 
@@ -50,7 +51,7 @@ export const useGetConnectionsTypeData = <
   const dataArray = useMemo(
     () =>
       includeArray
-        ? Object.entries(data || {}).map(([key, val]) => ({ ...val, key } as unknown as Mandate<Data<T2>, "key">))
+        ? Object.entries(data || {}).map(([key, val]) => ({ ...val, key } as unknown as Mandate<Data<ChildT>, "key">))
         : [],
     [includeArray, data]
   );

@@ -1,6 +1,6 @@
 import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { FirebaseHechDatabase, StatefulData, DataList } from "firebase-hech";
-import { getDataKeyValue, getOrderByWithLimit } from "firebase-hech/client";
+import type { FirebaseHechDatabase, ConnectionDataListDatabase } from "firebase-hech";
+import { getOrderByWithLimit } from "firebase-hech/client";
 
 // Context
 import { useFirebaseHechContext } from "../../context";
@@ -11,91 +11,17 @@ import { useStaticCachedDataKeyValues } from "../../hooks";
 // Local
 import { useBasicIntersectionObserver } from "./useBasicIntersectionObserver";
 import { useGetListeners } from "./useGetListeners";
-import { attachListeners, getDirection, getOrderBy, getPaginationOptions, getPath, getSide } from "./utils";
+import { attachListeners, getDirection, getMarker, getOrderBy, getPaginationOptions, getPath, getSide } from "./utils";
 import type {
   ConnectionsObserverHOCProps,
   CustomPaginationOpts,
   ItemComponentProps,
   GroupingComponentProps,
   EmptyComponentProps,
-  ObservedDataProps,
 } from "./types";
+import { ObservedData } from "./ObservedData";
 
 export type { ItemComponentProps, GroupingComponentProps, EmptyComponentProps };
-
-export function ObservedData<
-  T22 extends keyof FirebaseHechDatabase,
-  T2 extends Maybe<keyof FirebaseHechDatabase> = undefined
->({
-  animate,
-  idx,
-  list,
-  top,
-  bottom,
-  dataType,
-  dataKey,
-  parentDataType,
-  parentDataKey,
-  timestamp,
-  observe,
-  observed,
-  setCache,
-  getCache,
-  ItemComponent,
-  memoizedCustomGet,
-}: ObservedDataProps<T22, T2>) {
-  const ref = useRef<HTMLLIElement>(null);
-  const [data, setData] = useState<StatefulData<T22>>();
-
-  useEffect(() => {
-    if (ref.current) {
-      const unobserve = observe(ref.current);
-
-      return unobserve;
-    }
-
-    return undefined;
-  }, [observe]);
-
-  useEffect(() => {
-    if (observed) {
-      if (memoizedCustomGet) memoizedCustomGet(dataKey).then(setData);
-      else getDataKeyValue({ dataType, dataKey }).then(setData);
-    }
-  }, [timestamp, observed, dataType, dataKey, memoizedCustomGet]);
-
-  const animationStyle = animate
-    ? { animation: "var(--gridCardAnimation)", animationDelay: `calc(${idx} * var(--gridCardDelay))` }
-    : undefined;
-
-  return (
-    <li
-      id={dataKey}
-      ref={ref}
-      style={{
-        minHeight: "var(--listItemMinHeightPx)",
-        minWidth: "var(--listItemMinWidthPx)",
-        ...animationStyle,
-      }}
-    >
-      <ItemComponent
-        data={data}
-        dataType={dataType}
-        dataKey={dataKey}
-        parentDataType={parentDataType}
-        parentDataKey={parentDataKey}
-        observed={observed}
-        setCache={setCache}
-        getCache={getCache}
-        top={top}
-        bottom={bottom}
-        idx={idx}
-        list={list}
-        timestamp={timestamp}
-      />
-    </li>
-  );
-}
 
 /**
  * This component allows you to fetch a list of firebase-hech keys (by connection, ownership, or public lists)
@@ -106,10 +32,13 @@ export function ObservedData<
  * with a list of tens of thousands or more, such as in the case of a chat, you should pass in `managePagination`.
  */
 export function ConnectionsObserverHOC<
-  T2 extends keyof FirebaseHechDatabase,
-  T22 extends keyof FirebaseHechDatabase,
-  T222 extends keyof FirebaseHechDatabase
->(props: ConnectionsObserverHOCProps<T2, T22, T222>) {
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
+>(props: ConnectionsObserverHOCProps<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>) {
   const { initiallyLoading, user } = useFirebaseHechContext();
 
   // ---- Prop Settings -----------------------------------------------------------------------------------------------
@@ -168,7 +97,7 @@ export function ConnectionsObserverHOC<
 
   // ---- Data --------------------------------------------------------------------------------------------------------
   // We save the data as an array of pages because the added/changed/removed listeners read statuses according to their page
-  const [data, setData] = useState<DataList[T22][]>([]);
+  const [data, setData] = useState<Record<string, Val | number>[]>([]);
   const nextPageIdx = data.length;
 
   const dataList = useMemo(() => {
@@ -178,7 +107,7 @@ export function ConnectionsObserverHOC<
       else prev = { ...curr, ...prev };
       /* eslint-enable no-param-reassign */
       return prev;
-    }, {} as DataList[T22]);
+    }, {} as Record<string, Val | number>);
 
     if (sort === "created oldest" || sort === "updated oldest") return Object.entries(list);
     return Object.entries(list).reverse();
@@ -187,7 +116,7 @@ export function ConnectionsObserverHOC<
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Fetch Helpers -----------------------------------------------------------------------------------------------
-  const { getChildAddedOrChanged, getChildRemoved } = useGetListeners(setData);
+  const { getChildAddedOrChanged, getChildRemoved } = useGetListeners<ParentT, ParentK, ChildT, ChildK, Val>(setData);
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- New Page Fetching -------------------------------------------------------------------------------------------
@@ -205,11 +134,11 @@ export function ConnectionsObserverHOC<
       if (managePagination?.amount === undefined) throw Error("`managePagination?.amount` was `undefined`.");
       const { amount } = managePagination;
 
-      const path = getPath(versionSettings, dataType, user?.uid);
+      const path = getPath<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>(versionSettings, dataType, user?.uid);
       if (!path) throw Error("Unable to determine database path.");
 
       // When fetching a new page, first get the initial page data...
-      const newData = await getOrderByWithLimit<DataList[T22]>(path, orderBy, {
+      const newData = await getOrderByWithLimit<Record<string, Val | number>>(path, orderBy, {
         amount,
         direction,
         termination: { key: startPos, version: "exclusive" },
@@ -225,8 +154,9 @@ export function ConnectionsObserverHOC<
 
       const startEl = newDataArray[0];
       const endEl = newDataArray[newDataLength - 1];
-      const start = orderBy === "orderByKey" ? startEl[0] : startEl[1];
-      const end = orderBy === "orderByKey" ? endEl[0] : endEl[1];
+
+      const start = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(startEl, orderBy);
+      const end = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(endEl, orderBy);
 
       // ...if less than a full page came back, you are at the end and should listen to the opposite of the starting edge now also...
       if (newDataLength < amount) {
@@ -243,7 +173,7 @@ export function ConnectionsObserverHOC<
       const paginate = getPaginationOptions(sort, paginationOpts);
 
       // ...then establish the listeners for changes
-      const scrolledPageOff = attachListeners({
+      const scrolledPageOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
         userUid: user?.uid,
         dataType,
         settings: versionSettings,
@@ -283,7 +213,8 @@ export function ConnectionsObserverHOC<
 
       if (peripheryObserved) {
         const el = periphery[periphery.length - 1];
-        const marker = sort.startsWith("created") ? el[0] : el[1];
+        const marker = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(el, orderBy);
+
         setPeripheryMarker(marker);
       } else {
         setPeripheryMarker(undefined);
@@ -307,7 +238,7 @@ export function ConnectionsObserverHOC<
     if (!initiallyLoading && !disable) {
       // (1) If you are managing pagination...
       if (managePagination) {
-        const path = getPath(versionSettings, dataType, user?.uid);
+        const path = getPath<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>(versionSettings, dataType, user?.uid);
 
         if (path) {
           const { amount } = managePagination;
@@ -316,7 +247,7 @@ export function ConnectionsObserverHOC<
             : undefined;
 
           // ...get the initial chunk of data...
-          getOrderByWithLimit<DataList[T22]>(path, orderBy, {
+          getOrderByWithLimit<Record<string, Val | number>>(path, orderBy, {
             amount,
             direction,
             termination: terminationEdge,
@@ -337,7 +268,7 @@ export function ConnectionsObserverHOC<
                 // ...otherwise, set the `edge`, which will look in the direction of the starting place in case more data comes in
                 const elIndex = side === "high" ? 0 : newDataArray.length - 1;
                 const el = newDataArray[elIndex];
-                const marker = orderBy === "orderByKey" ? el[0] : el[1];
+                const marker = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(el, orderBy);
 
                 paginationOpts.edge = { side, termination: { key: marker, version: "inclusive" } };
               }
@@ -348,7 +279,7 @@ export function ConnectionsObserverHOC<
             const paginate = getPaginationOptions(sort, paginationOpts);
 
             // ...and then listen for any new data that comes in
-            primaryListenerOff = attachListeners({
+            primaryListenerOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
               userUid: user?.uid,
               dataType,
               settings: versionSettings,
@@ -365,7 +296,7 @@ export function ConnectionsObserverHOC<
         fetchedAll.current = true;
         const paginate = getPaginationOptions(sort, {});
 
-        primaryListenerOff = attachListeners({
+        primaryListenerOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
           userUid: user?.uid,
           dataType,
           settings: versionSettings,
@@ -413,7 +344,7 @@ export function ConnectionsObserverHOC<
         <props.LoadingComponent
           dataType={dataType} //
           parentDataType={props.parentDataType}
-          parentDataKey={props.parentDataKey}
+          parentDataKey={props.parentDataKey as Maybe<string>}
         />
       </div>
     ) : (
@@ -435,7 +366,7 @@ export function ConnectionsObserverHOC<
         <props.EmptyComponent
           dataType={dataType} //
           parentDataType={props.parentDataType}
-          parentDataKey={props.parentDataKey}
+          parentDataKey={props.parentDataKey as Maybe<string>}
         />
       </div>
     ) : (
@@ -465,12 +396,14 @@ export function ConnectionsObserverHOC<
     >
       {memoizedPrefixedListItems}
 
-      {dataList.map(([key, timestamp], i) => {
+      {dataList.map(([key, queryNode], i) => {
         if (omitKeys?.[key]) return null;
+
+        const timestamp = typeof queryNode === "number" ? queryNode : (queryNode as { updatedAt: number }).updatedAt;
 
         const dataJsx =
           props.version === "connectionDataList" ? (
-            <ObservedData
+            <ObservedData<ParentT, ParentK, ChildT, ChildK, Val>
               animate={animate}
               idx={i}
               list={dataList}
@@ -480,8 +413,9 @@ export function ConnectionsObserverHOC<
               dataKey={key}
               dataType={dataType}
               parentDataType={props.parentDataType}
-              parentDataKey={props.parentDataKey}
+              parentDataKey={props.parentDataKey as Maybe<string>}
               timestamp={timestamp}
+              queryNode={queryNode}
               observe={observe}
               observed={Boolean(observedIds[key])}
               setCache={setCache}
@@ -489,7 +423,7 @@ export function ConnectionsObserverHOC<
               ItemComponent={props.ItemComponent}
             />
           ) : (
-            <ObservedData
+            <ObservedData<ParentT, ParentK, ChildT, ChildK, Val>
               animate={animate}
               idx={i}
               list={dataList}
@@ -501,6 +435,7 @@ export function ConnectionsObserverHOC<
               parentDataType={undefined}
               parentDataKey={undefined}
               timestamp={timestamp}
+              queryNode={queryNode}
               observe={observe}
               observed={Boolean(observedIds[key])}
               setCache={setCache}

@@ -1,6 +1,6 @@
 // FirebaseHech
 import { PATHS } from "firebase-hech/paths";
-import type { ListenerPaginationOptions, FirebaseHechDatabase } from "firebase-hech";
+import type { ListenerPaginationOptions, FirebaseHechDatabase, ConnectionDataListDatabase } from "firebase-hech";
 
 // Helpers
 import {
@@ -19,11 +19,77 @@ import type { CustomPaginationOpts, SettingsVersion, Sort } from "./types";
  * "limitToLast"  : 789 | 456 | 123
  * ```
  */
-export const getDirection = (sort: Sort) => (sort.endsWith("newest") ? "limitToLast" : "limitToFirst");
-export const getSide = (sort: Sort) => (sort.endsWith("newest") ? "high" : "low");
-export const getOrderBy = (sort: Sort) => (sort.startsWith("created") ? "orderByKey" : "orderByValue");
+export const getDirection = <
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
+>(
+  sort: Sort<ParentT, ParentK, ChildT, ChildK, Val>
+) => {
+  if (typeof sort === "string" ? sort.endsWith("newest") : sort.direction === "desc") {
+    return "limitToLast";
+  }
 
-export const getPaginationOptions = (sort: Sort, opts: CustomPaginationOpts) => {
+  return "limitToFirst";
+};
+export const getSide = <
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
+>(
+  sort: Sort<ParentT, ParentK, ChildT, ChildK, Val>
+) => {
+  if (typeof sort === "string" ? sort.endsWith("newest") : sort.direction === "desc") {
+    return "high";
+  }
+
+  return "low";
+};
+export const getOrderBy = <
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
+>(
+  sort: Sort<ParentT, ParentK, ChildT, ChildK, Val>
+) => {
+  if (typeof sort === "string" && sort.startsWith("created")) return "orderByKey";
+  return typeof sort === "string" ? { path: "updatedAt" } : { path: sort.childKey as string };
+};
+
+export const getMarker = <
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
+>(
+  el: [string, Val | number],
+  orderBy: "orderByKey" | { path: string }
+) => {
+  const resource = orderBy === "orderByKey" ? el[0] : el[1];
+
+  if (typeof resource === "number" || typeof resource === "string") return resource;
+
+  if (orderBy === "orderByKey") throw Error("Invalid `sort` settings.");
+  return resource[orderBy.path as keyof Val] as string | number;
+};
+
+export const getPaginationOptions = <
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
+>(
+  sort: Sort<ParentT, ParentK, ChildT, ChildK, Val>,
+  opts: CustomPaginationOpts
+) => {
   const paginate: ListenerPaginationOptions = {};
 
   paginate.orderBy = getOrderBy(sort);
@@ -44,9 +110,12 @@ export const getPaginationOptions = (sort: Sort, opts: CustomPaginationOpts) => 
 };
 
 export const attachListeners = <
-  T2 extends keyof FirebaseHechDatabase,
-  T22 extends keyof FirebaseHechDatabase,
-  T222 extends keyof FirebaseHechDatabase
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 >({
   userUid,
   dataType,
@@ -58,21 +127,21 @@ export const attachListeners = <
   skipChildAdded,
 }: {
   userUid: Maybe<string>;
-  dataType: T22;
-  settings: SettingsVersion<T2, T22, T222>;
+  dataType: ChildT;
+  settings: SettingsVersion<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>;
   paginate: ListenerPaginationOptions;
-  childAdded: (val: number, key: string, previousOrderingKey?: Nullable<string>) => void;
-  childChanged: (val: number, key: string, previousOrderingKey?: Nullable<string>) => void;
-  childRemoved: (key: string) => void;
+  childAdded: (val: Val | number, key: ChildK | string, previousOrderingKey?: Nullable<string>) => void;
+  childChanged: (val: Val | number, key: ChildK | string, previousOrderingKey?: Nullable<string>) => void;
+  childRemoved: (key: ChildK | string) => void;
   skipChildAdded: boolean;
 }) => {
   let off: Maybe<VoidFunction>;
 
   if (settings.version === "connectionDataList" && settings.parentDataKey) {
-    off = onConnectionsDataListChildChanged(
+    off = onConnectionsDataListChildChanged<ParentT, ParentK, ChildT, ChildK, Val>(
       settings.parentDataType,
       settings.parentDataKey,
-      settings.connectionType || dataType,
+      (settings.connectionType || dataType) as ChildT,
       childChanged,
       childRemoved,
       { paginate, skipChildAdded, childAdded }
@@ -98,19 +167,22 @@ export const attachListeners = <
 };
 
 export const getPath = <
-  T2 extends keyof FirebaseHechDatabase,
-  T22 extends keyof FirebaseHechDatabase,
-  T222 extends keyof FirebaseHechDatabase
+  ParentT extends keyof ConnectionDataListDatabase,
+  ParentK extends keyof ConnectionDataListDatabase[ParentT],
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 >(
-  version: SettingsVersion<T2, T22, T222>,
-  dataType: T22,
+  version: SettingsVersion<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>,
+  dataType: ChildT,
   userUid: Maybe<string>
 ) => {
   if (version.version === "connectionDataList" && version.parentDataKey) {
     return PATHS.connectionDataListConnectionType(
-      version.parentDataType,
-      version.parentDataKey,
-      version.connectionType || dataType
+      version.parentDataType as unknown as ParentT,
+      version.parentDataKey as unknown as ParentK,
+      (version.connectionType || dataType) as unknown as ChildT
     );
   }
 

@@ -20,7 +20,7 @@ export const useOnUserTypeData = <T2 extends keyof FirebaseHechDatabase, Poke ex
 
   const childChanged = useCallback(
     async (_: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
-      firebaseHechHydrateAndSetStateFirebaseLists(dataType, setData, _, key, previousOrderingKey),
+      firebaseHechHydrateAndSetStateFirebaseLists(dataType, setData, key, previousOrderingKey),
     [dataType]
   );
 

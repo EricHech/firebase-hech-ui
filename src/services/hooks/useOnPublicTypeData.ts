@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { FirebaseHechDatabase, Data } from "firebase-hech";
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
+import type { FirebaseHechDatabase, Data, ConnectionDataListDatabase } from "firebase-hech";
 import { onPublicDataTypeListChildChanged } from "../helpers/onPublicDataTypeListChildChanged";
 import { OnDataListHookProps } from "./types";
 import { setStateFirebaseLists, firebaseHechHydrateAndSetStateFirebaseLists } from "../helpers/utils";
@@ -17,7 +17,7 @@ export const useOnPublicTypeData = <T2 extends keyof FirebaseHechDatabase, Poke 
 
   const childChanged = useCallback(
     async (_: number, key: string, previousOrderingKey: Maybe<Nullable<string>>) =>
-      firebaseHechHydrateAndSetStateFirebaseLists(dataType, setData, _, key, previousOrderingKey),
+      firebaseHechHydrateAndSetStateFirebaseLists(dataType, setData, key, previousOrderingKey),
     [dataType]
   );
 
