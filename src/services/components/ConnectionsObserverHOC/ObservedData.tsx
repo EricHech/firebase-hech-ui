@@ -24,6 +24,7 @@ export function ObservedData<
   parentDataType,
   parentDataKey,
   timestamp,
+  queryNode,
   observe,
   observed,
   setCache,
@@ -79,6 +80,7 @@ export function ObservedData<
         idx={idx}
         list={list}
         timestamp={timestamp}
+        queryNode={queryNode}
       />
     </li>
   );

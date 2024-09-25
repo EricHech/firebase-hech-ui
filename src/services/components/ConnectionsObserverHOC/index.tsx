@@ -109,7 +109,7 @@ export function ConnectionsObserverHOC<
       return prev;
     }, {} as Record<string, Val | number>);
 
-    if (sort === "created oldest" || sort === "updated oldest") return Object.entries(list);
+    if (direction === "limitToFirst") return Object.entries(list);
     return Object.entries(list).reverse();
   }, [direction, sort, data]);
 

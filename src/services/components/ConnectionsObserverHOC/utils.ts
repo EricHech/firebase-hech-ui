@@ -13,6 +13,9 @@ import {
 import type { CustomPaginationOpts, SettingsVersion, Sort } from "./types";
 
 /**
+ * "newest" or "desc" === "limitToLast"
+ * "oldest" or "asc" === "limitToFirst"
+ *
  * `limitToLast` returns the high end of a list, while `limitToFirst` returns the low end
  * ```
  * "limitToFirst" : 123 | 456 | 789
@@ -28,12 +31,15 @@ export const getDirection = <
 >(
   sort: Sort<ParentT, ParentK, ChildT, ChildK, Val>
 ) => {
+  // "newest" or "desc"
   if (typeof sort === "string" ? sort.endsWith("newest") : sort.direction === "desc") {
     return "limitToLast";
   }
 
+  // "oldest" or "asc"
   return "limitToFirst";
 };
+
 export const getSide = <
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
@@ -43,12 +49,15 @@ export const getSide = <
 >(
   sort: Sort<ParentT, ParentK, ChildT, ChildK, Val>
 ) => {
+  // "newest" or "desc"
   if (typeof sort === "string" ? sort.endsWith("newest") : sort.direction === "desc") {
     return "high";
   }
 
+  // "oldest" or "asc"
   return "low";
 };
+
 export const getOrderBy = <
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],

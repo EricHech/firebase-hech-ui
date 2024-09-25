@@ -82,6 +82,7 @@ export type ItemComponentProps<
   idx: number;
   list: [string, Val | number][];
   timestamp: number;
+  queryNode: number | Val;
   data: StatefulData<ChildT>;
   dataType: ChildT;
   dataKey: string;
