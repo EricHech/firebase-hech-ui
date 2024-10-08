@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { TrackingData } from "firebase-hech";
-import { PATHS } from "firebase-hech/paths";
+import { generateDbKey, PATHS } from "firebase-hech/paths";
 import { getCurrentUser, onDisconnect, pushKey, trackEvent } from "firebase-hech/client";
 import { useFirebaseHechContext } from "../context/firebaseHechContext";
 
@@ -14,7 +14,7 @@ export const usePageTracking = (asPath: string, query: Record<string, string>) =
 
   useEffect(() => {
     if (user) {
-      if (query.source) trackEvent(`source__${query.source}__ad__${query.ad}`, userUid);
+      if (query.source) trackEvent(generateDbKey("source", query.source, "ad", query.ad), userUid);
 
       trackEvent("onConnect", userUid);
       onDisconnect<TrackingData>(`${PATHS.trackingKey("onDisconnect")}/${pushKey(PATHS.TRACKING)}`, {
