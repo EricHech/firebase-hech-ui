@@ -360,7 +360,7 @@ export function ConnectionsObserverHOC<
   /* eslint-enable react/destructuring-assignment */
 
   /* eslint-disable react/destructuring-assignment */
-  if (dataList.length === 0 && props.EmptyComponent && initialHydrationComplete) {
+  if (!memoizedPrefixedListItems && dataList.length === 0 && props.EmptyComponent && initialHydrationComplete) {
     return props.version === "connectionDataList" ? (
       <div className={className}>
         <props.EmptyComponent
@@ -381,7 +381,7 @@ export function ConnectionsObserverHOC<
   }
   /* eslint-enable react/destructuring-assignment */
 
-  if (dataList.length === 0) return null;
+  if (!memoizedPrefixedListItems && dataList.length === 0) return null;
 
   let currentGrouping = 0;
 
