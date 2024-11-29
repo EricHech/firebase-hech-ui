@@ -1,16 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
-import type { FirebaseHechDatabase, StatefulData, ConnectionDataListDatabase } from "firebase-hech";
+import type {
+  FirebaseHechDatabase,
+  StatefulData,
+  ConnectionDataListDatabase,
+} from "firebase-hech";
 import { getDataKeyValue } from "firebase-hech/client";
 
 // Local
-import type { ItemComponentProps, GroupingComponentProps, EmptyComponentProps, ObservedDataProps } from "./types";
+import type {
+  ItemComponentProps,
+  GroupingComponentProps,
+  EmptyComponentProps,
+  ObservedDataProps,
+} from "./types";
 
 export type { ItemComponentProps, GroupingComponentProps, EmptyComponentProps };
 
 export function ObservedData<
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
-  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
+    keyof FirebaseHechDatabase,
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 >({
@@ -31,6 +41,7 @@ export function ObservedData<
   getCache,
   ItemComponent,
   memoizedCustomGet,
+  removeListItemWhenEmpty,
 }: ObservedDataProps<ParentT, ParentK, ChildT, ChildK, Val>) {
   const ref = useRef<HTMLLIElement>(null);
   const [data, setData] = useState<StatefulData<ChildT>>();
@@ -53,7 +64,10 @@ export function ObservedData<
   }, [timestamp, observed, dataType, dataKey, memoizedCustomGet]);
 
   const animationStyle = animate
-    ? { animation: "var(--gridCardAnimation)", animationDelay: `calc(${idx} * var(--gridCardDelay))` }
+    ? {
+        animation: "var(--gridCardAnimation)",
+        animationDelay: `calc(${idx} * var(--gridCardDelay))`,
+      }
     : undefined;
 
   return (
@@ -64,6 +78,7 @@ export function ObservedData<
         minHeight: "var(--listItemMinHeightPx)",
         minWidth: "var(--listItemMinWidthPx)",
         ...animationStyle,
+        ...(removeListItemWhenEmpty && !data ? { display: "none" } : {}),
       }}
     >
       <ItemComponent
