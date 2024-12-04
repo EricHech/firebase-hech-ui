@@ -164,10 +164,7 @@ export function ConnectionsObserverHOC<
         fetchedAll.current = true;
         paginationOpts.edge = {
           side: side === "high" ? "low" : "high",
-          termination: {
-            key: side === "high" ? end : start,
-            version: "exclusive",
-          },
+          termination: { key: side === "high" ? end : start, version: "exclusive" },
         };
       } else {
         // ...otherwise, set the listeners for that page...
@@ -267,20 +264,14 @@ export function ConnectionsObserverHOC<
               // If you are setting a custom edge (rather than the actual end of the infinite scroll)...
               if (terminationEdge) {
                 // ...then use the `pagination` prop, which aims in the direction you're paginating...
-                paginationOpts.pagination = {
-                  amount,
-                  termination: terminationEdge,
-                };
+                paginationOpts.pagination = { amount, termination: terminationEdge };
               } else {
                 // ...otherwise, set the `edge`, which will look in the direction of the starting place in case more data comes in
                 const elIndex = side === "high" ? 0 : newDataArray.length - 1;
                 const el = newDataArray[elIndex];
                 const marker = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(el, orderBy);
 
-                paginationOpts.edge = {
-                  side,
-                  termination: { key: marker, version: "inclusive" },
-                };
+                paginationOpts.edge = { side, termination: { key: marker, version: "inclusive" } };
               }
             }
             setInitialHydrationComplete(true);
