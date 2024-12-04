@@ -60,17 +60,16 @@ export function ObservedData<
       }
     : undefined;
 
+  const listItemStyle: React.CSSProperties = {
+    minHeight: "var(--listItemMinHeightPx)",
+    minWidth: "var(--listItemMinWidthPx)",
+    ...animationStyle,
+  };
+
+  if (removeListItemWhenEmpty && !data) listItemStyle.display = "none";
+
   return (
-    <li
-      id={dataKey}
-      ref={ref}
-      style={{
-        minHeight: "var(--listItemMinHeightPx)",
-        minWidth: "var(--listItemMinWidthPx)",
-        ...animationStyle,
-        ...(removeListItemWhenEmpty && !data ? { display: "none" } : {}),
-      }}
-    >
+    <li id={dataKey} ref={ref} style={listItemStyle}>
       <ItemComponent
         data={data}
         dataType={dataType}
