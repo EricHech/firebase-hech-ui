@@ -1,26 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
-import type {
-  FirebaseHechDatabase,
-  StatefulData,
-  ConnectionDataListDatabase,
-} from "firebase-hech";
+import type { FirebaseHechDatabase, StatefulData, ConnectionDataListDatabase } from "firebase-hech";
 import { getDataKeyValue } from "firebase-hech/client";
 
 // Local
-import type {
-  ItemComponentProps,
-  GroupingComponentProps,
-  EmptyComponentProps,
-  ObservedDataProps,
-} from "./types";
+import type { ItemComponentProps, GroupingComponentProps, EmptyComponentProps, ObservedDataProps } from "./types";
 
 export type { ItemComponentProps, GroupingComponentProps, EmptyComponentProps };
 
 export function ObservedData<
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
-  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
-    keyof FirebaseHechDatabase,
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 >({

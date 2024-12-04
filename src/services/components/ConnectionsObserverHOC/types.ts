@@ -14,8 +14,7 @@ import type { GetCache, SetCache } from "../../hooks";
 export type Sort<
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
-  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
-    keyof FirebaseHechDatabase,
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 > =
@@ -37,10 +36,7 @@ export type CustomPaginationOpts =
       pagination?: undefined;
     }
   | {
-      pagination?: Omit<
-        Mandate<ListenerPaginationOptions, "limit">["limit"],
-        "direction"
-      >;
+      pagination?: Omit<Mandate<ListenerPaginationOptions, "limit">["limit"], "direction">;
       between?: undefined;
       edge?: undefined;
     };
@@ -77,8 +73,7 @@ export type LoadingComponentProps<
 export type ItemComponentProps<
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
-  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
-    keyof FirebaseHechDatabase,
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 > = {
@@ -112,8 +107,7 @@ export type GroupingComponentProps = {
 export type ObservedDataProps<
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
-  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
-    keyof FirebaseHechDatabase,
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 > = {
@@ -144,10 +138,8 @@ export type ObservedDataProps<
 type ConnectionVersion<
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
-  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
-    keyof FirebaseHechDatabase,
-  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
-    keyof FirebaseHechDatabase,
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 > = {
@@ -156,13 +148,7 @@ type ConnectionVersion<
   parentDataKey: Maybe<ParentK>;
   /** Include this key if you want to use a connectionList other than the dataType you're requesting */
   connectionType?: ChildT2;
-  ItemComponent: ObservedDataProps<
-    ParentT,
-    ParentK,
-    ChildT,
-    ChildK,
-    Val
-  >["ItemComponent"];
+  ItemComponent: ObservedDataProps<ParentT, ParentK, ChildT, ChildK, Val>["ItemComponent"];
   EmptyComponent?: FC<EmptyComponentProps<ChildT, ParentT>>;
   LoadingComponent?: FC<LoadingComponentProps<ChildT, ParentT>>;
 };
@@ -170,8 +156,7 @@ type ConnectionVersion<
 type PublicOrUserListVersion<
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
-  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
-    keyof FirebaseHechDatabase,
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 > = {
@@ -179,13 +164,7 @@ type PublicOrUserListVersion<
   parentDataType?: undefined;
   parentDataKey?: undefined;
   connectionType?: undefined;
-  ItemComponent: ObservedDataProps<
-    ParentT,
-    ParentK,
-    ChildT,
-    ChildK,
-    Val
-  >["ItemComponent"];
+  ItemComponent: ObservedDataProps<ParentT, ParentK, ChildT, ChildK, Val>["ItemComponent"];
   EmptyComponent?: FC<EmptyComponentProps<ChildT, ParentT>>;
   LoadingComponent?: FC<LoadingComponentProps<ChildT, ParentT>>;
 };
@@ -193,10 +172,8 @@ type PublicOrUserListVersion<
 export type Version<
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
-  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
-    keyof FirebaseHechDatabase,
-  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
-    keyof FirebaseHechDatabase,
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 > =
@@ -206,10 +183,8 @@ export type Version<
 export type SettingsVersion<
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
-  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
-    keyof FirebaseHechDatabase,
-  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
-    keyof FirebaseHechDatabase,
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 > =
@@ -225,10 +200,8 @@ export type SettingsVersion<
 export type ConnectionsObserverHOCProps<
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
-  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
-    keyof FirebaseHechDatabase,
-  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
-    keyof FirebaseHechDatabase,
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 > = Version<ParentT, ParentK, ChildT, ChildT2, ChildK, Val> & {
