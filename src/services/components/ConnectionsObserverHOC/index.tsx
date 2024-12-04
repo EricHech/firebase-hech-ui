@@ -60,6 +60,7 @@ export function ConnectionsObserverHOC<
     memoizedPrefixedListItems = null,
     grouping,
     disable,
+    removeListItemWhenEmpty,
   } = props;
 
   /* eslint-disable react/destructuring-assignment */
@@ -421,6 +422,7 @@ export function ConnectionsObserverHOC<
               setCache={setCache}
               getCache={getCache}
               ItemComponent={props.ItemComponent}
+              removeListItemWhenEmpty={removeListItemWhenEmpty}
             />
           ) : (
             <ObservedData<ParentT, ParentK, ChildT, ChildK, Val>
@@ -441,6 +443,7 @@ export function ConnectionsObserverHOC<
               setCache={setCache}
               getCache={getCache}
               ItemComponent={props.ItemComponent}
+              removeListItemWhenEmpty={removeListItemWhenEmpty}
             />
           );
 

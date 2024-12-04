@@ -132,6 +132,7 @@ export type ObservedDataProps<
   setCache: SetCache;
   getCache: GetCache;
   ItemComponent: FC<ItemComponentProps<ParentT, ParentK, ChildT, ChildK, Val>>;
+  removeListItemWhenEmpty?: boolean;
 };
 
 type ConnectionVersion<
@@ -239,6 +240,7 @@ export type ConnectionsObserverHOCProps<
   /** Don't forget to memoize. */
   memoizedPrefixedListItems?: JSX.Element;
   disable?: boolean;
+  removeListItemWhenEmpty?: boolean;
 } & (
     | {
         GroupingComponent: FC<GroupingComponentProps>;
