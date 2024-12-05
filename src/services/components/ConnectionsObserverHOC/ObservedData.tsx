@@ -71,32 +71,37 @@ export function ObservedData<
     : undefined;
 
   return (
-    <li
-      id={dataKey}
-      ref={ref}
-      style={{
-        minHeight: "var(--listItemMinHeightPx)",
-        minWidth: "var(--listItemMinWidthPx)",
-        ...animationStyle,
-        ...(removeListItemWhenEmpty && !data ? { display: "none" } : {}),
-      }}
-    >
-      <ItemComponent
-        data={data}
-        dataType={dataType}
-        dataKey={dataKey}
-        parentDataType={parentDataType}
-        parentDataKey={parentDataKey}
-        observed={observed}
-        setCache={setCache}
-        getCache={getCache}
-        top={top}
-        bottom={bottom}
-        idx={idx}
-        list={list}
-        timestamp={timestamp}
-        queryNode={queryNode}
-      />
-    </li>
+    <>
+      {removeListItemWhenEmpty && !data ? (
+        <></>
+      ) : (
+        <li
+          id={dataKey}
+          ref={ref}
+          style={{
+            minHeight: "var(--listItemMinHeightPx)",
+            minWidth: "var(--listItemMinWidthPx)",
+            ...animationStyle,
+          }}
+        >
+          <ItemComponent
+            data={data}
+            dataType={dataType}
+            dataKey={dataKey}
+            parentDataType={parentDataType}
+            parentDataKey={parentDataKey}
+            observed={observed}
+            setCache={setCache}
+            getCache={getCache}
+            top={top}
+            bottom={bottom}
+            idx={idx}
+            list={list}
+            timestamp={timestamp}
+            queryNode={queryNode}
+          />
+        </li>
+      )}
+    </>
   );
 }
