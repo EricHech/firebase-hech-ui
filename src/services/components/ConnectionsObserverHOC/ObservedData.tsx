@@ -31,7 +31,7 @@ export function ObservedData<
   getCache,
   ItemComponent,
   memoizedCustomGet,
-  removeListItemWhenEmpty,
+  memoizedFilterOutCb
 }: ObservedDataProps<ParentT, ParentK, ChildT, ChildK, Val>) {
   const ref = useRef<HTMLLIElement>(null);
   const [data, setData] = useState<StatefulData<ChildT>>();
@@ -66,7 +66,8 @@ export function ObservedData<
     ...animationStyle,
   };
 
-  if (removeListItemWhenEmpty && !data) listItemStyle.display = "none";
+  // Once the data is in view and has been fetched, possibly determine if it should be filtered out
+  if (data !== undefined && memoizedFilterOutCb?.(dataKey, data)) return null;
 
   return (
     <li id={dataKey} ref={ref} style={listItemStyle}>

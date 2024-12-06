@@ -132,7 +132,8 @@ export type ObservedDataProps<
   setCache: SetCache;
   getCache: GetCache;
   ItemComponent: FC<ItemComponentProps<ParentT, ParentK, ChildT, ChildK, Val>>;
-  removeListItemWhenEmpty?: boolean;
+  /** Return `true` to filter this element out of the list. Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
+  memoizedFilterOutCb?: (key: string, value: StatefulData<ChildT>) => boolean;
 };
 
 type ConnectionVersion<
@@ -240,7 +241,8 @@ export type ConnectionsObserverHOCProps<
   /** Don't forget to memoize. */
   memoizedPrefixedListItems?: JSX.Element;
   disable?: boolean;
-  removeListItemWhenEmpty?: boolean;
+  /** Return `true` to filter this element out of the list. Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
+  memoizedFilterOutCb?: (key: string, value: StatefulData<ChildT>) => boolean;
 } & (
     | {
         GroupingComponent: FC<GroupingComponentProps>;
