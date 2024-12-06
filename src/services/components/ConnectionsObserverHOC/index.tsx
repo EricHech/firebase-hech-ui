@@ -1,5 +1,15 @@
-import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { FirebaseHechDatabase, ConnectionDataListDatabase } from "firebase-hech";
+import React, {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type {
+  FirebaseHechDatabase,
+  ConnectionDataListDatabase,
+} from "firebase-hech";
 import { getOrderByWithLimit } from "firebase-hech/client";
 
 // Context
@@ -11,7 +21,15 @@ import { useStaticCachedDataKeyValues } from "../../hooks";
 // Local
 import { useBasicIntersectionObserver } from "./useBasicIntersectionObserver";
 import { useGetListeners } from "./useGetListeners";
-import { attachListeners, getDirection, getMarker, getOrderBy, getPaginationOptions, getPath, getSide } from "./utils";
+import {
+  attachListeners,
+  getDirection,
+  getMarker,
+  getOrderBy,
+  getPaginationOptions,
+  getPath,
+  getSide,
+} from "./utils";
 import type {
   ConnectionsObserverHOCProps,
   CustomPaginationOpts,
@@ -34,11 +52,22 @@ export type { ItemComponentProps, GroupingComponentProps, EmptyComponentProps };
 export function ConnectionsObserverHOC<
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
-  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
-  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
+  ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
+    keyof FirebaseHechDatabase,
+  ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] &
+    keyof FirebaseHechDatabase,
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
->(props: ConnectionsObserverHOCProps<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>) {
+>(
+  props: ConnectionsObserverHOCProps<
+    ParentT,
+    ParentK,
+    ChildT,
+    ChildT2,
+    ChildK,
+    Val
+  >
+) {
   const { initiallyLoading, user } = useFirebaseHechContext();
 
   // ---- Prop Settings -----------------------------------------------------------------------------------------------
@@ -61,6 +90,7 @@ export function ConnectionsObserverHOC<
     grouping,
     disable,
     removeListItemWhenEmpty,
+    filterCb = null,
   } = props;
 
   /* eslint-disable react/destructuring-assignment */
@@ -79,7 +109,12 @@ export function ConnectionsObserverHOC<
             parentDataType: props.parentDataType,
             connectionType: props.connectionType,
           },
-    [props.connectionType, props.parentDataKey, props.parentDataType, props.version]
+    [
+      props.connectionType,
+      props.parentDataKey,
+      props.parentDataType,
+      props.version,
+    ]
   );
   /* eslint-enable react/destructuring-assignment */
 
@@ -93,7 +128,10 @@ export function ConnectionsObserverHOC<
   const horizontalMarginNum = hydrationBufferAmount * listItemMinWidthPx;
   const rootMargin = `${verticalMarginNum}px ${horizontalMarginNum}px ${verticalMarginNum}px ${horizontalMarginNum}px`;
 
-  const { observe, observedIds } = useBasicIntersectionObserver(root, rootMargin);
+  const { observe, observedIds } = useBasicIntersectionObserver(
+    root,
+    rootMargin
+  );
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Data --------------------------------------------------------------------------------------------------------
@@ -110,14 +148,27 @@ export function ConnectionsObserverHOC<
       return prev;
     }, {} as Record<string, Val | number>);
 
-    if (direction === "limitToFirst") return Object.entries(list);
-    return Object.entries(list).reverse();
-  }, [direction, sort, data]);
+    let entriesList = null;
+    if (direction === "limitToFirst") {
+      entriesList = Object.entries(list);
+    } else {
+      entriesList = Object.entries(list).reverse();
+    }
+    return !filterCb ? entriesList : entriesList.filter(filterCb);
+    // return Object.entries(list);
+    // return Object.entries(list).reverse();
+  }, [direction, sort, data, filterCb]);
 
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Fetch Helpers -----------------------------------------------------------------------------------------------
-  const { getChildAddedOrChanged, getChildRemoved } = useGetListeners<ParentT, ParentK, ChildT, ChildK, Val>(setData);
+  const { getChildAddedOrChanged, getChildRemoved } = useGetListeners<
+    ParentT,
+    ParentK,
+    ChildT,
+    ChildK,
+    Val
+  >(setData);
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- New Page Fetching -------------------------------------------------------------------------------------------
@@ -132,18 +183,27 @@ export function ConnectionsObserverHOC<
       fetchingNewPage.current = true;
       setPeripheryMarker(undefined);
 
-      if (managePagination?.amount === undefined) throw Error("`managePagination?.amount` was `undefined`.");
+      if (managePagination?.amount === undefined)
+        throw Error("`managePagination?.amount` was `undefined`.");
       const { amount } = managePagination;
 
-      const path = getPath<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>(versionSettings, dataType, user?.uid);
+      const path = getPath<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>(
+        versionSettings,
+        dataType,
+        user?.uid
+      );
       if (!path) throw Error("Unable to determine database path.");
 
       // When fetching a new page, first get the initial page data...
-      const newData = await getOrderByWithLimit<Record<string, Val | number>>(path, orderBy, {
-        amount,
-        direction,
-        termination: { key: startPos, version: "exclusive" },
-      });
+      const newData = await getOrderByWithLimit<Record<string, Val | number>>(
+        path,
+        orderBy,
+        {
+          amount,
+          direction,
+          termination: { key: startPos, version: "exclusive" },
+        }
+      );
 
       const newDataArray = Object.entries(newData || {});
       const newDataLength = newDataArray.length;
@@ -156,15 +216,24 @@ export function ConnectionsObserverHOC<
       const startEl = newDataArray[0];
       const endEl = newDataArray[newDataLength - 1];
 
-      const start = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(startEl, orderBy);
-      const end = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(endEl, orderBy);
+      const start = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(
+        startEl,
+        orderBy
+      );
+      const end = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(
+        endEl,
+        orderBy
+      );
 
       // ...if less than a full page came back, you are at the end and should listen to the opposite of the starting edge now also...
       if (newDataLength < amount) {
         fetchedAll.current = true;
         paginationOpts.edge = {
           side: side === "high" ? "low" : "high",
-          termination: { key: side === "high" ? end : start, version: "exclusive" },
+          termination: {
+            key: side === "high" ? end : start,
+            version: "exclusive",
+          },
         };
       } else {
         // ...otherwise, set the listeners for that page...
@@ -174,7 +243,14 @@ export function ConnectionsObserverHOC<
       const paginate = getPaginationOptions(sort, paginationOpts);
 
       // ...then establish the listeners for changes
-      const scrolledPageOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
+      const scrolledPageOff = attachListeners<
+        ParentT,
+        ParentK,
+        ChildT,
+        ChildT2,
+        ChildK,
+        Val
+      >({
         userUid: user?.uid,
         dataType,
         settings: versionSettings,
@@ -214,7 +290,10 @@ export function ConnectionsObserverHOC<
 
       if (peripheryObserved) {
         const el = periphery[periphery.length - 1];
-        const marker = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(el, orderBy);
+        const marker = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(
+          el,
+          orderBy
+        );
 
         setPeripheryMarker(marker);
       } else {
@@ -231,7 +310,9 @@ export function ConnectionsObserverHOC<
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Primary Hydration and Listeners -----------------------------------------------------------------------------
-  const [initialHydrationComplete, setInitialHydrationComplete] = useState(!managePagination); // initial hydration can only be tracked if managing pagination
+  const [initialHydrationComplete, setInitialHydrationComplete] = useState(
+    !managePagination
+  ); // initial hydration can only be tracked if managing pagination
 
   useEffect(() => {
     let primaryListenerOff: Maybe<VoidFunction>;
@@ -239,7 +320,11 @@ export function ConnectionsObserverHOC<
     if (!initiallyLoading && !disable) {
       // (1) If you are managing pagination...
       if (managePagination) {
-        const path = getPath<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>(versionSettings, dataType, user?.uid);
+        const path = getPath<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>(
+          versionSettings,
+          dataType,
+          user?.uid
+        );
 
         if (path) {
           const { amount } = managePagination;
@@ -264,14 +349,23 @@ export function ConnectionsObserverHOC<
               // If you are setting a custom edge (rather than the actual end of the infinite scroll)...
               if (terminationEdge) {
                 // ...then use the `pagination` prop, which aims in the direction you're paginating...
-                paginationOpts.pagination = { amount, termination: terminationEdge };
+                paginationOpts.pagination = {
+                  amount,
+                  termination: terminationEdge,
+                };
               } else {
                 // ...otherwise, set the `edge`, which will look in the direction of the starting place in case more data comes in
                 const elIndex = side === "high" ? 0 : newDataArray.length - 1;
                 const el = newDataArray[elIndex];
-                const marker = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(el, orderBy);
+                const marker = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(
+                  el,
+                  orderBy
+                );
 
-                paginationOpts.edge = { side, termination: { key: marker, version: "inclusive" } };
+                paginationOpts.edge = {
+                  side,
+                  termination: { key: marker, version: "inclusive" },
+                };
               }
             }
             setInitialHydrationComplete(true);
@@ -280,7 +374,14 @@ export function ConnectionsObserverHOC<
             const paginate = getPaginationOptions(sort, paginationOpts);
 
             // ...and then listen for any new data that comes in
-            primaryListenerOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
+            primaryListenerOff = attachListeners<
+              ParentT,
+              ParentK,
+              ChildT,
+              ChildT2,
+              ChildK,
+              Val
+            >({
               userUid: user?.uid,
               dataType,
               settings: versionSettings,
@@ -297,7 +398,14 @@ export function ConnectionsObserverHOC<
         fetchedAll.current = true;
         const paginate = getPaginationOptions(sort, {});
 
-        primaryListenerOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
+        primaryListenerOff = attachListeners<
+          ParentT,
+          ParentK,
+          ChildT,
+          ChildT2,
+          ChildK,
+          Val
+        >({
           userUid: user?.uid,
           dataType,
           settings: versionSettings,
@@ -361,7 +469,12 @@ export function ConnectionsObserverHOC<
   /* eslint-enable react/destructuring-assignment */
 
   /* eslint-disable react/destructuring-assignment */
-  if (!memoizedPrefixedListItems && dataList.length === 0 && props.EmptyComponent && initialHydrationComplete) {
+  if (
+    !memoizedPrefixedListItems &&
+    dataList.length === 0 &&
+    props.EmptyComponent &&
+    initialHydrationComplete
+  ) {
     return props.version === "connectionDataList" ? (
       <div className={className}>
         <props.EmptyComponent
@@ -400,7 +513,10 @@ export function ConnectionsObserverHOC<
       {dataList.map(([key, queryNode], i) => {
         if (omitKeys?.[key]) return null;
 
-        const timestamp = typeof queryNode === "number" ? queryNode : (queryNode as { updatedAt: number }).updatedAt;
+        const timestamp =
+          typeof queryNode === "number"
+            ? queryNode
+            : (queryNode as { updatedAt: number }).updatedAt;
 
         const dataJsx =
           props.version === "connectionDataList" ? (
@@ -449,8 +565,10 @@ export function ConnectionsObserverHOC<
 
         if (grouping) {
           let current: Maybe<number>;
-          if (grouping === "day") current = new Date(timestamp).setHours(0, 0, 0, 0);
-          if (grouping === "minute") current = new Date(timestamp).setSeconds(0, 0);
+          if (grouping === "day")
+            current = new Date(timestamp).setHours(0, 0, 0, 0);
+          if (grouping === "minute")
+            current = new Date(timestamp).setSeconds(0, 0);
 
           if (current && current !== currentGrouping) {
             currentGrouping = current;
