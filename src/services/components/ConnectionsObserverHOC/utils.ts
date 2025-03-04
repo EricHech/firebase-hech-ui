@@ -10,7 +10,7 @@ import {
 } from "../../helpers";
 
 // Local
-import type { CustomPaginationOpts, SettingsVersion, Sort } from "./types";
+import type { CustomPaginationOpts, SettingsVersion, Sort, Version } from "./types";
 
 /**
  * "newest" or "desc" === "limitToLast"
@@ -65,9 +65,14 @@ export const getOrderBy = <
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 >(
-  sort: Sort<ParentT, ParentK, ChildT, ChildK, Val>
+  sort: Sort<ParentT, ParentK, ChildT, ChildK, Val>,
+  version: "connectionDataList" | "publicDataList" | "userDataList"
 ) => {
-  if (typeof sort === "string" && sort.startsWith("created")) return "orderByKey";
+  if (typeof sort === "string") {
+    if (sort.startsWith("created")) return "orderByKey";
+    if (sort.startsWith("updated") && version !== "connectionDataList") return "orderByValue";
+  }
+
   return typeof sort === "string" ? { path: "updatedAt" } : { path: sort.childKey as string };
 };
 
@@ -79,13 +84,13 @@ export const getMarker = <
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 >(
   el: [string, Val | number],
-  orderBy: "orderByKey" | { path: string }
+  orderBy: "orderByKey" | "orderByValue" | { path: string }
 ) => {
   const resource = orderBy === "orderByKey" ? el[0] : el[1];
 
   if (typeof resource === "number" || typeof resource === "string") return resource;
+  if (orderBy === "orderByKey" || orderBy === "orderByValue") throw Error("Invalid `sort` settings.");
 
-  if (orderBy === "orderByKey") throw Error("Invalid `sort` settings.");
   return resource[orderBy.path as keyof Val] as string | number;
 };
 
@@ -97,11 +102,12 @@ export const getPaginationOptions = <
   Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 >(
   sort: Sort<ParentT, ParentK, ChildT, ChildK, Val>,
+  version: "connectionDataList" | "publicDataList" | "userDataList",
   opts: CustomPaginationOpts
 ) => {
   const paginate: ListenerPaginationOptions = {};
 
-  paginate.orderBy = getOrderBy(sort);
+  paginate.orderBy = getOrderBy(sort, version);
 
   if (opts.pagination?.amount) {
     paginate.limit = {

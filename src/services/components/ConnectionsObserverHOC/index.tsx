@@ -85,7 +85,7 @@ export function ConnectionsObserverHOC<
 
   const direction = useMemo(() => getDirection(sort), [sort]);
   const side = useMemo(() => getSide(sort), [sort]);
-  const orderBy = useMemo(() => getOrderBy(sort), [sort]);
+  const orderBy = useMemo(() => getOrderBy(sort, props.version), [sort, props.version]);
   // ------------------------------------------------------------------------------------------------------------------
 
   // ---- Observer ----------------------------------------------------------------------------------------------------
@@ -171,7 +171,7 @@ export function ConnectionsObserverHOC<
         paginationOpts.between = { start, end, version: "exclusive" };
       }
 
-      const paginate = getPaginationOptions(sort, paginationOpts);
+      const paginate = getPaginationOptions(sort, versionSettings.version, paginationOpts);
 
       // ...then establish the listeners for changes
       const scrolledPageOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
@@ -277,7 +277,7 @@ export function ConnectionsObserverHOC<
             setInitialHydrationComplete(true);
 
             if (newDataArray.length < amount) fetchedAll.current = true;
-            const paginate = getPaginationOptions(sort, paginationOpts);
+            const paginate = getPaginationOptions(sort, versionSettings.version, paginationOpts);
 
             // ...and then listen for any new data that comes in
             primaryListenerOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
@@ -295,7 +295,7 @@ export function ConnectionsObserverHOC<
       } else {
         // (2) Otherwise just listen to all the data
         fetchedAll.current = true;
-        const paginate = getPaginationOptions(sort, {});
+        const paginate = getPaginationOptions(sort, versionSettings.version, {});
 
         primaryListenerOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
           userUid: user?.uid,
