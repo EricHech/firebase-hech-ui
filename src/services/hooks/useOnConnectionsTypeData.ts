@@ -25,20 +25,29 @@ export const useOnConnectionsTypeData = <
   parentKey: Maybe<ParentK>;
 }) => {
   const [data, setData] = useState<Maybe<Nullable<Record<string, Data<ChildT>>>>>(poke ? undefined : {});
+  const [queryData, setQueryData] =
+    useState<Record<string, ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]>>({});
 
   const childChanged = useCallback(
     async (
-      _: ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK],
+      val: ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK],
       key: ChildK | string,
       previousOrderingKey: Maybe<Nullable<string>>
-    ) => firebaseHechHydrateAndSetStateFirebaseLists(dataType, setData, key as string, previousOrderingKey),
+    ) => {
+      await firebaseHechHydrateAndSetStateFirebaseLists(dataType, setData, key as string, previousOrderingKey);
+      setQueryData((prev) => ({ ...prev, [key]: val }));
+    },
     [dataType]
   );
 
-  const childRemoved = useCallback(
-    (key: ChildK | string) => setStateFirebaseLists(setData, null, key as string, undefined),
-    []
-  );
+  const childRemoved = useCallback((key: ChildK | string) => {
+    setStateFirebaseLists(setData, null, key as string, undefined);
+    setQueryData((prev) => {
+      const next = { ...prev };
+      delete next[key as string];
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     if (parentKey && enabled) {
@@ -87,6 +96,7 @@ export const useOnConnectionsTypeData = <
   );
 
   return {
+    queryData,
     data: data as Poke extends true ? Maybe<Nullable<Record<string, Data<ChildT>>>> : Record<string, Data<ChildT>>,
     dataArray,
   };
