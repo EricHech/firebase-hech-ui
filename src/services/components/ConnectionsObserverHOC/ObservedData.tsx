@@ -67,7 +67,7 @@ export function ObservedData<
   };
 
   // Once the data is in view and has been fetched, possibly determine if it should be filtered out
-  if (data !== undefined && memoizedFilterOutCb?.(dataKey, data)) return null;
+  if (data !== undefined && memoizedFilterOutCb?.(dataKey, queryNode, data)) return null;
 
   return (
     <li id={dataKey} ref={ref} style={listItemStyle}>

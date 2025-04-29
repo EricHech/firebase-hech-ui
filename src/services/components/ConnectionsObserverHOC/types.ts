@@ -133,7 +133,7 @@ export type ObservedDataProps<
   getCache: GetCache;
   ItemComponent: FC<ItemComponentProps<ParentT, ParentK, ChildT, ChildK, Val>>;
   /** Return `true` to filter this element out of the list. Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
-  memoizedFilterOutCb?: (key: string, value: StatefulData<ChildT>) => boolean;
+  memoizedFilterOutCb?: (key: string, queryNode: number | Val, value: StatefulData<ChildT>) => boolean;
 };
 
 type ConnectionVersion<
@@ -241,8 +241,15 @@ export type ConnectionsObserverHOCProps<
   /** Don't forget to memoize. */
   memoizedPrefixedListItems?: JSX.Element;
   disable?: boolean;
-  /** Return `true` to filter this element out of the list. Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
-  memoizedFilterOutCb?: (key: string, value: StatefulData<ChildT>) => boolean;
+  /**
+   * Return `true` to filter this element out of the list. Make sure that this function is memoed or otherwised saved to avoid infinite re-renders
+   *
+   * TODO: Refactor this out into `getChildAddedOrChanged` and the initial `getOrderByWithLimit` fetch:
+   * Sometimes the query list, if empty, matches more than it should. For example, when getting two lists of past and future alerts using the
+   * termination edge, Firebase returns the entire list because nothing matched the query. So you have to filter it out on the client. This
+   * should be done before we hydrate the data in the initial fetch and the subsequent listeners. For now, we're lumping it into this lazy feature.
+   */
+  memoizedFilterOutCb?: (key: string, queryNode: number | Val, value: StatefulData<ChildT>) => boolean;
 } & (
     | {
         GroupingComponent: FC<GroupingComponentProps>;
