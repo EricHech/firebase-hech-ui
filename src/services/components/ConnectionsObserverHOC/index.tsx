@@ -274,6 +274,7 @@ export function ConnectionsObserverHOC<
                 paginationOpts.edge = { side, termination: { key: marker, version: "inclusive" } };
               }
             }
+
             setInitialHydrationComplete(true);
 
             if (newDataArray.length < amount) fetchedAll.current = true;
