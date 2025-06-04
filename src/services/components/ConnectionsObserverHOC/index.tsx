@@ -59,6 +59,7 @@ export function ConnectionsObserverHOC<
     GroupingComponent,
     memoizedPrefixedListItems = null,
     grouping,
+    groupingQueryNodeKey,
     disable,
     memoizedFilterOutCb,
   } = props;
@@ -402,6 +403,8 @@ export function ConnectionsObserverHOC<
         if (omitKeys?.[key]) return null;
 
         const timestamp = typeof queryNode === "number" ? queryNode : (queryNode as { updatedAt: number }).updatedAt;
+        const groupingTimestamp =
+          typeof queryNode === "number" ? queryNode : queryNode[groupingQueryNodeKey || ("updatedAt" as keyof Val)];
 
         const dataJsx =
           props.version === "connectionDataList" ? (
@@ -450,8 +453,8 @@ export function ConnectionsObserverHOC<
 
         if (grouping) {
           let current: Maybe<number>;
-          if (grouping === "day") current = new Date(timestamp).setHours(0, 0, 0, 0);
-          if (grouping === "minute") current = new Date(timestamp).setSeconds(0, 0);
+          if (grouping === "day") current = new Date(groupingTimestamp as number).setHours(0, 0, 0, 0);
+          if (grouping === "minute") current = new Date(groupingTimestamp as number).setSeconds(0, 0);
 
           if (current && current !== currentGrouping) {
             currentGrouping = current;

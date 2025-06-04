@@ -255,10 +255,14 @@ export type ConnectionsObserverHOCProps<
         GroupingComponent: FC<GroupingComponentProps>;
         /** Method by which you want to section the list (ie. day, year, etc.) */
         grouping: "day" | "minute";
+        /** The query node key if sorting by a custom key rather than `updatedAt` */
+        groupingQueryNodeKey?: keyof Val;
       }
     | {
         GroupingComponent?: undefined;
         /** Method by which you want to section the list (ie. day, year, etc.) */
         grouping?: undefined;
+        /** The query node key if sorting by a custom key rather than `updatedAt` */
+        groupingQueryNodeKey?: undefined;
       }
   );
