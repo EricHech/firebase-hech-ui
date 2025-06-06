@@ -60,6 +60,7 @@ export function ConnectionsObserverHOC<
     memoizedPrefixedListItems = null,
     grouping,
     groupingQueryNodeKey,
+    listIsCssReversed,
     disable,
     memoizedFilterOutCb,
   } = props;
@@ -386,9 +387,41 @@ export function ConnectionsObserverHOC<
 
   if (!memoizedPrefixedListItems && dataList.length === 0) return null;
 
-  let currentGrouping = 0;
+  // --- Grouping -----------------------------------------------------------------------------------------------------
+  const groupsMs: Maybe<{ key: string; ms: Maybe<number> }>[] = [];
 
-  /* eslint-disable react/destructuring-assignment */
+  if (grouping) {
+    // If reversing the list, you want to be one step behind in the groups (e.g. chat groupings)
+    // For example, if the first group is "Today", it should not show up at the bottom of the reversed list, nothing should show up there
+    let reversedListTrailingMs: Maybe<number> = undefined;
+    let currentGroupingMs = 0;
+
+    dataList.forEach(([key, queryNode]) => {
+      if (omitKeys?.[key]) return;
+
+      const groupingTimestamp =
+        typeof queryNode === "number" ? queryNode : queryNode[groupingQueryNodeKey || ("updatedAt" as keyof Val)];
+
+      let currentMs: Maybe<number>;
+      if (grouping === "day") currentMs = new Date(groupingTimestamp as number).setHours(0, 0, 0, 0);
+      if (grouping === "minute") currentMs = new Date(groupingTimestamp as number).setSeconds(0, 0);
+
+      if (currentMs && currentMs !== currentGroupingMs) {
+        currentGroupingMs = currentMs;
+
+        if (listIsCssReversed) {
+          groupsMs.push({ key, ms: reversedListTrailingMs });
+          reversedListTrailingMs = currentMs;
+        } else {
+          groupsMs.push({ key, ms: currentMs });
+        }
+      }
+    });
+  }
+
+  let groupMsTargetIdx = 0;
+  // ------------------------------------------------------------------------------------------------------------------
+
   return (
     <ul
       className={className}
@@ -403,8 +436,6 @@ export function ConnectionsObserverHOC<
         if (omitKeys?.[key]) return null;
 
         const timestamp = typeof queryNode === "number" ? queryNode : (queryNode as { updatedAt: number }).updatedAt;
-        const groupingTimestamp =
-          typeof queryNode === "number" ? queryNode : queryNode[groupingQueryNodeKey || ("updatedAt" as keyof Val)];
 
         const dataJsx =
           props.version === "connectionDataList" ? (
@@ -452,25 +483,25 @@ export function ConnectionsObserverHOC<
           );
 
         if (grouping) {
-          let current: Maybe<number>;
-          if (grouping === "day") current = new Date(groupingTimestamp as number).setHours(0, 0, 0, 0);
-          if (grouping === "minute") current = new Date(groupingTimestamp as number).setSeconds(0, 0);
+          const group = groupsMs[groupMsTargetIdx];
 
-          if (current && current !== currentGrouping) {
-            currentGrouping = current;
+          if (group?.key === key) {
+            groupMsTargetIdx++;
 
-            return (
-              <Fragment key={key}>
-                <GroupingComponent
-                  idx={i}
-                  top={i === 0}
-                  bottom={i === dataList.length - 1}
-                  timestamp={currentGrouping}
-                  groupingData={groupingDataRef.current}
-                />
-                {dataJsx}
-              </Fragment>
-            );
+            if (group.ms !== undefined) {
+              return (
+                <Fragment key={key}>
+                  <GroupingComponent
+                    idx={i}
+                    top={i === 0}
+                    bottom={i === dataList.length - 1}
+                    timestamp={group.ms}
+                    groupingData={groupingDataRef.current}
+                  />
+                  {dataJsx}
+                </Fragment>
+              );
+            }
           }
         }
 
@@ -478,5 +509,4 @@ export function ConnectionsObserverHOC<
       })}
     </ul>
   );
-  /* eslint-enable react/destructuring-assignment */
 }

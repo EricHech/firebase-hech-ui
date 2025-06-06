@@ -257,6 +257,8 @@ export type ConnectionsObserverHOCProps<
         grouping: "day" | "minute";
         /** The query node key if sorting by a custom key rather than `updatedAt` */
         groupingQueryNodeKey?: keyof Val;
+        /** If your list is reversed using CSS, you will need to indicate that here if using a GroupingComponent */
+        listIsCssReversed?: boolean;
       }
     | {
         GroupingComponent?: undefined;
@@ -264,5 +266,7 @@ export type ConnectionsObserverHOCProps<
         grouping?: undefined;
         /** The query node key if sorting by a custom key rather than `updatedAt` */
         groupingQueryNodeKey?: undefined;
+        /** If your list is reversed using CSS, you will need to indicate that here if using a GroupingComponent */
+        listIsCssReversed?: undefined;
       }
   );
