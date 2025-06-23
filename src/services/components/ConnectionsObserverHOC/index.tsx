@@ -259,9 +259,9 @@ export function ConnectionsObserverHOC<
 
             const paginationOpts: CustomPaginationOpts = {};
 
-            if (newDataArray.length) {
+            if (newDataArray.length || terminationEdge) {
               // ...set it...
-              setData([newData]);
+              if (newDataArray.length) setData([newData]);
 
               // If you are setting a custom edge (rather than the actual end of the infinite scroll)...
               if (terminationEdge) {
