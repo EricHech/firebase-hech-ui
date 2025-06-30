@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo, ReactNode, createContext, useCallback } from "react";
+import React, { useState, useEffect, useMemo, ReactNode, createContext } from "react";
 import type { FirebaseOptions } from "firebase/app";
+import type { User as FirebaseUser, Persistence } from "firebase/auth";
 
-import { User as FirebaseUser, Persistence } from "firebase/auth";
 import { PATHS } from "firebase-hech/paths";
 import {
   initializeFirebase,

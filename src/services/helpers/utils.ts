@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 
 // FirebaseHech
 import { getDataKeyValue } from "firebase-hech/client";
-import type { ConnectionDataListDatabase, Data, FirebaseHechDatabase } from "firebase-hech";
+import type { Data, FirebaseHechDatabase } from "firebase-hech";
 
 export const handleOrderingFirebaseList = <T extends unknown>(
   data: Maybe<Nullable<Record<string, T>>>,

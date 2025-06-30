@@ -63,6 +63,7 @@ export function ConnectionsObserverHOC<
     listIsCssReversed,
     disable,
     memoizedFilterOutCb,
+    enableOfflineCaching,
   } = props;
 
   /* eslint-disable react/destructuring-assignment */
@@ -145,6 +146,9 @@ export function ConnectionsObserverHOC<
         amount,
         direction,
         termination: { key: startPos, version: "exclusive" },
+      }).catch((error) => {
+        if (error?.code === "unavailable") return null; // stifle the error in offline mode and let the onValue load the cache
+        throw error;
       });
 
       const newDataArray = Object.entries(newData || {});
@@ -153,7 +157,7 @@ export function ConnectionsObserverHOC<
 
       const paginationOpts: CustomPaginationOpts = {};
 
-      if (!empty) setData((prev) => [...prev, newData]);
+      if (!empty && newData) setData((prev) => [...prev, newData]);
 
       const startEl = newDataArray[0];
       const endEl = newDataArray[newDataLength - 1];
@@ -250,50 +254,59 @@ export function ConnectionsObserverHOC<
             : undefined;
 
           // ...get the initial chunk of data...
+          const paginationOpts: CustomPaginationOpts = {};
           getOrderByWithLimit<Record<string, Val | number>>(path, orderBy, {
             amount,
             direction,
             termination: terminationEdge,
-          }).then((newData) => {
-            const newDataArray = Object.entries(newData);
+          })
+            .then((newData) => {
+              const newDataArray = Object.entries(newData);
 
-            const paginationOpts: CustomPaginationOpts = {};
+              if (newDataArray.length || terminationEdge) {
+                // ...set it...
+                if (newDataArray.length) setData([newData]);
 
-            if (newDataArray.length || terminationEdge) {
-              // ...set it...
-              if (newDataArray.length) setData([newData]);
+                // If you are setting a custom edge (rather than the actual end of the infinite scroll)...
+                if (terminationEdge) {
+                  // ...then use the `pagination` prop, which aims in the direction you're paginating...
+                  paginationOpts.pagination = { amount, termination: terminationEdge };
+                } else {
+                  // ...otherwise, set the `edge`, which will look in the direction of the starting place in case more data comes in
+                  const elIndex = side === "high" ? 0 : newDataArray.length - 1;
+                  const el = newDataArray[elIndex];
+                  const marker = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(el, orderBy);
 
-              // If you are setting a custom edge (rather than the actual end of the infinite scroll)...
-              if (terminationEdge) {
-                // ...then use the `pagination` prop, which aims in the direction you're paginating...
-                paginationOpts.pagination = { amount, termination: terminationEdge };
-              } else {
-                // ...otherwise, set the `edge`, which will look in the direction of the starting place in case more data comes in
-                const elIndex = side === "high" ? 0 : newDataArray.length - 1;
-                const el = newDataArray[elIndex];
-                const marker = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(el, orderBy);
-
-                paginationOpts.edge = { side, termination: { key: marker, version: "inclusive" } };
+                  paginationOpts.edge = { side, termination: { key: marker, version: "inclusive" } };
+                }
               }
-            }
 
-            setInitialHydrationComplete(true);
+              setInitialHydrationComplete(true);
 
-            if (newDataArray.length < amount) fetchedAll.current = true;
-            const paginate = getPaginationOptions(sort, versionSettings.version, paginationOpts);
+              if (newDataArray.length < amount) fetchedAll.current = true;
+            })
+            .catch((error) => {
+              if (error?.code === "unavailable") {
+                setInitialHydrationComplete(true); // In offline mode, display the ObservedData to hopefully load something from the cache
+                return null; // stifle the error in offline mode and let the onValue load the cache
+              }
+              throw error;
+            })
+            .finally(() => {
+              const paginate = getPaginationOptions(sort, versionSettings.version, paginationOpts);
 
-            // ...and then listen for any new data that comes in
-            primaryListenerOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
-              userUid: user?.uid,
-              dataType,
-              settings: versionSettings,
-              paginate,
-              childAdded: getChildAddedOrChanged(0),
-              childChanged: getChildAddedOrChanged(0),
-              childRemoved: getChildRemoved(0),
-              skipChildAdded: false,
+              // ...and then listen for any new data that comes in
+              primaryListenerOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
+                userUid: user?.uid,
+                dataType,
+                settings: versionSettings,
+                paginate,
+                childAdded: getChildAddedOrChanged(0),
+                childChanged: getChildAddedOrChanged(0),
+                childRemoved: getChildRemoved(0),
+                skipChildAdded: false,
+              });
             });
-          });
         }
       } else {
         // (2) Otherwise just listen to all the data
@@ -458,6 +471,7 @@ export function ConnectionsObserverHOC<
               getCache={getCache}
               ItemComponent={props.ItemComponent}
               memoizedFilterOutCb={memoizedFilterOutCb}
+              enableOfflineCaching={enableOfflineCaching}
             />
           ) : (
             <ObservedData<ParentT, ParentK, ChildT, ChildK, Val>
@@ -479,6 +493,7 @@ export function ConnectionsObserverHOC<
               getCache={getCache}
               ItemComponent={props.ItemComponent}
               memoizedFilterOutCb={memoizedFilterOutCb}
+              enableOfflineCaching={enableOfflineCaching}
             />
           );
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { FirebaseHechDatabase, StatefulData, ConnectionDataListDatabase } from "firebase-hech";
 import { getDataKeyValue } from "firebase-hech/client";
+import { generateDbKey } from "firebase-hech/paths";
 
 // Local
 import type { ItemComponentProps, GroupingComponentProps, EmptyComponentProps, ObservedDataProps } from "./types";
@@ -31,7 +32,8 @@ export function ObservedData<
   getCache,
   ItemComponent,
   memoizedCustomGet,
-  memoizedFilterOutCb
+  memoizedFilterOutCb,
+  enableOfflineCaching,
 }: ObservedDataProps<ParentT, ParentK, ChildT, ChildK, Val>) {
   const ref = useRef<HTMLLIElement>(null);
   const [data, setData] = useState<StatefulData<ChildT>>();
@@ -47,11 +49,26 @@ export function ObservedData<
   }, [observe]);
 
   useEffect(() => {
-    if (observed) {
-      if (memoizedCustomGet) memoizedCustomGet(dataKey).then(setData);
-      else getDataKeyValue({ dataType, dataKey }).then(setData);
-    }
-  }, [timestamp, observed, dataType, dataKey, memoizedCustomGet]);
+    if (!observed) return undefined;
+    const getter = memoizedCustomGet
+      ? () => memoizedCustomGet(dataKey)
+      : () => getDataKeyValue({ dataType, dataKey });
+
+    // If caching enabled, use it for immediate feedback and offline-persistence, and then try to fetch and set the data
+    const cacheKey = generateDbKey(dataType, dataKey);
+    enableOfflineCaching?.getData(cacheKey).then((cachedData) => {
+      if (cachedData) setData(cachedData);
+    });
+
+    getter().then((d) => {
+      if (d === null) enableOfflineCaching?.clearData(cacheKey);
+      else enableOfflineCaching?.setData(cacheKey, d);
+
+      setData(d);
+    });
+
+    return undefined;
+  }, [timestamp, observed, dataType, dataKey, memoizedCustomGet, enableOfflineCaching]);
 
   const animationStyle = animate
     ? {

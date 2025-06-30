@@ -134,6 +134,12 @@ export type ObservedDataProps<
   ItemComponent: FC<ItemComponentProps<ParentT, ParentK, ChildT, ChildK, Val>>;
   /** Return `true` to filter this element out of the list. Make sure that this function is memoed or otherwised saved to avoid infinite re-renders */
   memoizedFilterOutCb?: (key: string, queryNode: number | Val, value: StatefulData<ChildT>) => boolean;
+  /** Enable this if you want the ObservedData to set and pull from IndexedDB (and then attempt a fetch and replace) */
+  enableOfflineCaching?: {
+    setData: (_cacheKey: string, _d: StatefulData<ChildT>) => Promise<void>;
+    getData: (_cacheKey: string) => Promise<StatefulData<ChildT>>;
+    clearData: (_cacheKey: string) => Promise<void>;
+  };
 };
 
 type ConnectionVersion<
@@ -250,6 +256,12 @@ export type ConnectionsObserverHOCProps<
    * should be done before we hydrate the data in the initial fetch and the subsequent listeners. For now, we're lumping it into this lazy feature.
    */
   memoizedFilterOutCb?: (key: string, queryNode: number | Val, value: StatefulData<ChildT>) => boolean;
+  /** Enable this if you want the ObservedData to set and pull from IndexedDB (and then attempt a fetch and replace) */
+  enableOfflineCaching?: {
+    setData: (_cacheKey: string, _d: StatefulData<ChildT>) => Promise<void>;
+    getData: (_cacheKey: string) => Promise<StatefulData<ChildT>>;
+    clearData: (_cacheKey: string) => Promise<void>;
+  };
 } & (
     | {
         GroupingComponent: FC<GroupingComponentProps>;
