@@ -81,7 +81,7 @@ type TProps = {
   emulatorOptions?: EmulatorOptions;
   enableOfflineCaching?: {
     setCachedUser: (_cacheKey: string, _d: Mandate<User, "uid">) => Promise<void>;
-    getCachedUser: (_cacheKey: string) => Promise<Mandate<User, "uid">>;
+    getCachedUser: (_cacheKey: string) => Promise<Nullable<Mandate<User, "uid">>>;
   };
 } & (
   | {
