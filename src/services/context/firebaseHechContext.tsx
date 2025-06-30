@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, ReactNode, createContext } from "r
 import type { FirebaseOptions } from "firebase/app";
 import type { User as FirebaseUser, Persistence } from "firebase/auth";
 
-import { PATHS } from "firebase-hech/paths";
+import { generateDbKey, PATHS } from "firebase-hech/paths";
 import {
   initializeFirebase,
   getAdminValue,
@@ -79,6 +79,10 @@ type TProps = {
   requireEmailVerification?: boolean;
   anonymousSignIn?: boolean;
   emulatorOptions?: EmulatorOptions;
+  enableOfflineCaching?: {
+    setCachedUser: (_cacheKey: string, _d: Mandate<User, "uid">) => Promise<void>;
+    getCachedUser: (_cacheKey: string) => Promise<Mandate<User, "uid">>;
+  };
 } & (
   | {
       isNativePlatform?: true;
@@ -96,6 +100,7 @@ export function FirebaseHechContextProviderComponent({
   requireEmailVerification = false,
   anonymousSignIn = false,
   emulatorOptions,
+  enableOfflineCaching,
   ...props
 }: TProps) {
   const [firebaseUserState, setFirebaseUserState] = useState<Nullable<FirebaseUser>>();
@@ -133,10 +138,26 @@ export function FirebaseHechContextProviderComponent({
       async (firebaseUser) => {
         setFirebaseUserState(firebaseUser);
         if (firebaseUser) setAwaitingVerification(!firebaseUser.emailVerified);
+
+        // If opening the app while offline and the user is verified, try to load them from the cache if that feature is enabled
+        if (firebaseUser?.emailVerified) {
+          enableOfflineCaching?.getCachedUser(generateDbKey("user", firebaseUser.uid)).then((u) => {
+            setFirebaseHechUserState(u);
+            setIsAdmin(false);
+            setInitiallyLoading(false);
+          });
+        }
       },
       { anonymousSignIn, emulatorOptions, ...props }
     );
-  }, [firebaseOptions, anonymousSignIn, emulatorOptions, props.isNativePlatform, props.webPersistance]);
+  }, [
+    enableOfflineCaching,
+    firebaseOptions,
+    anonymousSignIn,
+    emulatorOptions,
+    props.isNativePlatform,
+    props.webPersistance,
+  ]);
 
   useEffect(() => {
     let offUser: Maybe<VoidFunction>;
@@ -161,6 +182,7 @@ export function FirebaseHechContextProviderComponent({
           if (updateNeeded) await updateUser(fbUserStateUid, userUpdate);
 
           setFirebaseHechUserState(firebaseHechUser);
+          enableOfflineCaching?.setCachedUser(generateDbKey("user", fbUserStateUid), firebaseHechUser);
           await getAdminValue(fbUserStateUid)
             .then(setIsAdmin)
             .catch(() => setIsAdmin(false));
