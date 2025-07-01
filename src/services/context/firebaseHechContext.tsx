@@ -142,7 +142,7 @@ export function FirebaseHechContextProviderComponent({
         // If opening the app while offline and the user is verified, try to load them from the cache if that feature is enabled
         if (firebaseUser?.emailVerified) {
           const cachedUser = await enableOfflineCaching?.getCachedUser(generateDbKey("user", firebaseUser.uid));
-          setFirebaseHechUserState(cachedUser);
+          if (cachedUser) setFirebaseHechUserState(cachedUser);
           setIsAdmin(false);
           setInitiallyLoading(false);
         }
