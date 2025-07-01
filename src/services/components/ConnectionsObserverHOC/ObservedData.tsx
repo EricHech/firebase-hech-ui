@@ -57,7 +57,7 @@ export function ObservedData<
     // If caching enabled, use it for immediate feedback and offline-persistence, and then try to fetch and set the data
     const cacheKey = generateDbKey(dataType, dataKey);
     enableOfflineCaching?.getData(cacheKey).then((cachedData) => {
-      if (cachedData) setData(cachedData);
+      if (cachedData) setData(cachedData as StatefulData<ChildT>);
     });
 
     getter().then((d) => {

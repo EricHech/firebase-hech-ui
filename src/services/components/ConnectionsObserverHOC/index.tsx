@@ -1,6 +1,7 @@
 import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FirebaseHechDatabase, ConnectionDataListDatabase } from "firebase-hech";
 import { getOrderByWithLimit } from "firebase-hech/client";
+import { generateDbKey } from "firebase-hech/paths";
 
 // Context
 import { useFirebaseHechContext } from "../../context";
@@ -242,89 +243,102 @@ export function ConnectionsObserverHOC<
   useEffect(() => {
     let primaryListenerOff: Maybe<VoidFunction>;
 
-    if (!initiallyLoading && !disable) {
-      // (1) If you are managing pagination...
-      if (managePagination) {
-        const path = getPath<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>(versionSettings, dataType, user?.uid);
+    const handler = async () => {
+      if (!initiallyLoading && !disable) {
+        // (1) If you are managing pagination...
+        if (managePagination) {
+          const path = getPath<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>(versionSettings, dataType, user?.uid);
 
-        if (path) {
-          const { amount } = managePagination;
-          const terminationEdge = terminationEdgeMarker
-            ? ({ key: terminationEdgeMarker, version: "inclusive" } as const)
-            : undefined;
+          if (path) {
+            const { amount } = managePagination;
+            const terminationEdge = terminationEdgeMarker
+              ? ({ key: terminationEdgeMarker, version: "inclusive" } as const)
+              : undefined;
 
-          // ...get the initial chunk of data...
-          const paginationOpts: CustomPaginationOpts = {};
-          getOrderByWithLimit<Record<string, Val | number>>(path, orderBy, {
-            amount,
-            direction,
-            termination: terminationEdge,
-          })
-            .then((newData) => {
-              const newDataArray = Object.entries(newData);
-
-              if (newDataArray.length || terminationEdge) {
-                // ...set it...
-                if (newDataArray.length) setData([newData]);
-
-                // If you are setting a custom edge (rather than the actual end of the infinite scroll)...
-                if (terminationEdge) {
-                  // ...then use the `pagination` prop, which aims in the direction you're paginating...
-                  paginationOpts.pagination = { amount, termination: terminationEdge };
-                } else {
-                  // ...otherwise, set the `edge`, which will look in the direction of the starting place in case more data comes in
-                  const elIndex = side === "high" ? 0 : newDataArray.length - 1;
-                  const el = newDataArray[elIndex];
-                  const marker = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(el, orderBy);
-
-                  paginationOpts.edge = { side, termination: { key: marker, version: "inclusive" } };
-                }
-              }
-
+            const cachedData = await enableOfflineCaching?.getData(generateDbKey("activity", enableOfflineCaching.listKey, "page-1"));
+            if (cachedData) {
+              setData([cachedData as Record<string, number | Val>]);
               setInitialHydrationComplete(true);
+            }
 
-              if (newDataArray.length < amount) fetchedAll.current = true;
+            // ...get the initial chunk of data...
+            const paginationOpts: CustomPaginationOpts = {};
+            getOrderByWithLimit<Record<string, Val | number>>(path, orderBy, {
+              amount,
+              direction,
+              termination: terminationEdge,
             })
-            .catch((error) => {
-              if (error?.code === "unavailable") {
-                setInitialHydrationComplete(true); // In offline mode, display the ObservedData to hopefully load something from the cache
-                return null; // stifle the error in offline mode and let the onValue load the cache
-              }
-              throw error;
-            })
-            .finally(() => {
-              const paginate = getPaginationOptions(sort, versionSettings.version, paginationOpts);
+              .then((newData) => {
+                const newDataArray = Object.entries(newData);
 
-              // ...and then listen for any new data that comes in
-              primaryListenerOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
-                userUid: user?.uid,
-                dataType,
-                settings: versionSettings,
-                paginate,
-                childAdded: getChildAddedOrChanged(0),
-                childChanged: getChildAddedOrChanged(0),
-                childRemoved: getChildRemoved(0),
-                skipChildAdded: false,
+                if (newDataArray.length || terminationEdge) {
+                  // ...set it...
+                  if (newDataArray.length) {
+                    setData([newData]);
+                    enableOfflineCaching?.setData(generateDbKey("activity", enableOfflineCaching.listKey, "page-1"), newData);
+                  }
+
+                  // If you are setting a custom edge (rather than the actual end of the infinite scroll)...
+                  if (terminationEdge) {
+                    // ...then use the `pagination` prop, which aims in the direction you're paginating...
+                    paginationOpts.pagination = { amount, termination: terminationEdge };
+                  } else {
+                    // ...otherwise, set the `edge`, which will look in the direction of the starting place in case more data comes in
+                    const elIndex = side === "high" ? 0 : newDataArray.length - 1;
+                    const el = newDataArray[elIndex];
+                    const marker = getMarker<ParentT, ParentK, ChildT, ChildK, Val>(el, orderBy);
+
+                    paginationOpts.edge = { side, termination: { key: marker, version: "inclusive" } };
+                  }
+                }
+
+                setInitialHydrationComplete(true);
+
+                if (newDataArray.length < amount) fetchedAll.current = true;
+              })
+              .catch((error) => {
+                if (error?.code === "unavailable") {
+                  setInitialHydrationComplete(true); // In offline mode, display the ObservedData to hopefully load something from the cache
+                  return null; // stifle the error in offline mode and let the onValue load the cache
+                }
+                throw error;
+              })
+              .finally(() => {
+                const paginate = getPaginationOptions(sort, versionSettings.version, paginationOpts);
+
+                // ...and then listen for any new data that comes in
+                primaryListenerOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
+                  userUid: user?.uid,
+                  dataType,
+                  settings: versionSettings,
+                  paginate,
+                  childAdded: getChildAddedOrChanged(0),
+                  childChanged: getChildAddedOrChanged(0),
+                  childRemoved: getChildRemoved(0),
+                  skipChildAdded: false,
+                });
               });
-            });
-        }
-      } else {
-        // (2) Otherwise just listen to all the data
-        fetchedAll.current = true;
-        const paginate = getPaginationOptions(sort, versionSettings.version, {});
+          }
+        } else {
+          // (2) Otherwise just listen to all the data
+          fetchedAll.current = true;
+          const paginate = getPaginationOptions(sort, versionSettings.version, {});
 
-        primaryListenerOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
-          userUid: user?.uid,
-          dataType,
-          settings: versionSettings,
-          paginate,
-          childAdded: getChildAddedOrChanged(0),
-          childChanged: getChildAddedOrChanged(0),
-          childRemoved: getChildRemoved(0),
-          skipChildAdded: false,
-        });
+          primaryListenerOff = attachListeners<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>({
+            userUid: user?.uid,
+            dataType,
+            settings: versionSettings,
+            paginate,
+            childAdded: getChildAddedOrChanged(0),
+            childChanged: getChildAddedOrChanged(0),
+            childRemoved: getChildRemoved(0),
+            skipChildAdded: false,
+          });
+        }
       }
-    }
+    };
+
+    handler();
 
     return () => {
       primaryListenerOff?.();

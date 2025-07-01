@@ -136,8 +136,8 @@ export type ObservedDataProps<
   memoizedFilterOutCb?: (key: string, queryNode: number | Val, value: StatefulData<ChildT>) => boolean;
   /** Enable this if you want the ObservedData to set and pull from IndexedDB (and then attempt a fetch and replace) */
   enableOfflineCaching?: {
-    setData: (_cacheKey: string, _d: StatefulData<ChildT>) => Promise<void>;
-    getData: (_cacheKey: string) => Promise<StatefulData<ChildT>>;
+    setData: (_cacheKey: string, _d: unknown) => Promise<void>;
+    getData: (_cacheKey: string) => Promise<unknown>;
     clearData: (_cacheKey: string) => Promise<void>;
   };
 };
@@ -258,8 +258,9 @@ export type ConnectionsObserverHOCProps<
   memoizedFilterOutCb?: (key: string, queryNode: number | Val, value: StatefulData<ChildT>) => boolean;
   /** Enable this if you want the ObservedData to set and pull from IndexedDB (and then attempt a fetch and replace) */
   enableOfflineCaching?: {
-    setData: (_cacheKey: string, _d: StatefulData<ChildT>) => Promise<void>;
-    getData: (_cacheKey: string) => Promise<StatefulData<ChildT>>;
+    listKey: string;
+    setData: (_cacheKey: string, _d: unknown) => Promise<void>;
+    getData: (_cacheKey: string) => Promise<unknown>;
     clearData: (_cacheKey: string) => Promise<void>;
   };
 } & (
