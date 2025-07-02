@@ -103,20 +103,21 @@ export function FirebaseHechContextProviderComponent({
   enableOfflineCaching,
   ...props
 }: TProps) {
-  const [firebaseUserState, setFirebaseUserState] = useState<Nullable<FirebaseUser>>();
+  const [userStates, setUserStates] = useState<{
+    firebase: Maybe<Nullable<FirebaseUser>>;
+    hech: Maybe<Nullable<Mandate<User, "uid">>>;
+    awaitingVerification: Maybe<boolean>;
+  }>({ firebase: undefined, hech: undefined, awaitingVerification: undefined });
+
   const {
     uid: fbUserStateUid,
     email: fbUserStateEmail,
     emailVerified: fbUserStateEmailVerified,
     phoneNumber: fbUserStatePhoneNumber,
     photoURL: fbUserStatePhotoURL,
-  } = firebaseUserState || {};
-  const fbUserIsNull = firebaseUserState === null;
-
-  const [awaitingVerification, setAwaitingVerification] = useState<boolean>();
-
-  const [firebaseHechUserState, setFirebaseHechUserState] = useState<Nullable<Mandate<User, "uid">>>();
-  const firebaseHechUserIsNull = firebaseHechUserState === null;
+  } = userStates.firebase || {};
+  const fbUserIsNull = userStates.firebase === null;
+  const firebaseHechUserIsNull = userStates.hech === null;
 
   const [isAdmin, setIsAdmin] = useState<Nullable<boolean>>(false);
   const [initiallyLoading, setInitiallyLoading] = useState(true);
@@ -124,25 +125,47 @@ export function FirebaseHechContextProviderComponent({
   useEffect(() => {
     let reloadCancelToken: NodeJS.Timeout;
 
-    if (requireEmailVerification && firebaseUserState && !firebaseUserState.emailVerified) {
+    if (requireEmailVerification && userStates.firebase && !userStates.firebase.emailVerified) {
       // This is needed because Firebase caches the user's info. We need to continually reload to listen for `emailVerified === true`.
-      reloadCancelToken = setInterval(() => firebaseUserState?.reload(), 1_000);
+      reloadCancelToken = setInterval(() => userStates.firebase?.reload(), 1_000);
     }
 
     return () => clearInterval(reloadCancelToken);
-  }, [requireEmailVerification, firebaseUserState?.emailVerified]);
+  }, [requireEmailVerification, userStates.firebase?.emailVerified]);
 
   useEffect(() => {
     initializeFirebase(
       firebaseOptions,
       async (firebaseUser) => {
-        setFirebaseUserState(firebaseUser);
-        if (firebaseUser) setAwaitingVerification(!firebaseUser.emailVerified);
+        const nextAwaitingVerificationValue = firebaseUser ? !firebaseUser.emailVerified : undefined;
 
         // If opening the app while offline and the user is verified, try to load them from the cache if that feature is enabled
         if (firebaseUser?.emailVerified) {
-          const cachedUser = await enableOfflineCaching?.getCachedUser(generateDbKey("user", firebaseUser.uid));
-          if (cachedUser) setFirebaseHechUserState(cachedUser);
+          const cachedUser = await enableOfflineCaching
+            ?.getCachedUser(generateDbKey("user", firebaseUser.uid))
+            .catch((e) => console.error(`Error fetching firebaseHechContext user cache: ${e?.message || ""}`));
+
+          setUserStates((prev) => ({
+            hech: cachedUser || prev.hech,
+            firebase: firebaseUser,
+            awaitingVerification: nextAwaitingVerificationValue,
+          }));
+          setIsAdmin(false);
+        } else {
+          setUserStates((prev) => ({
+            hech: firebaseUser ? prev.hech : undefined,
+            firebase: firebaseUser,
+            awaitingVerification: nextAwaitingVerificationValue,
+          }));
+        }
+
+        // If there's no user, you're logged out and done loading
+        // If there is a user, the `onUserValue` will flip the state
+        if (!firebaseUser) {
+          setUserStates((prev) => ({
+            ...prev,
+            hech: null,
+          }));
           setIsAdmin(false);
           setInitiallyLoading(false);
         }
@@ -164,7 +187,10 @@ export function FirebaseHechContextProviderComponent({
     if (fbUserStateUid) {
       offUser = onUserValue(fbUserStateUid, async (firebaseHechUser) => {
         if (firebaseHechUser === null) {
-          setFirebaseHechUserState(null);
+          setUserStates((prev) => ({
+            ...prev,
+            hech: null,
+          }));
           // If the `firebaseHechUser` is not null, then the following should be true:
         } else if (!requireEmailVerification || fbUserStateEmailVerified) {
           // Always keep the FirebaseHech user synced with Firebase (which could be getting updates via their Google account, verification status, etc.)
@@ -180,8 +206,15 @@ export function FirebaseHechContextProviderComponent({
           );
           if (updateNeeded) await updateUser(fbUserStateUid, userUpdate);
 
-          setFirebaseHechUserState(firebaseHechUser);
-          enableOfflineCaching?.setCachedUser(generateDbKey("user", fbUserStateUid), firebaseHechUser);
+          setUserStates((prev) => ({
+            ...prev,
+            hech: firebaseHechUser,
+          }));
+
+          enableOfflineCaching
+            ?.setCachedUser(generateDbKey("user", fbUserStateUid), firebaseHechUser)
+            .catch((e) => console.error(`Error setting firebaseHechContext user cache: ${e?.message || ""}`));
+
           await getAdminValue(fbUserStateUid)
             .then(setIsAdmin)
             .catch(() => setIsAdmin(false));
@@ -189,10 +222,6 @@ export function FirebaseHechContextProviderComponent({
 
         setInitiallyLoading(false);
       });
-    } else if (fbUserIsNull) {
-      setFirebaseHechUserState(null);
-      setIsAdmin(false);
-      setInitiallyLoading(false);
     }
 
     return () => offUser?.();
@@ -219,12 +248,12 @@ export function FirebaseHechContextProviderComponent({
   const ctx = useMemo(
     () => ({
       initiallyLoading,
-      loggedIn: Boolean(firebaseHechUserState),
+      loggedIn: Boolean(userStates.hech),
       isAdmin,
-      awaitingVerification,
-      user: firebaseHechUserState,
+      awaitingVerification: userStates.awaitingVerification,
+      user: userStates.hech,
     }),
-    [initiallyLoading, firebaseHechUserState, isAdmin, awaitingVerification]
+    [initiallyLoading, userStates.hech, isAdmin, userStates.awaitingVerification]
   );
 
   return <FirebaseHechContext.Provider value={ctx}>{children}</FirebaseHechContext.Provider>;
