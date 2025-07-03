@@ -145,8 +145,10 @@ export function FirebaseHechContextProviderComponent({
             ?.getCachedUser(generateDbKey("user", firebaseUser.uid))
             .catch((e) => console.error(`Error fetching firebaseHechContext user cache: ${e?.message || ""}`));
 
+          // This could be awaiting the cache for awhile, and in the meantime, data could
+          // have hydrated from the server, so always prefer any data other than the cache
           setUserStates((prev) => ({
-            hech: cachedUser || prev.hech,
+            hech: prev.hech || cachedUser || null,
             firebase: firebaseUser,
             awaitingVerification: nextAwaitingVerificationValue,
           }));
