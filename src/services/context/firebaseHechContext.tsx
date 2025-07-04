@@ -18,7 +18,7 @@ import { useGetSafeContext } from "./useGetSafeContext";
 
 const getFirebaseUserSyncUpdate = (
   firebaseUser: Pick<FirebaseUser, "uid" | "email" | "emailVerified" | "phoneNumber" | "photoURL">,
-  user: User
+  user: User,
 ) => {
   let updateNeeded = false;
   const userUpdate: Partial<Mutable<User>> = {};
@@ -138,10 +138,11 @@ export function FirebaseHechContextProviderComponent({
       firebaseOptions,
       async (firebaseUser) => {
         const nextAwaitingVerificationValue = firebaseUser ? !firebaseUser.emailVerified : undefined;
+        let cachedUser: Maybe<Nullable<Mandate<User, "uid">>> | void;
 
         // If opening the app while offline and the user is verified, try to load them from the cache if that feature is enabled
         if (firebaseUser?.emailVerified) {
-          const cachedUser = await enableOfflineCaching
+          cachedUser = await enableOfflineCaching
             ?.getCachedUser(generateDbKey("user", firebaseUser.uid))
             .catch((e) => console.error(`Error fetching firebaseHechContext user cache: ${e?.message || ""}`));
 
@@ -161,8 +162,7 @@ export function FirebaseHechContextProviderComponent({
           }));
         }
 
-        // If there's no user, you're logged out and done loading
-        // If there is a user, the `onUserValue` will flip the state
+        // If there's no user, you're logged out and done loading...
         if (!firebaseUser) {
           setUserStates((prev) => ({
             ...prev,
@@ -170,9 +170,13 @@ export function FirebaseHechContextProviderComponent({
           }));
           setIsAdmin(false);
           setInitiallyLoading(false);
+          // ...but if there is a user, the `onUserValue` will flip the state, unless it's from the cache
+        } else if (cachedUser) {
+          setIsAdmin(false);
+          setInitiallyLoading(false);
         }
       },
-      { anonymousSignIn, emulatorOptions, ...props }
+      { anonymousSignIn, emulatorOptions, ...props },
     );
   }, [
     enableOfflineCaching,
@@ -204,7 +208,7 @@ export function FirebaseHechContextProviderComponent({
               phoneNumber: fbUserStatePhoneNumber || null,
               photoURL: fbUserStatePhotoURL || null,
             },
-            firebaseHechUser
+            firebaseHechUser,
           );
           if (updateNeeded) await updateUser(fbUserStateUid, userUpdate);
 
@@ -255,7 +259,7 @@ export function FirebaseHechContextProviderComponent({
       awaitingVerification: userStates.awaitingVerification,
       user: userStates.hech,
     }),
-    [initiallyLoading, userStates.hech, isAdmin, userStates.awaitingVerification]
+    [initiallyLoading, userStates.hech, isAdmin, userStates.awaitingVerification],
   );
 
   return <FirebaseHechContext.Provider value={ctx}>{children}</FirebaseHechContext.Provider>;
