@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import type { FirebaseHechDatabase, StatefulData, ConnectionDataListDatabase } from "firebase-hech";
 import { getDataKeyValue } from "firebase-hech/client";
 import { generateDbKey } from "firebase-hech/paths";
@@ -8,7 +8,7 @@ import type { ItemComponentProps, GroupingComponentProps, EmptyComponentProps, O
 
 export type { ItemComponentProps, GroupingComponentProps, EmptyComponentProps };
 
-export function ObservedData<
+function ObservedDataFunction<
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
   ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
@@ -50,7 +50,7 @@ export function ObservedData<
 
   useEffect(() => {
     if (!observed) return undefined;
-    const getter = memoizedCustomGet
+    const getter = memoizedCustomGet //
       ? () => memoizedCustomGet(dataKey)
       : () => getDataKeyValue({ dataType, dataKey });
 
@@ -107,3 +107,5 @@ export function ObservedData<
     </li>
   );
 }
+
+export const ObservedData = memo(ObservedDataFunction) as unknown as typeof ObservedDataFunction;

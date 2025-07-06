@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FirebaseHechDatabase, ConnectionDataListDatabase } from "firebase-hech";
 import { getOrderByWithLimit } from "firebase-hech/client";
 import { generateDbKey } from "firebase-hech/paths";
@@ -24,21 +24,13 @@ import { ObservedData } from "./ObservedData";
 
 export type { ItemComponentProps, GroupingComponentProps, EmptyComponentProps };
 
-/**
- * This component allows you to fetch a list of firebase-hech keys (by connection, ownership, or public lists)
- * and then hydrate the data for those keys only when those keys are scrolled into view. However, it
- * combines this method with optionally fetching keys in chunks to further improve performance if dealing
- * with extremely large lists. For example, if working with lists in the hundreds or even thousands, you
- * can feel comfortable fetching all of the keys and hydrating when scrolled into view. But if working
- * with a list of tens of thousands or more, such as in the case of a chat, you should pass in `managePagination`.
- */
-export function ConnectionsObserverHOC<
+function ConnectionsObserverHOCFunction<
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
   ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
   ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
-  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK],
 >(props: ConnectionsObserverHOCProps<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>) {
   const { initiallyLoading, user } = useFirebaseHechContext();
 
@@ -83,7 +75,7 @@ export function ConnectionsObserverHOC<
             parentDataType: props.parentDataType,
             connectionType: props.connectionType,
           },
-    [props.connectionType, props.parentDataKey, props.parentDataType, props.version]
+    [props.connectionType, props.parentDataKey, props.parentDataType, props.version],
   );
   /* eslint-enable react/destructuring-assignment */
 
@@ -106,13 +98,16 @@ export function ConnectionsObserverHOC<
   const nextPageIdx = data.length;
 
   const dataList = useMemo(() => {
-    const list = data.reduce((prev, curr) => {
-      /* eslint-disable no-param-reassign */
-      if (direction === "limitToFirst") prev = { ...prev, ...curr };
-      else prev = { ...curr, ...prev };
-      /* eslint-enable no-param-reassign */
-      return prev;
-    }, {} as Record<string, Val | number>);
+    const list = data.reduce(
+      (prev, curr) => {
+        /* eslint-disable no-param-reassign */
+        if (direction === "limitToFirst") prev = { ...prev, ...curr };
+        else prev = { ...curr, ...prev };
+        /* eslint-enable no-param-reassign */
+        return prev;
+      },
+      {} as Record<string, Val | number>,
+    );
 
     if (direction === "limitToFirst") return Object.entries(list);
     return Object.entries(list).reverse();
@@ -209,7 +204,7 @@ export function ConnectionsObserverHOC<
       versionSettings,
       user?.uid,
       nextPageIdx,
-    ]
+    ],
   );
   // ------------------------------------------------------------------------------------------------------------------
 
@@ -255,7 +250,9 @@ export function ConnectionsObserverHOC<
               ? ({ key: terminationEdgeMarker, version: "inclusive" } as const)
               : undefined;
 
-            const cachedData = await enableOfflineCaching?.getData(generateDbKey("activity", enableOfflineCaching.listKey, "page-1"));
+            const cachedData = await enableOfflineCaching?.getData(
+              generateDbKey(dataType, enableOfflineCaching.listKey, "page-1"),
+            );
             if (cachedData) {
               setData([cachedData as Record<string, number | Val>]);
               setInitialHydrationComplete(true);
@@ -275,7 +272,10 @@ export function ConnectionsObserverHOC<
                   // ...set it...
                   if (newDataArray.length) {
                     setData([newData]);
-                    enableOfflineCaching?.setData(generateDbKey("activity", enableOfflineCaching.listKey, "page-1"), newData);
+                    enableOfflineCaching?.setData(
+                      generateDbKey(dataType, enableOfflineCaching.listKey, "page-1"),
+                      newData,
+                    );
                   }
 
                   // If you are setting a custom edge (rather than the actual end of the infinite scroll)...
@@ -420,7 +420,7 @@ export function ConnectionsObserverHOC<
   if (grouping) {
     // If reversing the list, you want to be one step behind in the groups (e.g. chat groupings)
     // For example, if the first group is "Today", it should not show up at the bottom of the reversed list, nothing should show up there
-    let reversedListTrailingMs: Maybe<number> = undefined;
+    let reversedListTrailingMs: Maybe<number>;
     let currentGroupingMs = 0;
 
     dataList.forEach(([key, queryNode]) => {
@@ -539,3 +539,15 @@ export function ConnectionsObserverHOC<
     </ul>
   );
 }
+
+/**
+ * This component allows you to fetch a list of firebase-hech keys (by connection, ownership, or public lists)
+ * and then hydrate the data for those keys only when those keys are scrolled into view. However, it
+ * combines this method with optionally fetching keys in chunks to further improve performance if dealing
+ * with extremely large lists. For example, if working with lists in the hundreds or even thousands, you
+ * can feel comfortable fetching all of the keys and hydrating when scrolled into view. But if working
+ * with a list of tens of thousands or more, such as in the case of a chat, you should pass in `managePagination`.
+ */
+export const ConnectionsObserverHOC = memo(
+  ConnectionsObserverHOCFunction,
+) as unknown as typeof ConnectionsObserverHOCFunction;
