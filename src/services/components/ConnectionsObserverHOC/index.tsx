@@ -30,7 +30,7 @@ function ConnectionsObserverHOCFunction<
   ChildT extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
   ChildT2 extends keyof ConnectionDataListDatabase[ParentT][ParentK] & keyof FirebaseHechDatabase,
   ChildK extends keyof ConnectionDataListDatabase[ParentT][ParentK][ChildT],
-  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK],
+  Val extends ConnectionDataListDatabase[ParentT][ParentK][ChildT][ChildK]
 >(props: ConnectionsObserverHOCProps<ParentT, ParentK, ChildT, ChildT2, ChildK, Val>) {
   const { initiallyLoading, user } = useFirebaseHechContext();
 
@@ -75,7 +75,7 @@ function ConnectionsObserverHOCFunction<
             parentDataType: props.parentDataType,
             connectionType: props.connectionType,
           },
-    [props.connectionType, props.parentDataKey, props.parentDataType, props.version],
+    [props.connectionType, props.parentDataKey, props.parentDataType, props.version]
   );
   /* eslint-enable react/destructuring-assignment */
 
@@ -98,20 +98,43 @@ function ConnectionsObserverHOCFunction<
   const nextPageIdx = data.length;
 
   const dataList = useMemo(() => {
-    const list = data.reduce(
-      (prev, curr) => {
-        /* eslint-disable no-param-reassign */
-        if (direction === "limitToFirst") prev = { ...prev, ...curr };
-        else prev = { ...curr, ...prev };
-        /* eslint-enable no-param-reassign */
-        return prev;
-      },
-      {} as Record<string, Val | number>,
-    );
+    const list = data.reduce((prev, curr) => {
+      /* eslint-disable no-param-reassign */
+      if (direction === "limitToFirst") prev = { ...prev, ...curr };
+      else prev = { ...curr, ...prev };
+      /* eslint-enable no-param-reassign */
+      return prev;
+    }, {} as Record<string, Val | number>);
 
     if (direction === "limitToFirst") return Object.entries(list);
     return Object.entries(list).reverse();
   }, [direction, sort, data]);
+
+  // ------------------------------------------------------------------------------------------------------------------
+
+  // ---- Debounced Cache Update --------------------------------------------------------------------------------------
+  const cacheUpdateTimeoutRef = useRef<NodeJS.Timeout>();
+  const firstPage: Maybe<Record<string, number | Val>> = data[0];
+
+  useEffect(() => {
+    if (!enableOfflineCaching || !managePagination) return;
+
+    if (cacheUpdateTimeoutRef.current) clearTimeout(cacheUpdateTimeoutRef.current);
+
+    // 3 second debounce to allow for listeners to stream in data updates before saving to the cache
+    cacheUpdateTimeoutRef.current = setTimeout(() => {
+      const hasData = Object.entries(firstPage || {}).length;
+
+      enableOfflineCaching.setData(
+        generateDbKey(dataType, enableOfflineCaching.listKey, "page-1"),
+        hasData ? firstPage : null
+      );
+    }, 3_000);
+
+    return () => {
+      if (cacheUpdateTimeoutRef.current) clearTimeout(cacheUpdateTimeoutRef.current);
+    };
+  }, [firstPage, enableOfflineCaching, managePagination, dataType]);
 
   // ------------------------------------------------------------------------------------------------------------------
 
@@ -204,7 +227,7 @@ function ConnectionsObserverHOCFunction<
       versionSettings,
       user?.uid,
       nextPageIdx,
-    ],
+    ]
   );
   // ------------------------------------------------------------------------------------------------------------------
 
@@ -251,7 +274,7 @@ function ConnectionsObserverHOCFunction<
               : undefined;
 
             const cachedData = await enableOfflineCaching?.getData(
-              generateDbKey(dataType, enableOfflineCaching.listKey, "page-1"),
+              generateDbKey(dataType, enableOfflineCaching.listKey, "page-1")
             );
             if (cachedData) {
               setData([cachedData as Record<string, number | Val>]);
@@ -270,13 +293,7 @@ function ConnectionsObserverHOCFunction<
 
                 if (newDataArray.length || terminationEdge) {
                   // ...set it...
-                  if (newDataArray.length) {
-                    setData([newData]);
-                    enableOfflineCaching?.setData(
-                      generateDbKey(dataType, enableOfflineCaching.listKey, "page-1"),
-                      newData,
-                    );
-                  }
+                  if (newDataArray.length) setData([newData]);
 
                   // If you are setting a custom edge (rather than the actual end of the infinite scroll)...
                   if (terminationEdge) {
@@ -549,5 +566,5 @@ function ConnectionsObserverHOCFunction<
  * with a list of tens of thousands or more, such as in the case of a chat, you should pass in `managePagination`.
  */
 export const ConnectionsObserverHOC = memo(
-  ConnectionsObserverHOCFunction,
+  ConnectionsObserverHOCFunction
 ) as unknown as typeof ConnectionsObserverHOCFunction;
