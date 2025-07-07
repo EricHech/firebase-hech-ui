@@ -18,7 +18,7 @@ import { useGetSafeContext } from "./useGetSafeContext";
 
 const getFirebaseUserSyncUpdate = (
   firebaseUser: Pick<FirebaseUser, "uid" | "email" | "emailVerified" | "phoneNumber" | "photoURL">,
-  user: User,
+  user: User
 ) => {
   let updateNeeded = false;
   const userUpdate: Partial<Mutable<User>> = {};
@@ -153,7 +153,6 @@ export function FirebaseHechContextProviderComponent({
             firebase: firebaseUser,
             awaitingVerification: nextAwaitingVerificationValue,
           }));
-          setIsAdmin(false);
         } else {
           setUserStates((prev) => ({
             hech: firebaseUser ? prev.hech : undefined,
@@ -172,11 +171,10 @@ export function FirebaseHechContextProviderComponent({
           setInitiallyLoading(false);
           // ...but if there is a user, the `onUserValue` will flip the state, unless it's from the cache
         } else if (cachedUser) {
-          setIsAdmin(false);
           setInitiallyLoading(false);
         }
       },
-      { anonymousSignIn, emulatorOptions, ...props },
+      { anonymousSignIn, emulatorOptions, ...props }
     );
   }, [
     enableOfflineCaching,
@@ -208,7 +206,7 @@ export function FirebaseHechContextProviderComponent({
               phoneNumber: fbUserStatePhoneNumber || null,
               photoURL: fbUserStatePhotoURL || null,
             },
-            firebaseHechUser,
+            firebaseHechUser
           );
           if (updateNeeded) await updateUser(fbUserStateUid, userUpdate);
 
@@ -220,11 +218,11 @@ export function FirebaseHechContextProviderComponent({
           enableOfflineCaching
             ?.setCachedUser(generateDbKey("user", fbUserStateUid), firebaseHechUser)
             .catch((e) => console.error(`Error setting firebaseHechContext user cache: ${e?.message || ""}`));
-
-          await getAdminValue(fbUserStateUid)
-            .then(setIsAdmin)
-            .catch(() => setIsAdmin(false));
         }
+
+        await getAdminValue(fbUserStateUid)
+          .then(setIsAdmin)
+          .catch(() => setIsAdmin(false));
 
         setInitiallyLoading(false);
       });
@@ -259,7 +257,7 @@ export function FirebaseHechContextProviderComponent({
       awaitingVerification: userStates.awaitingVerification,
       user: userStates.hech,
     }),
-    [initiallyLoading, userStates.hech, isAdmin, userStates.awaitingVerification],
+    [initiallyLoading, userStates.hech, isAdmin, userStates.awaitingVerification]
   );
 
   return <FirebaseHechContext.Provider value={ctx}>{children}</FirebaseHechContext.Provider>;
