@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import type { FirebaseHechDatabase, ConnectionDataListDatabase } from "firebase-hech";
+import type { FirebaseHechDatabase, ConnectionDataListDatabase, ListenerPaginationOptions } from "firebase-hech";
 import { getConnectionTypeKeys } from "firebase-hech/client";
 import { onConnectionsDataListChildChanged } from "../helpers/onConnectionsDataListChildChanged";
 import { setStateFirebaseLists } from "../helpers/utils";
 import { OnDataListHookProps } from "./types";
 
+/** Currently `poke` is not set up to work with `paginate` */
 export const useOnConnectionsTypeKeys = <
   ParentT extends keyof ConnectionDataListDatabase,
   ParentK extends keyof ConnectionDataListDatabase[ParentT],
@@ -21,9 +22,11 @@ export const useOnConnectionsTypeKeys = <
   enabled = true,
   maintainWhenDisabled = false,
   deps = [],
+  paginate,
 }: OnDataListHookProps<ChildT, Poke> & {
   parentType: ParentT;
   parentKey: Maybe<ParentK>;
+  paginate?: ListenerPaginationOptions;
 }) => {
   const [data, setData] = useState<Maybe<Nullable<Record<string, QueryData>>>>(poke ? undefined : {});
 
@@ -41,7 +44,7 @@ export const useOnConnectionsTypeKeys = <
   useEffect(() => {
     if (parentKey && enabled) {
       const turnOn = () =>
-        onConnectionsDataListChildChanged(parentType, parentKey, dataType, childChanged, childRemoved);
+        onConnectionsDataListChildChanged(parentType, parentKey, dataType, childChanged, childRemoved, { paginate });
       let off: Maybe<VoidFunction> = undefined;
 
       if (poke) {
@@ -64,7 +67,7 @@ export const useOnConnectionsTypeKeys = <
     }
 
     return undefined;
-  }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled, maintainWhenDisabled, poke, ...deps]);
+  }, [parentType, parentKey, dataType, childChanged, childRemoved, enabled, maintainWhenDisabled, poke, paginate, ...deps]);
 
   const dataArray = useMemo(() => (includeArray ? Object.keys(data || {}) : []), [includeArray, data]);
 
