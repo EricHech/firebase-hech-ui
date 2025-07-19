@@ -291,6 +291,8 @@ function ConnectionsObserverHOCFunction<
               .then((newData) => {
                 const newDataArray = Object.entries(newData);
 
+                if (!newDataArray.length) setData([]);
+
                 if (newDataArray.length || terminationEdge) {
                   // ...set it...
                   if (newDataArray.length) setData([newData]);
