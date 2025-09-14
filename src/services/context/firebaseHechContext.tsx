@@ -169,7 +169,10 @@ export function FirebaseHechContextProviderComponent({
           }));
           setIsAdmin(false);
           setInitiallyLoading(false);
-          // ...but if there is a user, the `onUserValue` will flip the state, unless it's from the cache
+          // ...but if there is a user that isn't verified, flip loading off because there's no other data to fetch...
+        } else if (firebaseUser.emailVerified === false) {
+          setInitiallyLoading(false);
+          // ...but if there is a verified user, the `onUserValue` will flip the state, unless it's from the cache
         } else if (cachedUser) {
           setInitiallyLoading(false);
         }
