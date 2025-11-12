@@ -256,7 +256,7 @@ export function FirebaseHechContextProviderComponent({
   const ctx = useMemo(
     () => ({
       initiallyLoading,
-      loggedIn: Boolean(userStates.hech),
+      loggedIn: Boolean(userStates.hech || userStates.firebase),
       isAdmin,
       awaitingVerification: userStates.awaitingVerification,
       user: userStates.hech,
