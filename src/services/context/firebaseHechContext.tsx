@@ -56,6 +56,7 @@ type BaseFirebaseHechContext = {
   isAdmin: Nullable<boolean>;
   awaitingVerification: Maybe<boolean>;
   user: Maybe<Nullable<Mandate<User, "uid">>>;
+  firebase: Maybe<Nullable<FirebaseUser>>;
 };
 
 const FirebaseHechContext = createContext<Maybe<BaseFirebaseHechContext>>(undefined);
@@ -259,6 +260,7 @@ export function FirebaseHechContextProviderComponent({
       isAdmin,
       awaitingVerification: userStates.awaitingVerification,
       user: userStates.hech,
+      firebase: userStates.firebase,
     }),
     [initiallyLoading, userStates.hech, isAdmin, userStates.awaitingVerification]
   );
